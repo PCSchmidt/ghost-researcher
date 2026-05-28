@@ -1,0 +1,152 @@
+[
+  {
+    "id": "bp_001",
+    "prompt": "Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.",
+    "domain": "defense_aerospace",
+    "expected_source_types": ["gov", "procurement", "defense_news"],
+    "expected_sources": ["sam.gov", "usaspending.gov", "defensenews.com", "c4isrnet.com"],
+    "min_sources": 3,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["contract value or range", "contracting agency", "system type"],
+      "must_not_hallucinate": ["specific dollar amounts", "company names", "contract numbers"],
+      "freshness_required": true
+    },
+    "notes": "Gate 4 primary test prompt. Agent must hit SAM.gov and at least one defense news outlet."
+  },
+  {
+    "id": "bp_002",
+    "prompt": "What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?",
+    "domain": "aviation_regulatory",
+    "expected_source_types": ["gov", "legal", "industry"],
+    "expected_sources": ["faa.gov", "federalregister.gov", "auvsi.org"],
+    "min_sources": 3,
+    "max_steps": 12,
+    "eval_criteria": {
+      "must_include": ["rule name or docket number", "effective date or deadline", "affected operations"],
+      "must_not_hallucinate": ["specific regulation numbers", "dates"],
+      "freshness_required": true
+    },
+    "notes": "Gate 4 secondary test prompt. Tests government portal navigation."
+  },
+  {
+    "id": "bp_003",
+    "prompt": "What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?",
+    "domain": "aviation_operational",
+    "expected_source_types": ["gov", "aviation_data"],
+    "expected_sources": ["notams.aim.faa.gov", "aviationweather.gov", "skyvector.com"],
+    "min_sources": 2,
+    "max_steps": 10,
+    "eval_criteria": {
+      "must_include": ["NOTAM identifier", "affected airspace or airport", "effective time"],
+      "must_not_hallucinate": ["NOTAM numbers", "coordinates", "times"],
+      "freshness_required": true
+    },
+    "notes": "Gate 4 tertiary test prompt. Direct overlap with SkySigint data — good cross-validation."
+  },
+  {
+    "id": "bp_004",
+    "prompt": "Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.",
+    "domain": "ml_research",
+    "expected_source_types": ["academic", "preprint", "industry_research"],
+    "expected_sources": ["arxiv.org", "scholar.google.com", "semanticscholar.org"],
+    "min_sources": 4,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["author or institution", "specific technique or variant", "performance metric"],
+      "must_not_hallucinate": ["paper titles", "author names", "benchmark results"],
+      "freshness_required": true
+    },
+    "notes": "Tests academic source navigation. Your math background lets you judge output quality directly."
+  },
+  {
+    "id": "bp_005",
+    "prompt": "What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?",
+    "domain": "defense_aerospace",
+    "expected_source_types": ["gov", "procurement", "company"],
+    "expected_sources": ["sbir.gov", "usaspending.gov", "sam.gov"],
+    "min_sources": 3,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["company name", "award amount or range", "research topic or abstract summary"],
+      "must_not_hallucinate": ["award amounts", "company names", "contract numbers"],
+      "freshness_required": true
+    },
+    "notes": "Relevant to your defense aerospace contract work. You can judge accuracy."
+  },
+  {
+    "id": "bp_006",
+    "prompt": "What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?",
+    "domain": "career_intelligence",
+    "expected_source_types": ["jobs", "industry_news", "company"],
+    "expected_sources": ["linkedin.com", "indeed.com", "clearancejobs.com"],
+    "min_sources": 3,
+    "max_steps": 12,
+    "eval_criteria": {
+      "must_include": ["company names", "role types or titles", "required skills or clearance"],
+      "must_not_hallucinate": ["salary figures", "headcount numbers"],
+      "freshness_required": true
+    },
+    "notes": "Personally useful output. Easy to judge quality. Tests commercial portal navigation."
+  },
+  {
+    "id": "bp_007",
+    "prompt": "Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.",
+    "domain": "ml_research",
+    "expected_source_types": ["academic", "preprint", "conference"],
+    "expected_sources": ["arxiv.org", "openreview.net", "proceedings.mlr.press"],
+    "min_sources": 4,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["specific algorithm or approach", "application domain", "performance comparison"],
+      "must_not_hallucinate": ["benchmark scores", "paper titles", "venue names"],
+      "freshness_required": true
+    },
+    "notes": "Directly connected to your JHU RL coursework. You can judge technical accuracy."
+  },
+  {
+    "id": "bp_008",
+    "prompt": "What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?",
+    "domain": "aviation_regulatory",
+    "expected_source_types": ["gov", "legal", "industry"],
+    "expected_sources": ["faa.gov", "federalregister.gov", "auvsi.org", "dronelife.com"],
+    "min_sources": 3,
+    "max_steps": 12,
+    "eval_criteria": {
+      "must_include": ["waiver or certification type", "operational requirements", "application process"],
+      "must_not_hallucinate": ["regulation part numbers", "fee amounts", "processing times"],
+      "freshness_required": false
+    },
+    "notes": "Stable regulatory topic — good test of whether agent recognizes when freshness matters less."
+  },
+  {
+    "id": "bp_009",
+    "prompt": "What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?",
+    "domain": "ml_research",
+    "expected_source_types": ["academic", "preprint", "industry_blog"],
+    "expected_sources": ["arxiv.org", "huggingface.co", "ai.googleblog.com", "openai.com/research"],
+    "min_sources": 4,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["specific technique name", "speedup or efficiency metric", "model or hardware context"],
+      "must_not_hallucinate": ["benchmark numbers", "paper titles", "speedup claims"],
+      "freshness_required": true
+    },
+    "notes": "Direct overlap with your 9x throughput inference optimization project. Highest ability to judge accuracy."
+  },
+  {
+    "id": "bp_010",
+    "prompt": "Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.",
+    "domain": "defense_aerospace",
+    "expected_source_types": ["github", "industry_blog", "academic", "news"],
+    "expected_sources": ["github.com", "pypi.org", "medium.com", "towardsdatascience.com"],
+    "min_sources": 3,
+    "max_steps": 15,
+    "eval_criteria": {
+      "must_include": ["library name and GitHub link", "specific use case or deployment context", "performance characteristic"],
+      "must_not_hallucinate": ["GitHub star counts", "version numbers", "specific deployments"],
+      "freshness_required": false
+    },
+    "notes": "Connects to IsolationForest work in AeroIntel. Tests GitHub navigation and technical source extraction."
+  }
+]

@@ -1,0 +1,31 @@
+"""FastAPI application entrypoint for GhostResearcher."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Mapping
+
+from fastapi import FastAPI
+
+from backend.api import create_health_router, create_research_router
+from backend.config import Settings
+from backend.executor.browser import BrowserHealth
+from backend.api.research import ResearchOrchestratorLike
+
+
+def create_app(
+    env: Mapping[str, str] | None = None,
+    *,
+    browser_health_resolver: Callable[[], BrowserHealth] | None = None,
+    research_orchestrator: ResearchOrchestratorLike | None = None,
+) -> FastAPI:
+    """Build the FastAPI app with environment-backed settings."""
+    settings = Settings.from_env(env)
+    app = FastAPI(title="GhostResearcher API", version="0.1.0")
+    app.include_router(create_health_router(settings, browser_health_resolver=browser_health_resolver))
+    app.include_router(create_research_router(settings, orchestrator=research_orchestrator))
+    app.state.settings = settings
+    return app
+
+
+app = create_app()
