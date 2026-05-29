@@ -33,9 +33,9 @@ synthesis or persistence.
 - [x] Create [core/DECISIONS.md](./DECISIONS.md)
 - [x] Create [core/SPEC_GATES.md](./SPEC_GATES.md)
 - [x] Create [core/AGENT_SPEC.md](./AGENT_SPEC.md)
-- [ ] Finalize dollar-denominated cost ceilings via `/costs`
-- [ ] Review AGENT_SPEC against `/critical-thinker`
-- [ ] Mark Gate 1 CONFIRMED once contract and budgets are locked
+- [x] Finalize dollar-denominated cost ceilings via `/costs`
+- [x] Review AGENT_SPEC against `/critical-thinker`
+- [x] Mark Gate 1 CONFIRMED once contract and budgets are locked
 - [x] Add schema-only [backend/agent/tools.py](../backend/agent/tools.py)
 - [x] Add [backend/agent/memory.py](../backend/agent/memory.py) session state
 - [x] Add FastAPI entrypoint and `/health` route
@@ -86,7 +86,7 @@ synthesis or persistence.
 
 ## WHAT DOES NOT SHIP IN THIS GATE
 
-- No Claude API planner loop yet
+- No OpenRouter planner adapter yet
 - No frontend UI yet
 - No report synthesis code yet
 - No real browser integration test yet; executor tests use fakes
@@ -103,5 +103,5 @@ start, then feed search results into the deterministic navigation path.
 
 ---
 
-**Last updated:** 2026-05-28  
+**Last updated:** 2026-05-29
 **Updated by:** GitHub Copilot

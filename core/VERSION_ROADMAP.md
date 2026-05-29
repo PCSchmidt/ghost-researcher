@@ -38,11 +38,11 @@ Recently completed:
 - v0.6.0 extraction and credibility executor skeletons
 - v0.7.0 multi-step planner skeleton
 
-Open foundation items that still matter:
+Foundation items resolved on 2026-05-29:
 
-- Finalize dollar-denominated cost ceilings via `/costs`
-- Review [AGENT_SPEC.md](./AGENT_SPEC.md) through `/critical-thinker`
-- Mark Gate 1 fully confirmed once those two items are resolved
+- Dollar-denominated cost ceilings are locked in [CONTRACT.md](./CONTRACT.md) and [COSTS.md](./COSTS.md)
+- [AGENT_SPEC.md](./AGENT_SPEC.md) passed critical review with the OpenRouter-first model-routing decision logged in [DECISIONS.md](./DECISIONS.md)
+- Gate 1 is confirmed for continued implementation
 
 ---
 
@@ -66,7 +66,7 @@ Exit criteria:
 - Hard guard rails are documented
 - Cost ceilings and critical review are resolved before formal close
 
-Status: Functionally scaffolded; cost and critical review still open.
+Status: Complete.
 
 ---
 
@@ -112,7 +112,7 @@ Status: Complete with fake page tests; live CloakBrowser integration remains lat
 
 ## v0.4.0 - Planner Integration Skeleton
 
-Goal: Add deterministic planner-to-runner orchestration before the Claude planner exists.
+Goal: Add deterministic planner-to-runner orchestration before the LLM planner exists.
 
 Ships:
 
@@ -216,22 +216,23 @@ Status: Planned.
 
 ---
 
-## v0.9.0 - Claude Planner Adapter
+## v0.9.0 - OpenRouter Planner Adapter
 
-Goal: Replace deterministic planning with an adapter that can call Claude while preserving the same tool-call contract.
+Goal: Replace deterministic planning with an OpenRouter-backed adapter while preserving the same tool-call contract.
 
 Ships:
 
-- Claude planner adapter
+- OpenRouter planner adapter
 - Prompt templates
 - Tool-call validation
-- Budget checks before each planner turn
+- Token and dollar budget checks before each planner turn
 
 Exit criteria:
 
 - Adapter emits validated tool calls only
 - Invalid/free-text planner output is rejected safely
-- Token and step budgets are enforced
+- Token, step, and dollar budgets are enforced
+- Model slug, token usage, and reported cost are logged for each planner call
 
 Status: Planned.
 

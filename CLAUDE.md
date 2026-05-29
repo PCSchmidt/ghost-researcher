@@ -3,19 +3,21 @@
 ## What This Project Is
 
 GhostResearcher is an autonomous agentic web research engine. The user submits
-a research prompt. Claude API (as planner) decomposes it into a multi-step
+a research prompt. An OpenRouter-backed LLM planner decomposes it into a multi-step
 browsing strategy, dispatches tool calls to a CloakBrowser executor, extracts
 and credibility-scores sources, and synthesizes a structured intelligence report.
 
 This is a **full-stack agentic AI project** with three distinct layers:
-- **Planner**: Claude API with tool use (function calling loop)
+
+- **Planner**: OpenRouter-backed LLM with tool use (function calling loop)
 - **Executor**: CloakBrowser via CDP — stealth browser navigation and extraction
-- **Synthesizer**: Claude API call that produces the final structured report
+- **Synthesizer**: OpenRouter-backed LLM call that produces the final structured report
 
 ## Portfolio Purpose
 
 GhostResearcher closes the two highest-priority gaps identified in the
 pcschmidt.github.io portfolio review:
+
 1. **Agentic AI** — real tool-use loop, not black-box API calls
 2. **Evals culture** — `evals/` directory seeds a live web evals harness (Priority 3)
 
@@ -45,8 +47,8 @@ to the existing inference optimization and ML pipeline work in the portfolio.
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Planner | Claude API (claude-sonnet-4-20250514) with tool use |
+| --- | --- |
+| Planner | OpenRouter model gateway with DeepSeek/Qwen default tier and optional Anthropic fallback |
 | Executor | CloakBrowser (Chromium CDP) + Playwright async |
 | API framework | FastAPI (Python 3.11+) |
 | Job queue | Redis (research job queue) |
@@ -68,7 +70,7 @@ to the existing inference optimization and ML pipeline work in the portfolio.
 
 ## Directory Structure (Target State)
 
-```
+```text
 ghost-researcher/
 ├── .claude/                        # Syntaris hooks and skills
 ├── core/                           # Syntaris foundation files
@@ -85,7 +87,7 @@ ghost-researcher/
 │   ├── main.py                     # FastAPI entrypoint
 │   ├── config.py
 │   ├── agent/
-│   │   ├── planner.py              # Claude API tool-use loop
+│   │   ├── planner.py              # LLM tool-use loop
 │   │   ├── tools.py                # Tool definitions — Gate 2 exit artifact
 │   │   ├── memory.py               # AgentSession state
 │   │   └── prompts.py              # System prompt, planner prompt templates
@@ -97,7 +99,7 @@ ghost-researcher/
 │   │   ├── screenshot.py           # Tool: capture page screenshot
 │   │   └── credibility.py          # Source credibility scorer
 │   ├── synthesizer/
-│   │   ├── report.py               # Claude API → structured report
+│   │   ├── report.py               # LLM → structured report
 │   │   ├── schema.py               # ResearchReport Pydantic model
 │   │   └── scorer.py               # Report quality scoring → feeds evals/
 │   ├── jobs/
@@ -116,7 +118,7 @@ ghost-researcher/
 │   │   └── layout.tsx
 │   ├── components/
 │   │   ├── ResearchForm.tsx
-│   │   ├── JobStatus.tsx           # Polling — shows agent steps in real time
+│   │   ├── JobStatus.tsx           # SSE status stream — shows agent steps in real time
 │   │   ├── ReportViewer.tsx
 │   │   └── SourceCard.tsx          # Source + credibility score display
 │   └── lib/
@@ -151,7 +153,7 @@ ghost-researcher/
 
 ## Gate Model (Syntaris)
 
-```
+```text
 CONFIRMED
     ↓
 [Gate 1: CONTRACT + AGENT_SPEC]
@@ -165,8 +167,8 @@ CONFIRMED
     No executor implementation may be written before this gate closes
     ↓
 [Gate 3: EXECUTOR UNIT TESTS PASS]
-    Exit artifact: pytest passes for all test_executor/ modules
-    Hook: fails if any test missing or pytest exit code != 0
+    Exit artifact: backend unit tests pass for all executor modules
+    Hook: fails if any test missing or regression suite exit code != 0
     ↓
 [Gate 4: PLANNER INTEGRATION]
     Exit artifact: planner produces valid tool call sequences for 3 benchmark prompts
@@ -183,12 +185,14 @@ GO — deploy backend to Railway, frontend to Vercel
 This is the most important document in the project. It must define:
 
 **Planner system prompt contract:**
+
 - What the planner knows: research goal, available tools, tool output format
 - What the planner must output: structured tool calls, not free text
 - Termination conditions: max_steps (hard limit), confidence threshold, no_new_sources signal
-- Cost guard: max Claude API calls per job, token budget per call
+- Cost guard: max model spend per job, token budget per call
 
 **Tool definitions (all 5):**
+
 - `navigate_to_url(url, wait_for?, fingerprint_seed?) → PageContent`
 - `extract_structured_data(selector, extraction_goal, output_schema?) → ExtractedData`
 - `web_search(query, num_results?) → SearchResults`
@@ -196,12 +200,14 @@ This is the most important document in the project. It must define:
 - `finalize_report(confidence, sources_used, termination_reason) → void`
 
 **AgentSession state schema:**
+
 - research_goal, steps_taken, sources_visited, running_cost
 - detection_events (per source), termination_state, termination_reason
 
 **Failure mode catalog (required before Gate 1 closes):**
+
 - Agent loop: same URL visited repeatedly → URL deduplication + step counter hard stop
-- Cost runaway: uncapped API calls → hard token budget, graceful early termination
+- Cost runaway: uncapped model calls → hard token and dollar budgets, graceful early termination
 - Hallucination in synthesis: every claim traceable to an extracted source in session state
 - Bot detection cascade: tool returns detection_blocked=true, planner adapts browsing plan
 - Context window overflow: long research sessions accumulate tool results → summarize mid-session
@@ -285,7 +291,7 @@ TOOLS = [
    different fingerprint strategies, different deployment lifecycles. Shared pattern,
    not shared infrastructure.
 
-2. **Claude as planner, CloakBrowser as executor** — Claude never touches the browser
+2. **LLM as planner, CloakBrowser as executor** — the model never touches the browser
    directly. The tool-use interface is the only contract between planner and executor.
    This separation makes the executor independently testable.
 
@@ -302,8 +308,8 @@ TOOLS = [
    corroboration count, detection resistance penalty. Logistic regression or
    hand-tuned scoring function over labeled features. Score feeds report confidence.
 
-6. **Frontend shows agent steps in real time** — JobStatus.tsx polls /research/{job_id}
-   and renders each tool call as it completes. This is the primary portfolio demo moment.
+6. **Frontend shows agent steps in real time** — JobStatus.tsx consumes the SSE
+    status stream and renders each tool call as it completes. This is the primary portfolio demo moment.
    A hiring audience watching the agent navigate, extract, and score sources in real time
    understands immediately what the system does.
 
@@ -311,9 +317,9 @@ TOOLS = [
 
 - **Agent loop**: planner revisits same URL → detect via session_state.sources_visited set,
   return cached result, increment loop_detection counter, terminate if > 3 repeats
-- **Cost runaway**: no token budget → set max_tokens_per_job in config, track running_cost
+- **Cost runaway**: no token or dollar budget → set max_tokens_per_job and max_model_cost_per_job_usd in config, track running_cost
   in AgentSession, call finalize_report with termination_reason="cost_limit" when exceeded
-- **Hallucination in synthesis**: Claude invents sources in report → every cited source
+- **Hallucination in synthesis**: model invents sources in report → every cited source
   must exist in session_state.sources_visited; synthesizer validates before returning report
 - **Context window overflow**: long sessions accumulate tool results → mid-session
   summarization step after every 10 tool calls, compress older results
@@ -321,11 +327,21 @@ TOOLS = [
   Railway restart policy, /health endpoint detects and reports cloakserve status
 - **Frontend polling storm**: many concurrent jobs, each JobStatus polling /research/{job_id}
   every 2s → use SSE (Server-Sent Events) instead of polling for job status updates
+- **Model routing variance**: cheaper models vary in tool-call/JSON reliability → validate
+    every model output against schemas, retry once, then escalate or finalize safely
 
 ## Environment Variables Required
 
-```
-# Claude API
+```bash
+# Model gateway
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+DEFAULT_PLANNER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_PLANNER_MODEL=deepseek/deepseek-v4-pro
+DEFAULT_SYNTHESIZER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_SYNTHESIZER_MODEL=moonshotai/kimi-k2.6
+
+# Optional premium fallback
 ANTHROPIC_API_KEY=
 
 # CloakBrowser CDP server
@@ -343,6 +359,8 @@ PROXY_PASS=
 # Agent behavior
 MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
+MAX_MODEL_COST_PER_JOB_USD=0.05
+WARN_MODEL_COST_PER_JOB_USD=0.02
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
 
@@ -355,15 +373,15 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [ ] Syntaris installed (`bash C:\Users\pchri\Syntaris\install.sh`)
 - [ ] CloakBrowser cloned (`git clone https://github.com/PCSchmidt/CloakBrowser.git`)
 - [ ] `/start` run, bring-your-own recipe selected
-- [ ] `core/CONTRACT.md` filled and CONFIRMED
-- [ ] `core/AGENT_SPEC.md` complete before Gate 1 closes — invoke `/critical-thinker` against it
-- [ ] `evals/benchmark_prompts.json` created with 10 prompts (Gate 1 entry condition)
-- [ ] `backend/agent/tools.py` complete before any executor code written (Gate 2)
-- [ ] `.env.example` committed, `.env` in `.gitignore`
+- [x] `core/CONTRACT.md` filled and CONFIRMED
+- [x] `core/AGENT_SPEC.md` complete before Gate 1 closes — `/critical-thinker` outcome logged in DECISIONS.md
+- [x] `evals/benchmark_prompts.json` created with 10 prompts (Gate 1 entry condition)
+- [x] `backend/agent/tools.py` complete before executor work (Gate 2)
+- [x] `.env.example` committed, `.env` in `.gitignore`
 
 ## Session Start Command
 
-```
+```text
 /start
 ```
 

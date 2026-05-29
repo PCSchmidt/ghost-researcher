@@ -1,11 +1,123 @@
-# GhostResearcher — First Session Setup
+# GhostResearcher Setup And Resume Guide
 
-Complete these steps **in order** before opening Claude Code or writing any
-application code. Each step is a hard prerequisite for the next.
+This project has moved past the initial prototype setup. Use this document to
+prepare a local environment, verify the current baseline, and resume work from
+the staged roadmap.
 
 ---
 
-## Step 1 — Clone CloakBrowser (if not already done for SkySigint)
+## Current Baseline
+
+Current checkpoint: v0.7.0 - Multi-Step Planner Skeleton complete.
+Next stage: v0.8.0 - Search Tool Skeleton.
+
+Gate 1 is confirmed:
+
+- [core/CONTRACT.md](core/CONTRACT.md) contains dollar-denominated model cost ceilings.
+- [core/AGENT_SPEC.md](core/AGENT_SPEC.md) defines the planner, tool, session, and failure contracts.
+- [core/COSTS.md](core/COSTS.md) locks the OpenRouter-first cost plan.
+- [core/DECISIONS.md](core/DECISIONS.md) records the critical review outcome.
+- [evals/benchmark_prompts.json](evals/benchmark_prompts.json) contains 10 benchmark prompts.
+- [backend/agent/tools.py](backend/agent/tools.py) contains the schema-locked tool catalog.
+
+The current backend is fake-tested. No live OpenRouter, Redis, Postgres, or
+CloakBrowser service is required to run the regression suite.
+
+---
+
+## Local Setup
+
+Use Python 3.11 or newer.
+
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+```
+
+Create a local environment file when needed:
+
+```bash
+cp .env.example .env
+```
+
+Never commit `.env` or real API keys.
+
+---
+
+## Environment Variables
+
+OpenRouter is the default model gateway. Anthropic is an optional premium
+fallback only.
+
+```bash
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_APP_TITLE=GhostResearcher
+OPENROUTER_HTTP_REFERER=http://localhost:8000
+DEFAULT_PLANNER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_PLANNER_MODEL=deepseek/deepseek-v4-pro
+DEFAULT_SYNTHESIZER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_SYNTHESIZER_MODEL=moonshotai/kimi-k2.6
+ANTHROPIC_API_KEY=
+CLOAK_CDP_URL=http://localhost:9222
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+REDIS_URL=redis://host:6379
+PROXY_URL=
+PROXY_USER=
+PROXY_PASS=
+MAX_STEPS_PER_JOB=20
+MAX_TOKENS_PER_JOB=50000
+MAX_MODEL_COST_PER_JOB_USD=0.05
+WARN_MODEL_COST_PER_JOB_USD=0.02
+SCRAPE_ENABLED=true
+LOG_LEVEL=INFO
+NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
+```
+
+---
+
+## Verify The Baseline
+
+Run the full backend regression suite:
+
+```bash
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_jobs.test_runner tests.test_jobs.test_research
+```
+
+Expected current result: 41 tests passing.
+
+---
+
+## Run The API Locally
+
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+Health check:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Research skeleton request:
+
+```bash
+curl -X POST http://localhost:8000/research \
+  -H "Content-Type: application/json" \
+  -d '{"research_goal":"Review https://example.com/report"}'
+```
+
+The response currently includes planner decisions, tool results, session state,
+and `synthesis: null`.
+
+---
+
+## CloakBrowser Setup For Later Gates
+
+Live browser integration is not required for the current fake-tested backend
+baseline. Before live executor tests, clone and verify CloakBrowser separately:
 
 ```bash
 git clone https://github.com/PCSchmidt/CloakBrowser.git
@@ -13,257 +125,42 @@ cd CloakBrowser
 # Build and verify cloakserve --version works
 ```
 
-If you already cloned CloakBrowser for SkySigint, confirm it still builds cleanly.
-GhostResearcher runs its **own** `cloakserve` instance — do not share with SkySigint.
-
-**Checkpoint:** `cloakserve --version` returns without error.
+GhostResearcher must run its own `cloakserve` instance. Do not share runtime
+state with SkySigint.
 
 ---
 
-## Step 2 — Install Syntaris into This Project
+## Resume Workflow
 
-From the `ghost-researcher/` project root:
+Start each coding session with `/start`, then read:
 
-```bash
-bash C:\Users\pchri\Syntaris\install.sh
-bash C:\Users\pchri\Syntaris\syntaris-doctor.sh
-```
+1. [README.md](README.md)
+2. [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md)
+3. [core/SPEC.md](core/SPEC.md)
+4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-All checks must pass before proceeding.
-
-**Checkpoint:** `syntaris-doctor.sh` exits clean. `.claude/` and `core/` directories exist.
-
----
-
-## Step 3 — Copy CLAUDE.md into Project Root
-
-`CLAUDE.md` is already written. Place it at the project root alongside README.md and this file.
-
-It contains the full agent architecture, tool definitions, gate model, failure mode catalog,
-architectural decisions, and first session checklist. Claude Code reads it at every `/start`.
-
-**Checkpoint:** `CLAUDE.md` exists at `ghost-researcher/` root.
-
----
-
-## Step 4 — Create evals/benchmark_prompts.json
-
-This file must exist before Gate 1 can close. Create it now with 10 research prompts.
-Gate 4 uses 3 of these as the integration test. Gate 5 runs all 10.
-
-Format:
-
-```json
-[
-  {
-    "id": "bp_001",
-    "prompt": "Summarize DoD uncrewed systems procurement activity from the past 30 days",
-    "domain": "defense_aerospace",
-    "expected_source_types": ["gov", "news", "procurement"],
-    "min_sources": 3,
-    "max_steps": 15,
-    "notes": "Should hit SAM.gov, defense news outlets, USASpending"
-  },
-  {
-    "id": "bp_002",
-    "prompt": "What are the most recent FAA rulemaking actions affecting commercial UAS operations?",
-    "domain": "aviation_regulatory",
-    "expected_source_types": ["gov", "legal", "industry"],
-    "min_sources": 3,
-    "max_steps": 12,
-    "notes": "Should hit FAA.gov rulemaking portal, federal register"
-  }
-  // ... 8 more prompts covering your target research domains
-]
-```
-
-Write prompts in domains you can verify answers for — this lets you score report quality
-honestly when Gate 5 runs.
-
-**Checkpoint:** `evals/benchmark_prompts.json` exists with at least 10 prompts.
-
----
-
-## Step 5 — Create .env.example and .gitignore
-
-**.env.example** (commit this):
-
-```bash
-# Claude API — required, no default
-ANTHROPIC_API_KEY=
-
-# CloakBrowser CDP
-CLOAK_CDP_URL=http://localhost:9222
-
-# Data layer
-DATABASE_URL=postgresql://user:pass@host:5432/dbname
-REDIS_URL=redis://host:6379
-
-# Proxy (for high bot-risk sources)
-PROXY_URL=
-PROXY_USER=
-PROXY_PASS=
-
-# Agent behavior
-MAX_STEPS_PER_JOB=20
-MAX_TOKENS_PER_JOB=50000
-LOG_LEVEL=INFO
-
-# Frontend (set in Vercel environment, not here)
-NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
-```
-
-**.gitignore** (commit this):
-
-```
-.env
-.env.local
-.env.*.local
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-.pytest_cache/
-.coverage
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-playwright-report/
-test-results/
-screenshots/
-.next/
-node_modules/
-```
-
-**Checkpoint:** Both files committed. `.env` confirmed absent from git tracking.
-
----
-
-## Step 6 — Open Claude Code in VSCode
-
-With Steps 1–5 complete:
-
-```
-/start
-```
-
-Syntaris loads memory files, detects fresh project, prompts for recipe and CONTRACT.md.
-
-**Recipe selection:** `bring-your-own`
-Use `nextjs-fastapi-supabase` as a structural reference but customize for this stack —
-GhostResearcher has no Supabase dependency and adds the agent/executor/synthesizer layers.
-
----
-
-## Step 7 — Run These Skills Before Gate 1 Closes
-
-**`/build-rules`** — full interrogation of constraints. Specifically address:
-- Token budget per research job (cost ceiling before you write the planner loop)
-- Max steps per job (hard limit, not a soft suggestion)
-- What counts as "sufficient coverage" for finalize_report confidence threshold
-
-**`/critical-thinker`** — challenge every significant architectural decision.
-Ask it to pressure-test specifically:
-- The `finalize_report` as tool (vs. stop_reason="end_turn") decision
-- SSE vs. polling for frontend job status (polling storm failure mode)
-- Context window management strategy for long research sessions
-- Whether credibility scoring needs a trained model or if a scoring function suffices
-
-**`/costs`** — Claude API is the primary cost driver here, not compute.
-Set a per-job token budget and a monthly API cost ceiling before the planner loop exists.
-A runaway research job with no token limit will drain your API budget fast.
-
-**`/security`** — ANTHROPIC_API_KEY is now in the mix alongside proxy credentials
-and a shared database. Get the OWASP checklist before Gate 1 closes.
-
----
-
-## Step 8 — Fill Out core/CONTRACT.md
-
-```
-Project name: GhostResearcher
-Stack: Claude API (tool use) / CloakBrowser / FastAPI / Redis / Postgres / Next.js 14
-Purpose: Agentic web research engine — planner + executor + synthesizer
-Repo: https://github.com/PCSchmidt/ghost-researcher
-Related: SkySigint (CDP pattern reference), CloakBrowser, Syntaris, AeroIntel
-Backend deploy: Railway (cloakserve + ghostresearcher-api)
-Frontend deploy: Vercel
-Cost ceiling per job: [set from /costs output]
-Monthly API ceiling: [set from /costs output]
-Banned approaches:
-  - Per-request CloakBrowser launches (persistent cloakserve only)
-  - Sharing cloakserve with SkySigint
-  - Free-text planner output (must be tool calls only)
-  - Report claims not traceable to extracted session sources
-  - Skipping Gate 2 tools.py lock before writing any executor code
-  - Committing .env or ANTHROPIC_API_KEY
-```
-
----
-
-## Step 9 — Produce AGENT_SPEC.md (Gate 1 Critical Exit Artifact)
-
-This is the most important document in the project. Gate 1 does not close without it.
-Run `/critical-thinker` against a draft before finalizing.
-
-It must define:
-
-**Planner system prompt contract** — what the planner knows, what it must output,
-termination conditions (max_steps, confidence threshold, no_new_sources),
-cost guard (max tokens per job).
-
-**All 5 tool schemas** — input schema, output schema, error contract for each tool.
-The seed is in CLAUDE.md under "Tool Definitions." Expand with full output schemas
-and explicit error cases (e.g. navigate_to_url when CloakBrowser returns detection_blocked).
-
-**AgentSession state schema** — every field tracked across the research session:
-research_goal, steps_taken, sources_visited (set for deduplication), running_cost,
-detection_events, termination_state, termination_reason.
-
-**Failure mode catalog** — all 6 failure modes from CLAUDE.md documented with
-detection condition, mitigation, and which ERRORS.md entry they map to.
-
-**Checkpoint:** `core/AGENT_SPEC.md` exists, complete, reviewed by `/critical-thinker`.
-
----
-
-## Step 10 — Gate 2: Lock tools.py Before Any Executor Code
-
-After Gate 1 closes, the next action is completing `backend/agent/tools.py`.
-This is a schema-only file — no implementation. Every tool from AGENT_SPEC.md
-expressed as a Python structure matching the Claude API tool use format.
-
-Gate 2 hook fails if:
-- `tools.py` does not exist
-- Any tool is missing `input_schema`
-- Any tool has `NotImplemented`, `pass`, or `...` stubs
-
-Run `/testing` to generate schema validation tests before Gate 2 closes.
-
-**After Gate 2: you may begin writing `backend/executor/browser.py`.**
+The next build slice is v0.8.0: add the `web_search` executor path, wire it into
+`ResearchRunner`, update the deterministic planner so URL-free goals search
+first, and feed search results into the existing navigation flow.
 
 ---
 
 ## Gate Checklist
 
-| Gate | Exit Artifacts | Human Token |
-|---|---|---|
-| 1 | CONTRACT.md, AGENT_SPEC.md, SPEC.md, evals/benchmark_prompts.json | CONFIRMED |
-| 2 | backend/agent/tools.py (complete schemas) | TOOLS CONFIRMED |
-| 3 | pytest passes, all test_executor/ + test_agent/ | TESTS CONFIRMED |
-| 4 | Planner produces valid sequences for 3 benchmark prompts | PLANNER CONFIRMED |
-| 5 | 3 reports in evals/results/, scored | REPORTS CONFIRMED |
-| GO | Railway + Vercel deployed, /health 200 | DEPLOY CONFIRMED |
-
----
-
-## Files That Must Exist Before First Claude Code Session
-
-- [x] `README.md`
-- [x] `CLAUDE.md`
-- [x] `SETUP.md`
-- [ ] `evals/benchmark_prompts.json` — 10 prompts (Step 4)
-- [ ] `.env.example` — committed (Step 5)
-- [ ] `.gitignore` — committed (Step 5)
-- [ ] Syntaris installed → `.claude/` and `core/` exist (Step 2)
+| Stage | Exit Artifacts | Status |
+| --- | --- | --- |
+| v0.1.0 | Contract, AGENT_SPEC, memory files, ERRORS, benchmark prompts | Complete |
+| v0.2.0 | `backend/agent/tools.py` complete schemas | Complete |
+| v0.3.0 | Browser health, navigation executor, runner tests | Complete |
+| v0.4.0 | Deterministic planner integration skeleton | Complete |
+| v0.5.0 | `POST /research` endpoint skeleton | Complete |
+| v0.6.0 | Extraction and credibility executor skeletons | Complete |
+| v0.7.0 | Multi-step planner sequence | Complete |
+| v0.8.0 | Search tool skeleton | Next |
+| v0.9.0 | OpenRouter planner adapter | Planned |
+| v0.10.0 | Synthesizer skeleton | Planned |
+| v0.11.0 | Persistence and job state | Planned |
+| v0.12.0 | SSE live status stream | Planned |
+| v0.13.0 | Frontend research UI | Planned |
+| v0.14.0 | Evals harness | Planned |
+| v1.0.0 | Railway and Vercel deployment | Planned |

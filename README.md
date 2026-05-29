@@ -2,7 +2,7 @@
 
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
-session state, and a minimal FastAPI API. Frontend, persistence, Claude planner
+session state, and a minimal FastAPI API. Frontend, persistence, OpenRouter planner
 integration, synthesis, live browser integration tests, and deployment are planned
 but not shipped yet.
 
@@ -27,7 +27,7 @@ Implemented now:
 
 Not implemented yet:
 
-- Claude API planner adapter
+- OpenRouter planner adapter
 - `web_search` executor implementation
 - Report synthesis
 - Postgres/Redis persistence
@@ -64,7 +64,7 @@ PlannerSkeleton -> ResearchRunner -> Executor tools
 Response with decisions[], tool_results[], session, synthesis=null
 ```
 
-The production target remains a Claude planner, CloakBrowser executor, credibility
+The production target remains an OpenRouter-backed planner, CloakBrowser executor, credibility
 scorer, report synthesizer, persisted jobs, SSE status updates, and a Next.js UI.
 The current repo intentionally builds toward that target in small verified slices.
 
@@ -107,7 +107,7 @@ Create a local environment file when needed:
 cp .env.example .env
 ```
 
-For the current fake-tested backend slices, no live Anthropic, Redis, Postgres, or
+For the current fake-tested backend slices, no live OpenRouter, Redis, Postgres, or
 CloakBrowser service is required. A live CloakBrowser instance will be required
 for later integration testing.
 
@@ -151,6 +151,14 @@ The response currently returns planner decisions, tool results, session state, a
 ## Environment Variables
 
 ```bash
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_APP_TITLE=GhostResearcher
+OPENROUTER_HTTP_REFERER=http://localhost:8000
+DEFAULT_PLANNER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_PLANNER_MODEL=deepseek/deepseek-v4-pro
+DEFAULT_SYNTHESIZER_MODEL=deepseek/deepseek-v4-flash
+FALLBACK_SYNTHESIZER_MODEL=moonshotai/kimi-k2.6
 ANTHROPIC_API_KEY=
 CLOAK_CDP_URL=http://localhost:9222
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
@@ -160,6 +168,8 @@ PROXY_USER=
 PROXY_PASS=
 MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
+MAX_MODEL_COST_PER_JOB_USD=0.05
+WARN_MODEL_COST_PER_JOB_USD=0.02
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
 NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
@@ -179,7 +189,7 @@ The build is intentionally staged:
 - v0.6.0 - Extract and Credibility Skeletons
 - v0.7.0 - Multi-Step Planner Skeleton
 - v0.8.0 - Search Tool Skeleton
-- v0.9.0 - Claude Planner Adapter
+- v0.9.0 - OpenRouter Planner Adapter
 - v0.10.0 - Synthesizer Skeleton
 - v0.11.0 - Persistence and Job State
 - v0.12.0 - Live Status Stream

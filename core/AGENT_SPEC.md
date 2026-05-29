@@ -7,12 +7,15 @@ Gate 1 exit artifact for GhostResearcher
 
 ## PURPOSE
 
-Define the contract between the Claude planner, the CloakBrowser-backed executor,
+Define the contract between the LLM planner, the CloakBrowser-backed executor,
 the report synthesizer, and the session state manager before implementation begins.
 
 ---
 
 ## PLANNER SYSTEM PROMPT CONTRACT
+
+The planner adapter should call models through OpenRouter by default. Anthropic
+direct access is a premium fallback only, not the normal runtime path.
 
 ### Inputs available to the planner
 
@@ -35,7 +38,7 @@ the report synthesizer, and the session state manager before implementation begi
 ### Termination conditions
 
 - `max_steps`: hard stop when `steps_taken >= MAX_STEPS_PER_JOB`
-- `cost_limit`: hard stop when `running_tokens >= MAX_TOKENS_PER_JOB`
+- `cost_limit`: hard stop when `running_tokens >= MAX_TOKENS_PER_JOB` or `running_cost_usd >= MAX_MODEL_COST_PER_JOB_USD`
 - `sufficient_coverage`: minimum source count met, source diversity met, and planner confidence >= 0.80
 - `no_new_sources`: two consecutive search/navigation attempts produce no novel usable sources
 - `detection_blocked`: high-value paths are repeatedly blocked and the planner can no longer diversify the plan
@@ -45,7 +48,26 @@ the report synthesizer, and the session state manager before implementation begi
 - Default token budget per job: `MAX_TOKENS_PER_JOB=50000`
 - Default step budget per job: `MAX_STEPS_PER_JOB=20`
 - Default planner completion budget: 12 planner turns per job
-- Any step that would exceed the remaining token budget must route directly to `finalize_report`
+- Default model spend hard ceiling per job: `MAX_MODEL_COST_PER_JOB_USD=0.05`
+- Default model spend warning threshold per job: `WARN_MODEL_COST_PER_JOB_USD=0.02`
+- Any step that would exceed the remaining token or dollar budget must route directly to `finalize_report`
+- Every model response must record model slug, prompt tokens, completion tokens, and reported cost when available
+
+### Model routing policy
+
+| Tier | Purpose | Default candidates | Trigger |
+| --- | --- | --- | --- |
+| Default | Planner tool selection, normal extraction normalization, normal synthesis | `deepseek/deepseek-v4-flash`, `qwen/qwen3-235b-a22b-2507` | First attempt for routine jobs |
+| Quality fallback | Harder synthesis or failed tool/JSON validation | `deepseek/deepseek-v4-pro`, `moonshotai/kimi-k2.6`, `moonshotai/kimi-k2-thinking` | Validation failure, complex comparison, or confidence below threshold |
+| Premium fallback | Last resort for repeated failures | `anthropic/claude-sonnet-latest` or direct Anthropic adapter | Explicit configuration only |
+
+Routing rules:
+
+- Model slugs are configuration, not hard-coded business logic.
+- Prefer the cheapest configured model that supports the required behavior.
+- Validate tool calls and structured JSON before accepting planner output.
+- Retry once on the default tier, then escalate to quality fallback if the result still fails validation.
+- Do not escalate if doing so would exceed `MAX_MODEL_COST_PER_JOB_USD`; finalize with `cost_limit` instead.
 
 ---
 
@@ -347,12 +369,13 @@ the report synthesizer, and the session state manager before implementation begi
 | Error ID | Failure mode | Detection | Mitigation |
 | --- | --- | --- | --- |
 | ERR-001 | Agent revisits the same URL repeatedly | URL appears in `sources_visited` 3+ times | Return cached result, increment loop counter, force planner to diversify |
-| ERR-002 | Planner exceeds token or step budget | `running_tokens` or `steps_taken` reaches hard limit | Route directly to `finalize_report` with hard-stop reason |
+| ERR-002 | Planner exceeds token, step, or dollar budget | `running_tokens`, `steps_taken`, or `running_cost_usd` reaches hard limit | Route directly to `finalize_report` with hard-stop reason |
 | ERR-003 | Synthesizer hallucinates unsupported claims | Claim lacks source trace in `evidence_records` | Reject synthesis output until every claim maps to evidence |
 | ERR-004 | Bot detection cascade blocks key sources | Multiple `detection_events` on high-value domains | Switch search path, lower-risk domains, or finalize with explicit limitation |
 | ERR-005 | Context window overflow in long sessions | Tool results exceed summarization threshold | Summarize older results and keep structured evidence only |
 | ERR-006 | CloakBrowser or CDP server unavailable | Health check fails or navigation returns transport error | Fail executor tools fast and surface degraded health state |
 | ERR-007 | Frontend status transport overload | High-frequency polling increases API load | Use SSE as the default status channel, polling only as fallback |
+| ERR-008 | Model routing produces invalid tool calls | Planner output fails schema validation | Retry once on default model, then escalate to quality fallback or finalize safely |
 
 ---
 
@@ -361,3 +384,4 @@ the report synthesizer, and the session state manager before implementation begi
 - SSE is the intended default for job status updates; prior polling references are legacy planning notes
 - `finalize_report` is the planner's only valid completion signal
 - Gate 2 implementation begins with schema-only tool definitions in `backend/agent/tools.py`
+- OpenRouter is the default model gateway; direct Anthropic use is a premium fallback path only
