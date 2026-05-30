@@ -35,8 +35,14 @@ class PlannerDecision:
 class PlannerSkeleton:
     """Small deterministic planner used before the LLM planner loop exists."""
 
-    def plan_next(self, session: AgentSession) -> PlannerDecision:
+    def plan_next(
+        self,
+        session: AgentSession,
+        *,
+        last_tool_result: dict[str, Any] | None = None,
+    ) -> PlannerDecision:
         """Choose the next tool call from the current session state."""
+        del last_tool_result
         if session.evidence_records:
             return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
         if session.session_summary is not None:

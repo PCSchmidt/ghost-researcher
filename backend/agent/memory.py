@@ -51,6 +51,12 @@ class AgentSession:
         self.running_tokens += tokens
         self.running_cost_usd += cost_usd
 
+    def record_model_usage(self, *, prompt_tokens: int = 0, completion_tokens: int = 0, cost_usd: float = 0.0) -> None:
+        """Track one planner model call without counting it as an executor step."""
+        self.planner_turns += 1
+        self.running_tokens += prompt_tokens + completion_tokens
+        self.running_cost_usd += cost_usd
+
     def register_source(self, url: str) -> bool:
         """Return True only when a source is first seen in this session."""
         if url in self.sources_visited:

@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from backend.agent.memory import AgentSession
+from backend.agent.openrouter import OpenRouterPlanner
 from backend.agent.planner import PlannerDecision, PlannerSkeleton
 from backend.config import Settings
 from backend.jobs.runner import ResearchRunner
+
+
+class PlannerLike(Protocol):
+    def plan_next(
+        self,
+        session: AgentSession,
+        *,
+        last_tool_result: dict[str, Any] | None = None,
+    ) -> PlannerDecision | Any: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,16 +47,27 @@ class ResearchOrchestrator:
         self,
         settings: Settings,
         *,
-        planner: PlannerSkeleton | None = None,
+        planner: PlannerLike | None = None,
         runner: ResearchRunner | None = None,
     ) -> None:
-        self._planner = planner or PlannerSkeleton()
+        self._planner = planner or _default_planner(settings)
         self._runner = runner or ResearchRunner(settings)
+
+    async def _plan_next(
+        self,
+        session: AgentSession,
+        *,
+        last_tool_result: dict[str, Any] | None = None,
+    ) -> PlannerDecision:
+        planned = self._planner.plan_next(session, last_tool_result=last_tool_result)
+        if inspect.isawaitable(planned):
+            planned = await planned
+        return planned
 
     async def run_one_step(self, research_goal: str) -> PlannerRunResult:
         """Plan one tool call, dispatch it if available, and return the session state."""
         session = AgentSession(research_goal=research_goal)
-        decision = self._planner.plan_next(session)
+        decision = await self._plan_next(session)
         if decision.should_stop:
             session.finalize(decision.termination_reason or "no_new_sources")
             return PlannerRunResult(session=session, decision=decision, tool_result=None)
@@ -66,9 +88,10 @@ class ResearchOrchestrator:
         session = AgentSession(research_goal=research_goal)
         decisions: list[PlannerDecision] = []
         tool_results: list[dict[str, Any]] = []
+        last_tool_result: dict[str, Any] | None = None
 
         for _ in range(max_steps):
-            decision = self._planner.plan_next(session)
+            decision = await self._plan_next(session, last_tool_result=last_tool_result)
             decisions.append(decision)
             if decision.should_stop or decision.tool_call is None:
                 session.finalize(decision.termination_reason or "no_new_sources")
@@ -80,6 +103,7 @@ class ResearchOrchestrator:
                 session=session,
             )
             tool_results.append(tool_result)
+            last_tool_result = tool_result
             if decision.tool_call.name == "extract_structured_data":
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
             if decision.tool_call.name == "assess_credibility":
@@ -90,3 +114,9 @@ class ResearchOrchestrator:
                 break
 
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results)
+
+
+def _default_planner(settings: Settings) -> PlannerLike:
+    if settings.openrouter_api_key:
+        return OpenRouterPlanner(settings)
+    return PlannerSkeleton()

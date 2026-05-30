@@ -62,13 +62,13 @@ stage.
 
 - Exit artifacts: OpenRouter adapter, prompt templates, tool-call validation, cost checks
 - Exit token: `MODEL PLANNER CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.10.0 - Synthesizer Skeleton
 
 - Exit artifacts: report schema, synthesizer adapter, claim-source validation
 - Exit token: `SYNTHESIS CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v0.11.0 - Persistence and Job State
 

@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.9.0 -- OpenRouter Planner Adapter
+
+Date: 2026-05-30
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: The adapter needed async planner support in the orchestrator before it could fit cleanly beside the deterministic planner. Keeping transport injectable made validation testable without live model calls.
+CORRECTION FOR FUTURE: Add model adapters as fake-tested ports first, then layer live-provider tests after the contract and budget behavior are stable.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.8.0 -- Search Tool Skeleton
 
 Date: 2026-05-30

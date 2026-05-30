@@ -2,16 +2,16 @@
 
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
-session state, and a minimal FastAPI API. Frontend, persistence, OpenRouter planner
-integration, synthesis, live browser integration tests, and deployment are planned
-but not shipped yet.
+session state, and a minimal FastAPI API. Frontend, persistence, report
+synthesis, live browser integration tests, and deployment are planned but not
+shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.8.0 - Search Tool Skeleton complete.
-Next stage: v0.9.0 - OpenRouter Planner Adapter.
+Current checkpoint: v0.9.0 - OpenRouter Planner Adapter complete.
+Next stage: v0.10.0 - Synthesizer Skeleton.
 
 Implemented now:
 
@@ -24,11 +24,11 @@ Implemented now:
 - Deterministic planner skeleton
 - Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
 - Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
+- OpenRouter planner adapter with tool-call validation, usage accounting, and cost-limit stops
 - Unit tests for config, API routes, planner, runner, and executor modules
 
 Not implemented yet:
 
-- OpenRouter planner adapter
 - Real search provider integration
 - Report synthesis
 - Postgres/Redis persistence
@@ -52,7 +52,7 @@ FastAPI /research
 ResearchOrchestrator
         |
         v
-PlannerSkeleton -> ResearchRunner -> Executor tools
+PlannerSkeleton/OpenRouterPlanner -> ResearchRunner -> Executor tools
         |              |              |
         |              |              +-- web_search
         |              |              +-- navigate_to_url
@@ -77,7 +77,7 @@ The current repo intentionally builds toward that target in small verified slice
 ```text
 ghost-researcher/
 +-- backend/
-|   +-- agent/          # Tool catalog, session state, deterministic planner skeleton
+|   +-- agent/          # Tool catalog, session state, deterministic planner, OpenRouter adapter
 |   +-- api/            # FastAPI routes: /health and /research
 |   +-- executor/       # Browser health, search, navigation, extraction, credibility skeletons
 |   +-- jobs/           # Runner and planner orchestration
@@ -118,10 +118,10 @@ for later integration testing.
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_jobs.test_runner tests.test_jobs.test_research
 ```
 
-Current validated result: 48 tests passing.
+Current validated result: 54 tests passing.
 
 ---
 

@@ -387,3 +387,4 @@ Routing rules:
 - `finalize_report` is the planner's only valid completion signal
 - Gate 2 implementation begins with schema-only tool definitions in `backend/agent/tools.py`
 - OpenRouter is the default model gateway; direct Anthropic use is a premium fallback path only
+- The OpenRouter planner adapter uses fakeable transport in tests and validates every tool call against `backend/agent/tools.py` before execution

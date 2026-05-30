@@ -14,6 +14,38 @@ from backend.jobs.runner import ResearchRunner
 
 
 class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
+    async def test_orchestrator_accepts_async_planner(self) -> None:
+        class AsyncPlanner:
+            async def plan_next(
+                self,
+                session,
+                *,
+                last_tool_result=None,
+            ):
+                from backend.agent.planner import PlannerDecision, ToolCall
+
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="web_search",
+                        arguments={"query": session.research_goal, "num_results": 1},
+                    )
+                )
+
+        async def fake_search(settings: Settings, **kwargs: object) -> SearchResults:
+            return SearchResults(query=str(kwargs["query"]), results=[], new_result_count=0)
+
+        settings = Settings.from_env({})
+        orchestrator = ResearchOrchestrator(
+            settings,
+            planner=AsyncPlanner(),
+            runner=ResearchRunner(settings, search=fake_search),
+        )
+
+        result = await orchestrator.run_one_step("Find recent FAA BVLOS guidance")
+
+        self.assertEqual("web_search", result.decision.tool_call.name)
+        self.assertEqual("Find recent FAA BVLOS guidance", result.tool_result["query"])
+
     async def test_orchestrator_dispatches_planned_navigation(self) -> None:
         async def fake_navigate(settings: Settings, **kwargs: object) -> NavigationResult:
             return NavigationResult(

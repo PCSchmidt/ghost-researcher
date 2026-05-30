@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.9.0 - OpenRouter Planner Adapter
+Current stage: v0.10.0 - Synthesizer Skeleton
 
 Recently completed:
 
@@ -38,6 +38,7 @@ Recently completed:
 - v0.6.0 extraction and credibility executor skeletons
 - v0.7.0 multi-step planner skeleton
 - v0.8.0 search tool skeleton
+- v0.9.0 OpenRouter planner adapter
 
 Foundation items resolved on 2026-05-29:
 
@@ -236,7 +237,7 @@ Exit criteria:
 - Token, step, and dollar budgets are enforced
 - Model slug, token usage, and reported cost are logged for each planner call
 
-Status: Planned.
+Status: Complete.
 
 ---
 
@@ -256,7 +257,7 @@ Exit criteria:
 - Unsupported claims fail validation
 - `finalize_report` triggers synthesis path
 
-Status: Planned.
+Status: Next.
 
 ---
 

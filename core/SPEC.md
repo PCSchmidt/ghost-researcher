@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.8.0
-**Gate Name:** Search Tool Skeleton
+**Version:** v0.9.0
+**Gate Name:** OpenRouter Planner Adapter
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Add the missing `web_search` executor path so research goals without URLs can
-start with candidate source discovery, then feed the first novel search result
-into the deterministic navigation, extraction, and credibility sequence.
+Add an OpenRouter-backed planner adapter that preserves the locked tool-call
+contract, validates model output before execution, records usage and model cost,
+and falls back to the deterministic planner when no OpenRouter key is configured.
 
 ---
 
@@ -56,15 +56,21 @@ into the deterministic navigation, extraction, and credibility sequence.
 - [x] Extend [backend/jobs/runner.py](../backend/jobs/runner.py) to dispatch `web_search`
 - [x] Extend [backend/agent/planner.py](../backend/agent/planner.py) so URL-free goals search before navigation
 - [x] Extend [backend/api/research.py](../backend/api/research.py) to expose source candidates in session state
+- [x] Extend [backend/config.py](../backend/config.py) with OpenRouter model and cost settings
+- [x] Add [backend/agent/prompts.py](../backend/agent/prompts.py) planner prompt templates
+- [x] Add [backend/agent/openrouter.py](../backend/agent/openrouter.py) OpenRouter planner adapter
+- [x] Extend [backend/agent/memory.py](../backend/agent/memory.py) with model usage accounting
+- [x] Extend [backend/jobs/research.py](../backend/jobs/research.py) to support async planners
+- [x] Add [tests/test_agent/test_openrouter.py](../tests/test_agent/test_openrouter.py) adapter tests
 
 ---
 
 ## EXIT CRITERIA
 
-1. URL-free research goal produces `web_search`
-2. Search results feed the next navigation step
-3. Tests cover empty, duplicate, and new-result cases
-4. Orchestrator executes `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
+1. Adapter emits validated tool calls only
+2. Invalid/free-text planner output is rejected safely
+3. Token, step, and dollar budgets are enforced before execution
+4. Model usage metadata is recorded in session state
 5. Current backend regression suite passes
 
 ---
@@ -89,26 +95,31 @@ into the deterministic navigation, extraction, and credibility sequence.
 - `web_search` executor skeleton with deterministic candidate generation
 - Source candidate queue in `AgentSession`
 - Runner dispatch and planner transitions for search-first URL-free goals
+- OpenRouter planner adapter with injectable transport for tests
+- Planner prompt templates built from session state, last tool result, and locked tool catalog
+- Tool-call argument validation against `backend/agent/tools.py`
+- Model usage accounting and cost-limit stop decisions
+- Async planner support in `ResearchOrchestrator`
 
 ---
 
 ## WHAT DOES NOT SHIP IN THIS GATE
 
-- No OpenRouter planner adapter yet
 - No frontend UI yet
 - No report synthesis code yet
 - No real browser integration test yet; executor tests use fakes
 - No real search provider yet; `web_search` is a deterministic skeleton
+- No live OpenRouter integration test yet; adapter tests use fake transport
 - No persistence layer yet
 
 ---
 
 ## NEXT GATE
 
-### v0.9.0 - OpenRouter Planner Adapter
+### v0.10.0 - Synthesizer Skeleton
 
-Replace deterministic planning with an OpenRouter-backed adapter while preserving
-the same tool-call contract and budget guardrails.
+Produce a structured report from extracted evidence without allowing unsupported
+claims.
 
 ---
 
