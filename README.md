@@ -2,16 +2,16 @@
 
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
-session state, and a minimal FastAPI API. Frontend, persistence, report
-synthesis, live browser integration tests, and deployment are planned but not
+session state, synthesis skeleton, and a minimal FastAPI API. Frontend,
+persistence, live browser integration tests, and deployment are planned but not
 shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.9.0 - OpenRouter Planner Adapter complete.
-Next stage: v0.10.0 - Synthesizer Skeleton.
+Current checkpoint: v0.10.0 - Synthesizer Skeleton complete.
+Next stage: v0.11.0 - Persistence and Job State.
 
 Implemented now:
 
@@ -25,12 +25,12 @@ Implemented now:
 - Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
 - Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
 - OpenRouter planner adapter with tool-call validation, usage accounting, and cost-limit stops
+- Report synthesis skeleton with source-trace validation
 - Unit tests for config, API routes, planner, runner, and executor modules
 
 Not implemented yet:
 
 - Real search provider integration
-- Report synthesis
 - Postgres/Redis persistence
 - Frontend UI
 - Docker/Railway/Vercel deployment
@@ -60,10 +60,10 @@ PlannerSkeleton/OpenRouterPlanner -> ResearchRunner -> Executor tools
         |              |              +-- assess_credibility
         |              |
         |              v
-        |        AgentSession state
+        |        AgentSession state -> ReportSynthesizer
         |
         v
-Response with decisions[], tool_results[], session, synthesis=null
+Response with decisions[], tool_results[], session, synthesis
 ```
 
 The production target remains an OpenRouter-backed planner, CloakBrowser executor, credibility
@@ -81,6 +81,7 @@ ghost-researcher/
 |   +-- api/            # FastAPI routes: /health and /research
 |   +-- executor/       # Browser health, search, navigation, extraction, credibility skeletons
 |   +-- jobs/           # Runner and planner orchestration
+|   +-- synthesizer/    # Report schema, synthesis skeleton, source validation
 |   +-- config.py       # Environment-backed settings
 |   +-- main.py         # FastAPI app factory
 +-- core/               # Blueprint/Syntaris contract, spec, roadmap, decisions, memory
@@ -118,10 +119,10 @@ for later integration testing.
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_jobs.test_runner tests.test_jobs.test_research
 ```
 
-Current validated result: 54 tests passing.
+Current validated result: 63 tests passing.
 
 ---
 
@@ -145,8 +146,8 @@ curl -X POST http://localhost:8000/research \
   -d '{"research_goal":"Review https://example.com/report"}'
 ```
 
-The response currently returns planner decisions, tool results, session state, and
-`synthesis: null`. Report synthesis is planned for a later stage.
+The response currently returns planner decisions, tool results, session state,
+and `synthesis` when sufficient evidence exists.
 
 ---
 

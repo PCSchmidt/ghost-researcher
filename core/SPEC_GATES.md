@@ -66,15 +66,15 @@ stage.
 
 ### v0.10.0 - Synthesizer Skeleton
 
-- Exit artifacts: report schema, synthesizer adapter, claim-source validation
+- Exit artifacts: report schema, synthesizer adapter, claim-source validation, API synthesis serialization
 - Exit token: `SYNTHESIS CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.11.0 - Persistence and Job State
 
 - Exit artifacts: Postgres schema, Redis queue, persisted job/report/source logs
 - Exit token: `PERSISTENCE CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v0.12.0 - Live Status Stream
 

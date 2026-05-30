@@ -11,6 +11,20 @@ from backend.executor.navigate import NavigationResult
 from backend.executor.search import SearchResultItem, SearchResults
 from backend.jobs.research import ResearchOrchestrator
 from backend.jobs.runner import ResearchRunner
+from backend.synthesizer.schema import ResearchReport, ReportClaim
+
+
+class FakeSynthesizer:
+    async def synthesize(self, session) -> ResearchReport:
+        return ResearchReport(
+            title="Synthesized report",
+            summary="Latest FAA BVLOS guidance",
+            key_findings=[
+                ReportClaim(text="Latest FAA BVLOS guidance", source_urls=["https://example.com/report"])
+            ],
+            sources_used=["https://example.com/report"],
+            confidence=0.81,
+        )
 
 
 class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
@@ -124,6 +138,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         orchestrator = ResearchOrchestrator(
             settings,
             runner=ResearchRunner(settings, navigate=fake_navigate, extract=fake_extract, assess=fake_assess),
+            synthesizer=FakeSynthesizer(),
         )
 
         result = await orchestrator.run_sequence("Review https://example.com/report")
@@ -137,6 +152,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
         self.assertEqual("Latest FAA guidance from 2026", result.session.session_summary)
         self.assertEqual(0.81, result.tool_results[-1]["score"])
+        self.assertEqual("Synthesized report", result.synthesis.title)
 
     async def test_orchestrator_runs_search_first_for_url_free_goal(self) -> None:
         async def fake_search(settings: Settings, **kwargs: object) -> SearchResults:
@@ -198,6 +214,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
                 extract=fake_extract,
                 assess=fake_assess,
             ),
+            synthesizer=FakeSynthesizer(),
         )
 
         result = await orchestrator.run_sequence("Find recent FAA BVLOS guidance")
@@ -210,6 +227,13 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(["https://faa.gov/bvlos-guidance"], result.session.source_candidates)
         self.assertIn("https://faa.gov/bvlos-guidance", result.session.sources_visited)
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
+
+    async def test_orchestrator_leaves_synthesis_empty_when_not_finalized_with_coverage(self) -> None:
+        orchestrator = ResearchOrchestrator(Settings.from_env({}))
+
+        result = await orchestrator.run_sequence("Find FAA BVLOS guidance", max_steps=1)
+
+        self.assertIsNone(result.synthesis)
 
 
 if __name__ == "__main__":

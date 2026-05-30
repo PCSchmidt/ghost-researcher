@@ -388,3 +388,4 @@ Routing rules:
 - Gate 2 implementation begins with schema-only tool definitions in `backend/agent/tools.py`
 - OpenRouter is the default model gateway; direct Anthropic use is a premium fallback path only
 - The OpenRouter planner adapter uses fakeable transport in tests and validates every tool call against `backend/agent/tools.py` before execution
+- The synthesizer must reject any report claim or `sources_used` URL that is absent from `evidence_records`

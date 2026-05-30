@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.9.0
-**Gate Name:** OpenRouter Planner Adapter
+**Version:** v0.10.0
+**Gate Name:** Synthesizer Skeleton
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Add an OpenRouter-backed planner adapter that preserves the locked tool-call
-contract, validates model output before execution, records usage and model cost,
-and falls back to the deterministic planner when no OpenRouter key is configured.
+Produce a structured report from extracted evidence without allowing unsupported
+claims. The synthesizer uses deterministic fallback when no model transport is
+configured and validates every cited claim against session evidence.
 
 ---
 
@@ -62,15 +62,20 @@ and falls back to the deterministic planner when no OpenRouter key is configured
 - [x] Extend [backend/agent/memory.py](../backend/agent/memory.py) with model usage accounting
 - [x] Extend [backend/jobs/research.py](../backend/jobs/research.py) to support async planners
 - [x] Add [tests/test_agent/test_openrouter.py](../tests/test_agent/test_openrouter.py) adapter tests
+- [x] Add [backend/synthesizer/schema.py](../backend/synthesizer/schema.py) report schema and source validation
+- [x] Add [backend/synthesizer/report.py](../backend/synthesizer/report.py) synthesizer skeleton
+- [x] Extend [backend/jobs/research.py](../backend/jobs/research.py) to synthesize after sufficient coverage
+- [x] Extend [backend/api/research.py](../backend/api/research.py) to serialize synthesized reports
+- [x] Add [tests/test_synthesizer/test_schema.py](../tests/test_synthesizer/test_schema.py) and [tests/test_synthesizer/test_report.py](../tests/test_synthesizer/test_report.py)
 
 ---
 
 ## EXIT CRITERIA
 
-1. Adapter emits validated tool calls only
-2. Invalid/free-text planner output is rejected safely
-3. Token, step, and dollar budgets are enforced before execution
-4. Model usage metadata is recorded in session state
+1. Report contains cited claims only
+2. Unsupported claims fail validation
+3. `synthesis` is returned from `POST /research` when sufficient evidence exists
+4. Deterministic fallback works without live OpenRouter credentials
 5. Current backend regression suite passes
 
 ---
@@ -100,13 +105,17 @@ and falls back to the deterministic planner when no OpenRouter key is configured
 - Tool-call argument validation against `backend/agent/tools.py`
 - Model usage accounting and cost-limit stop decisions
 - Async planner support in `ResearchOrchestrator`
+- Research report schema with claim-level `source_urls`
+- Source-trace validation for every report source and finding
+- Report synthesizer skeleton with deterministic fallback and fakeable model transport
+- API synthesis serialization after sufficient coverage
 
 ---
 
 ## WHAT DOES NOT SHIP IN THIS GATE
 
 - No frontend UI yet
-- No report synthesis code yet
+- No rich report formatting yet; v0.10 ships the structured skeleton only
 - No real browser integration test yet; executor tests use fakes
 - No real search provider yet; `web_search` is a deterministic skeleton
 - No live OpenRouter integration test yet; adapter tests use fake transport
@@ -116,10 +125,9 @@ and falls back to the deterministic planner when no OpenRouter key is configured
 
 ## NEXT GATE
 
-### v0.10.0 - Synthesizer Skeleton
+### v0.11.0 - Persistence and Job State
 
-Produce a structured report from extracted evidence without allowing unsupported
-claims.
+Persist research jobs, step events, sources, and synthesized reports.
 
 ---
 

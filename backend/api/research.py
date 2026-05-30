@@ -11,6 +11,7 @@ from backend.agent.memory import AgentSession
 from backend.agent.planner import PlannerDecision, ToolCall
 from backend.config import Settings
 from backend.jobs.research import PlannerRunResult, PlannerSequenceResult, ResearchOrchestrator
+from backend.synthesizer.schema import ResearchReport
 
 
 class ResearchOrchestratorLike(Protocol):
@@ -58,6 +59,12 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
     }
 
 
+def _serialize_synthesis(report: ResearchReport | None) -> dict[str, Any] | None:
+    if report is None:
+        return None
+    return report.to_dict()
+
+
 def _serialize_run_result(result: PlannerRunResult) -> dict[str, Any]:
     return {
         "status": "completed" if result.session.steps_taken > 0 else "stopped",
@@ -75,7 +82,7 @@ def _serialize_sequence_result(result: PlannerSequenceResult) -> dict[str, Any]:
         "session": _serialize_session(result.session),
         "decisions": [_serialize_decision(decision) for decision in result.decisions],
         "tool_results": result.tool_results,
-        "synthesis": None,
+        "synthesis": _serialize_synthesis(result.synthesis),
     }
 
 

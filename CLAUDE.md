@@ -371,12 +371,13 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v0.9.0 - OpenRouter Planner Adapter complete
-- Next stage: v0.10.0 - Synthesizer Skeleton
-- Current regression baseline: 54 tests passing
+- Current checkpoint: v0.10.0 - Synthesizer Skeleton complete
+- Next stage: v0.11.0 - Persistence and Job State
+- Current regression baseline: 63 tests passing
 - `web_search` is a deterministic skeleton, not a real provider integration yet
 - URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
 - OpenRouter planner adapter is fake-tested; no live OpenRouter integration test yet
+- Report synthesis is source-validated and fake-tested; no live synthesizer integration test yet
 
 ## Resume Checklist
 
@@ -387,7 +388,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] `.env.example` committed, `.env` in `.gitignore`
 - [x] v0.8.0 search skeleton complete and documented
 - [x] v0.9.0 OpenRouter planner adapter complete and documented
-- [ ] v0.10.0 synthesizer skeleton not started
+- [x] v0.10.0 synthesizer skeleton complete and documented
+- [ ] v0.11.0 persistence and job state not started
 
 ## Session Start Command
 

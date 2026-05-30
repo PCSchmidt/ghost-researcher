@@ -11,6 +11,8 @@ from backend.agent.openrouter import OpenRouterPlanner
 from backend.agent.planner import PlannerDecision, PlannerSkeleton
 from backend.config import Settings
 from backend.jobs.runner import ResearchRunner
+from backend.synthesizer.report import ReportSynthesizer, SynthesisError
+from backend.synthesizer.schema import ResearchReport
 
 
 class PlannerLike(Protocol):
@@ -38,6 +40,7 @@ class PlannerSequenceResult:
     session: AgentSession
     decisions: list[PlannerDecision]
     tool_results: list[dict[str, Any]]
+    synthesis: ResearchReport | None = None
 
 
 class ResearchOrchestrator:
@@ -49,9 +52,11 @@ class ResearchOrchestrator:
         *,
         planner: PlannerLike | None = None,
         runner: ResearchRunner | None = None,
+        synthesizer: Any | None = None,
     ) -> None:
         self._planner = planner or _default_planner(settings)
         self._runner = runner or ResearchRunner(settings)
+        self._synthesizer = synthesizer or ReportSynthesizer(settings)
 
     async def _plan_next(
         self,
@@ -113,7 +118,16 @@ class ResearchOrchestrator:
                 session.finalize("no_new_sources")
                 break
 
-        return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results)
+        synthesis = await self._synthesize_if_ready(session)
+        return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results, synthesis=synthesis)
+
+    async def _synthesize_if_ready(self, session: AgentSession) -> ResearchReport | None:
+        if session.termination_reason != "sufficient_coverage" or not session.evidence_records:
+            return None
+        try:
+            return await self._synthesizer.synthesize(session)
+        except SynthesisError:
+            return None
 
 
 def _default_planner(settings: Settings) -> PlannerLike:

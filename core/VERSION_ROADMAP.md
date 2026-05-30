@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.10.0 - Synthesizer Skeleton
+Current stage: v0.11.0 - Persistence and Job State
 
 Recently completed:
 
@@ -39,6 +39,7 @@ Recently completed:
 - v0.7.0 multi-step planner skeleton
 - v0.8.0 search tool skeleton
 - v0.9.0 OpenRouter planner adapter
+- v0.10.0 synthesizer skeleton
 
 Foundation items resolved on 2026-05-29:
 
@@ -250,14 +251,15 @@ Ships:
 - Report schema
 - Synthesizer adapter
 - Claim-to-source validation
+- API synthesis serialization
 
 Exit criteria:
 
 - Report contains cited claims only
 - Unsupported claims fail validation
-- `finalize_report` triggers synthesis path
+- Sufficient coverage triggers synthesis path
 
-Status: Next.
+Status: Complete.
 
 ---
 
@@ -278,7 +280,7 @@ Exit criteria:
 - Step history can be retrieved by job ID
 - Report and source records are queryable
 
-Status: Planned.
+Status: Next.
 
 ---
 

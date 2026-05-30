@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.10.0 -- Synthesizer Skeleton
+
+Date: 2026-05-30
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: Synthesis fit cleanly once evidence records were already created by credibility assessment. The important boundary was not report prose, but rejecting any claim source absent from session evidence.
+CORRECTION FOR FUTURE: Build report schemas around source traceability before adding model polish or formatting features.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.9.0 -- OpenRouter Planner Adapter
 
 Date: 2026-05-30
