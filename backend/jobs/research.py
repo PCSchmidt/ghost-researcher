@@ -61,7 +61,7 @@ class ResearchOrchestrator:
         )
         return PlannerRunResult(session=session, decision=decision, tool_result=tool_result)
 
-    async def run_sequence(self, research_goal: str, *, max_steps: int = 3) -> PlannerSequenceResult:
+    async def run_sequence(self, research_goal: str, *, max_steps: int = 4) -> PlannerSequenceResult:
         """Run a deterministic tool sequence without synthesis or persistence."""
         session = AgentSession(research_goal=research_goal)
         decisions: list[PlannerDecision] = []
@@ -84,6 +84,9 @@ class ResearchOrchestrator:
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
             if decision.tool_call.name == "assess_credibility":
                 session.finalize("sufficient_coverage")
+                break
+            if decision.tool_call.name == "web_search" and tool_result.get("new_result_count", 0) == 0:
+                session.finalize("no_new_sources")
                 break
 
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results)

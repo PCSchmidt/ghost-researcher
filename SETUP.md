@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.7.0 - Multi-Step Planner Skeleton complete.
-Next stage: v0.8.0 - Search Tool Skeleton.
+Current checkpoint: v0.8.0 - Search Tool Skeleton complete.
+Next stage: v0.9.0 - OpenRouter Planner Adapter.
 
 Gate 1 is confirmed:
 
@@ -20,8 +20,9 @@ Gate 1 is confirmed:
 - [evals/benchmark_prompts.json](evals/benchmark_prompts.json) contains 10 benchmark prompts.
 - [backend/agent/tools.py](backend/agent/tools.py) contains the schema-locked tool catalog.
 
-The current backend is fake-tested. No live OpenRouter, Redis, Postgres, or
-CloakBrowser service is required to run the regression suite.
+The current backend is fake-tested. No live OpenRouter, Redis, Postgres,
+CloakBrowser service, or real search provider is required to run the regression
+suite.
 
 ---
 
@@ -82,10 +83,10 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 Run the full backend regression suite:
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_jobs.test_runner tests.test_jobs.test_research
 ```
 
-Expected current result: 41 tests passing.
+Expected current result: 48 tests passing.
 
 ---
 
@@ -139,9 +140,9 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v0.8.0: add the `web_search` executor path, wire it into
-`ResearchRunner`, update the deterministic planner so URL-free goals search
-first, and feed search results into the existing navigation flow.
+The next build slice is v0.9.0: replace the deterministic planner skeleton with
+an OpenRouter-backed adapter while preserving the locked tool-call contract,
+schema validation, and per-job cost guardrails.
 
 ---
 
@@ -156,8 +157,8 @@ first, and feed search results into the existing navigation flow.
 | v0.5.0 | `POST /research` endpoint skeleton | Complete |
 | v0.6.0 | Extraction and credibility executor skeletons | Complete |
 | v0.7.0 | Multi-step planner sequence | Complete |
-| v0.8.0 | Search tool skeleton | Next |
-| v0.9.0 | OpenRouter planner adapter | Planned |
+| v0.8.0 | Search tool skeleton | Complete |
+| v0.9.0 | OpenRouter planner adapter | Next |
 | v0.10.0 | Synthesizer skeleton | Planned |
 | v0.11.0 | Persistence and job state | Planned |
 | v0.12.0 | SSE live status stream | Planned |

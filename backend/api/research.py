@@ -44,6 +44,7 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
         "running_cost_usd": session.running_cost_usd,
         "sources_visited": sorted(session.sources_visited),
         "search_queries": session.search_queries,
+        "source_candidates": session.source_candidates,
         "detection_events": [
             {
                 "url": event.url,

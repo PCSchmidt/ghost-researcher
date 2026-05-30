@@ -130,6 +130,7 @@ ghost-researcher/
 │   ├── test_executor/
 │   │   ├── test_navigate.py
 │   │   ├── test_extract.py
+│   │   ├── test_search.py
 │   │   └── test_credibility.py
 │   └── test_synthesizer/
 │       ├── test_report.py
@@ -368,16 +369,23 @@ LOG_LEVEL=INFO
 NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 ```
 
-## First Session Checklist
+## Current Implementation Checkpoint
 
-- [ ] Syntaris installed (`bash C:\Users\pchri\Syntaris\install.sh`)
-- [ ] CloakBrowser cloned (`git clone https://github.com/PCSchmidt/CloakBrowser.git`)
-- [ ] `/start` run, bring-your-own recipe selected
+- Current checkpoint: v0.8.0 - Search Tool Skeleton complete
+- Next stage: v0.9.0 - OpenRouter Planner Adapter
+- Current regression baseline: 48 tests passing
+- `web_search` is a deterministic skeleton, not a real provider integration yet
+- URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
+
+## Resume Checklist
+
 - [x] `core/CONTRACT.md` filled and CONFIRMED
-- [x] `core/AGENT_SPEC.md` complete before Gate 1 closes — `/critical-thinker` outcome logged in DECISIONS.md
-- [x] `evals/benchmark_prompts.json` created with 10 prompts (Gate 1 entry condition)
-- [x] `backend/agent/tools.py` complete before executor work (Gate 2)
+- [x] `core/AGENT_SPEC.md` complete before Gate 1 closes; `/critical-thinker` outcome logged in DECISIONS.md
+- [x] `evals/benchmark_prompts.json` created with 10 prompts
+- [x] `backend/agent/tools.py` complete before executor work
 - [x] `.env.example` committed, `.env` in `.gitignore`
+- [x] v0.8.0 search skeleton complete and documented
+- [ ] v0.9.0 OpenRouter planner adapter not started
 
 ## Session Start Command
 

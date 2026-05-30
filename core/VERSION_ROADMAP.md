@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.8.0 - Search Tool Skeleton
+Current stage: v0.9.0 - OpenRouter Planner Adapter
 
 Recently completed:
 
@@ -37,6 +37,7 @@ Recently completed:
 - v0.5.0 `POST /research` API skeleton
 - v0.6.0 extraction and credibility executor skeletons
 - v0.7.0 multi-step planner skeleton
+- v0.8.0 search tool skeleton
 
 Foundation items resolved on 2026-05-29:
 
@@ -123,7 +124,7 @@ Exit criteria:
 
 - Planner emits a structured `navigate_to_url` call from a URL-bearing goal
 - Orchestrator dispatches through `ResearchRunner`
-- Safe stop is returned when no URL exists
+- URL-free goals terminate without executor dispatch at this stage; this historical behavior is superseded by v0.8 search
 
 Status: Complete.
 
@@ -205,6 +206,7 @@ Ships:
 - `backend/executor/search.py`
 - Runner dispatch for `web_search`
 - Planner fallback from no URL to search query
+- Source candidate queue in `AgentSession`
 
 Exit criteria:
 
@@ -212,7 +214,7 @@ Exit criteria:
 - Search results feed the next navigation step
 - Tests cover empty, duplicate, and new-result cases
 
-Status: Planned.
+Status: Complete.
 
 ---
 

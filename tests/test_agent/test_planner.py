@@ -32,18 +32,42 @@ class PlannerSkeletonTests(unittest.TestCase):
         self.assertIsNotNone(decision.tool_call)
         self.assertEqual({"url": "https://example.com/new"}, decision.tool_call.arguments)
 
-    def test_planner_stops_when_no_url_exists(self) -> None:
+    def test_planner_searches_when_no_url_exists(self) -> None:
         planner = PlannerSkeleton()
         session = AgentSession(research_goal="Find recent FAA BVLOS guidance")
+
+        decision = planner.plan_next(session)
+
+        self.assertFalse(decision.should_stop)
+        self.assertEqual("web_search", decision.tool_call.name)
+        self.assertEqual("Find recent FAA BVLOS guidance", decision.tool_call.arguments["query"])
+
+    def test_planner_stops_when_search_query_repeats_without_candidates(self) -> None:
+        planner = PlannerSkeleton()
+        session = AgentSession(research_goal="Find recent FAA BVLOS guidance")
+        session.record_search_query("Find recent FAA BVLOS guidance")
 
         decision = planner.plan_next(session)
 
         self.assertTrue(decision.should_stop)
         self.assertEqual("no_new_sources", decision.termination_reason)
 
+    def test_planner_navigates_search_candidate_after_search(self) -> None:
+        planner = PlannerSkeleton()
+        session = AgentSession(research_goal="Find recent FAA BVLOS guidance")
+        session.add_source_candidates(["https://search.usa.gov/search?query=faa"])
+        session.increment_step()
+
+        decision = planner.plan_next(session)
+
+        self.assertFalse(decision.should_stop)
+        self.assertEqual("navigate_to_url", decision.tool_call.name)
+        self.assertEqual("https://search.usa.gov/search?query=faa", decision.tool_call.arguments["url"])
+
     def test_planner_emits_extraction_after_navigation(self) -> None:
         planner = PlannerSkeleton()
         session = AgentSession(research_goal="Review https://example.com/report")
+        session.register_source("https://example.com/report")
         session.increment_step()
 
         decision = planner.plan_next(session)
@@ -70,9 +94,12 @@ class PlannerSkeletonTests(unittest.TestCase):
     def test_planner_stops_after_credibility_step(self) -> None:
         planner = PlannerSkeleton()
         session = AgentSession(research_goal="Review https://example.com/report")
-        session.increment_step()
-        session.increment_step()
-        session.increment_step()
+        session.add_evidence(
+            url="https://example.com/report",
+            title="Example Report",
+            claims=["Example claim"],
+            credibility_score=0.8,
+        )
 
         decision = planner.plan_next(session)
 

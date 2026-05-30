@@ -55,6 +55,7 @@ class ResearchRouteTests(unittest.TestCase):
         self.assertEqual("navigate_to_url", payload["decisions"][0]["tool_call"]["name"])
         self.assertEqual("https://example.com/report", payload["tool_results"][0]["final_url"])
         self.assertEqual(["https://example.com/report"], payload["session"]["sources_visited"])
+        self.assertEqual([], payload["session"]["source_candidates"])
         self.assertIsNone(payload["synthesis"])
         self.assertEqual("Review https://example.com/report", orchestrator.received_goal)
 

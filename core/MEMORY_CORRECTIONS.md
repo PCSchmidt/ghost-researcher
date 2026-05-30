@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.8.0 -- Search Tool Skeleton
+
+Date: 2026-05-30
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: Adding search was not just a runner branch. The planner needed source candidate state so URL-free goals could search first, then navigate a novel result without reverting to the old no-URL safe stop.
+CORRECTION FOR FUTURE: When adding executor discovery tools, update session state first so planner transitions can be expressed from state instead of step count alone.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: Gate 1 -- Contract and Agent Spec
 
 Date: 2026-05-29

@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.7.0  
-**Gate Name:** Multi-Step Planner Skeleton  
+**Version:** v0.8.0
+**Gate Name:** Search Tool Skeleton
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Extend deterministic orchestration from one action to a fixed sequence:
-`navigate_to_url -> extract_structured_data -> assess_credibility`, still without
-synthesis or persistence.
+Add the missing `web_search` executor path so research goals without URLs can
+start with candidate source discovery, then feed the first novel search result
+into the deterministic navigation, extraction, and credibility sequence.
 
 ---
 
@@ -51,15 +51,20 @@ synthesis or persistence.
 - [x] Extend [backend/agent/planner.py](../backend/agent/planner.py) to select navigation, extraction, and credibility steps
 - [x] Extend [backend/jobs/research.py](../backend/jobs/research.py) to return multi-step sequence results
 - [x] Update [backend/api/research.py](../backend/api/research.py) to return `decisions[]` and `tool_results[]`
+- [x] Add [backend/executor/search.py](../backend/executor/search.py) deterministic `web_search` skeleton
+- [x] Extend [backend/agent/memory.py](../backend/agent/memory.py) with queued source candidates
+- [x] Extend [backend/jobs/runner.py](../backend/jobs/runner.py) to dispatch `web_search`
+- [x] Extend [backend/agent/planner.py](../backend/agent/planner.py) so URL-free goals search before navigation
+- [x] Extend [backend/api/research.py](../backend/api/research.py) to expose source candidates in session state
 
 ---
 
 ## EXIT CRITERIA
 
-1. Planner selects the correct next tool based on session progress
-2. Orchestrator executes navigation, extraction, and credibility with fake executors
-3. Session records source, extraction summary, credibility result, and final status
-4. API returns `decisions[]`, `tool_results[]`, session state, and `synthesis: null`
+1. URL-free research goal produces `web_search`
+2. Search results feed the next navigation step
+3. Tests cover empty, duplicate, and new-result cases
+4. Orchestrator executes `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
 5. Current backend regression suite passes
 
 ---
@@ -81,6 +86,9 @@ synthesis or persistence.
 - Expanded runner dispatch surface
 - Multi-step deterministic planner sequence
 - Multi-step API response shape
+- `web_search` executor skeleton with deterministic candidate generation
+- Source candidate queue in `AgentSession`
+- Runner dispatch and planner transitions for search-first URL-free goals
 
 ---
 
@@ -90,18 +98,19 @@ synthesis or persistence.
 - No frontend UI yet
 - No report synthesis code yet
 - No real browser integration test yet; executor tests use fakes
+- No real search provider yet; `web_search` is a deterministic skeleton
 - No persistence layer yet
 
 ---
 
 ## NEXT GATE
 
-### v0.8.0 - Search Tool Skeleton
+### v0.9.0 - OpenRouter Planner Adapter
 
-Add the missing `web_search` executor path so research goals without URLs can
-start, then feed search results into the deterministic navigation path.
+Replace deterministic planning with an OpenRouter-backed adapter while preserving
+the same tool-call contract and budget guardrails.
 
 ---
 
-**Last updated:** 2026-05-29
+**Last updated:** 2026-05-30
 **Updated by:** GitHub Copilot

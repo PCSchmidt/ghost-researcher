@@ -9,6 +9,7 @@ from backend.config import Settings
 from backend.executor.credibility import CredibilityResult
 from backend.executor.extract import ExtractionResult
 from backend.executor.navigate import NavigationResult
+from backend.executor.search import SearchResultItem, SearchResults
 from backend.jobs.runner import ResearchRunner
 
 
@@ -68,14 +69,42 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(session.detection_events))
         self.assertEqual("bot_challenge", session.detection_events[0].reason)
 
+    async def test_runner_executes_search_and_records_candidates(self) -> None:
+        async def fake_search(settings: Settings, **kwargs: object) -> SearchResults:
+            return SearchResults(
+                query=str(kwargs["query"]),
+                results=[
+                    SearchResultItem(
+                        title="FAA guidance",
+                        url="https://faa.gov/guidance",
+                        snippet="FAA BVLOS guidance",
+                        source_type="gov",
+                    )
+                ],
+                new_result_count=1,
+            )
+
+        runner = ResearchRunner(Settings.from_env({}), search=fake_search)
+        session = AgentSession(research_goal="Find FAA guidance")
+
+        payload = await runner.execute_tool_call(
+            name="web_search",
+            arguments={"query": "Find FAA guidance"},
+            session=session,
+        )
+
+        self.assertEqual(1, payload["new_result_count"])
+        self.assertEqual(["Find FAA guidance"], session.search_queries)
+        self.assertEqual(["https://faa.gov/guidance"], session.source_candidates)
+
     async def test_runner_rejects_unsupported_tools(self) -> None:
         runner = ResearchRunner(Settings.from_env({}))
         session = AgentSession(research_goal="Unsupported tool test")
 
         with self.assertRaisesRegex(NotImplementedError, "unsupported_tool"):
             await runner.execute_tool_call(
-                name="web_search",
-                arguments={"query": "ghost researcher"},
+                name="take_screenshot",
+                arguments={},
                 session=session,
             )
 
@@ -125,6 +154,7 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(0.82, payload["score"])
         self.assertEqual(1, session.steps_taken)
+        self.assertEqual(1, len(session.evidence_records))
 
 
 if __name__ == "__main__":

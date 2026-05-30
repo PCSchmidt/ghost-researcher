@@ -333,6 +333,7 @@ Routing rules:
   "running_cost_usd": "number",
   "sources_visited": ["string"],
   "search_queries": ["string"],
+  "source_candidates": ["string"],
   "evidence_records": [
     {
       "url": "string",
@@ -358,6 +359,7 @@ Routing rules:
 ### Session rules
 
 - `sources_visited` is the primary deduplication set
+- `source_candidates` queues novel URLs discovered by `web_search` before navigation
 - Every synthesized claim must map to at least one `evidence_record`
 - `detection_events` must influence future source selection
 - `session_summary` is refreshed after every 10 tool calls or when context pressure rises

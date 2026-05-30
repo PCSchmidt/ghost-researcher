@@ -54,15 +54,15 @@ stage.
 
 ### v0.8.0 - Search Tool Skeleton
 
-- Exit artifacts: `web_search` executor path, runner dispatch, URL-free goal fallback
+- Exit artifacts: `web_search` executor path, runner dispatch, URL-free goal fallback, source candidate queue
 - Exit token: `SEARCH CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.9.0 - OpenRouter Planner Adapter
 
 - Exit artifacts: OpenRouter adapter, prompt templates, tool-call validation, cost checks
 - Exit token: `MODEL PLANNER CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v0.10.0 - Synthesizer Skeleton
 

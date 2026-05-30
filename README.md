@@ -10,8 +10,8 @@ but not shipped yet.
 
 ## Current Status
 
-Current checkpoint: v0.7.0 - Multi-Step Planner Skeleton complete.  
-Next stage: v0.8.0 - Search Tool Skeleton.
+Current checkpoint: v0.8.0 - Search Tool Skeleton complete.
+Next stage: v0.9.0 - OpenRouter Planner Adapter.
 
 Implemented now:
 
@@ -20,15 +20,16 @@ Implemented now:
 - Schema-locked tool catalog
 - Agent session state model
 - CloakBrowser CDP health client
-- Executor skeletons for `navigate_to_url`, `extract_structured_data`, and `assess_credibility`
+- Executor skeletons for `web_search`, `navigate_to_url`, `extract_structured_data`, and `assess_credibility`
 - Deterministic planner skeleton
-- Multi-step orchestrator sequence: `navigate_to_url -> extract_structured_data -> assess_credibility`
+- Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
+- Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
 - Unit tests for config, API routes, planner, runner, and executor modules
 
 Not implemented yet:
 
 - OpenRouter planner adapter
-- `web_search` executor implementation
+- Real search provider integration
 - Report synthesis
 - Postgres/Redis persistence
 - Frontend UI
@@ -53,6 +54,7 @@ ResearchOrchestrator
         v
 PlannerSkeleton -> ResearchRunner -> Executor tools
         |              |              |
+        |              |              +-- web_search
         |              |              +-- navigate_to_url
         |              |              +-- extract_structured_data
         |              |              +-- assess_credibility
@@ -77,7 +79,7 @@ ghost-researcher/
 +-- backend/
 |   +-- agent/          # Tool catalog, session state, deterministic planner skeleton
 |   +-- api/            # FastAPI routes: /health and /research
-|   +-- executor/       # Browser health, navigation, extraction, credibility skeletons
+|   +-- executor/       # Browser health, search, navigation, extraction, credibility skeletons
 |   +-- jobs/           # Runner and planner orchestration
 |   +-- config.py       # Environment-backed settings
 |   +-- main.py         # FastAPI app factory
@@ -116,10 +118,10 @@ for later integration testing.
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_jobs.test_runner tests.test_jobs.test_research
 ```
 
-Current validated result: 41 tests passing.
+Current validated result: 48 tests passing.
 
 ---
 

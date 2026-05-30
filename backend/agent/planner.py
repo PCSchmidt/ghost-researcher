@@ -33,28 +33,46 @@ class PlannerDecision:
 
 
 class PlannerSkeleton:
-    """Small deterministic planner used before the Claude planner loop exists."""
+    """Small deterministic planner used before the LLM planner loop exists."""
 
     def plan_next(self, session: AgentSession) -> PlannerDecision:
         """Choose the next tool call from the current session state."""
-        if session.steps_taken == 0:
-            return self._plan_navigation(session)
-        if session.steps_taken == 1:
-            return self._plan_extraction()
-        if session.steps_taken == 2:
+        if session.evidence_records:
+            return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
+        if session.session_summary is not None:
             return self._plan_credibility(session)
-        return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
+        if session.sources_visited:
+            next_url = self._first_unvisited_url(session)
+            if next_url is not None:
+                return self._plan_navigation(session)
+            return self._plan_extraction()
+        if session.steps_taken > 0 or session.source_candidates:
+            return self._plan_navigation(session)
+        return self._plan_navigation(session)
 
     def _plan_navigation(self, session: AgentSession) -> PlannerDecision:
-        next_url = self._first_unvisited_url(session)
+        next_url = self._first_unvisited_url(session) or session.next_source_candidate()
         if next_url is None:
-            return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
+            return self._plan_search(session)
 
         tool = get_tool("navigate_to_url")
         return PlannerDecision(
             tool_call=ToolCall(
                 name=tool["name"],
                 arguments={"url": next_url},
+            )
+        )
+
+    def _plan_search(self, session: AgentSession) -> PlannerDecision:
+        query = self._search_query(session)
+        if query in session.search_queries:
+            return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
+
+        tool = get_tool("web_search")
+        return PlannerDecision(
+            tool_call=ToolCall(
+                name=tool["name"],
+                arguments={"query": query, "num_results": 5},
             )
         )
 
@@ -88,3 +106,6 @@ class PlannerSkeleton:
             if url not in session.sources_visited:
                 return url
         return None
+
+    def _search_query(self, session: AgentSession) -> str:
+        return re.sub(r"\s+", " ", session.research_goal).strip()

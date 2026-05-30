@@ -37,6 +37,7 @@ class AgentSession:
     running_cost_usd: float = 0.0
     sources_visited: set[str] = field(default_factory=set)
     search_queries: list[str] = field(default_factory=list)
+    source_candidates: list[str] = field(default_factory=list)
     evidence_records: list[EvidenceRecord] = field(default_factory=list)
     detection_events: list[DetectionEvent] = field(default_factory=list)
     termination_state: str = "active"
@@ -60,6 +61,23 @@ class AgentSession:
     def record_search_query(self, query: str) -> None:
         """Track unique planner search attempts in order."""
         self.search_queries.append(query)
+
+    def add_source_candidates(self, urls: list[str]) -> int:
+        """Queue novel candidate URLs discovered by search."""
+        added_count = 0
+        for url in urls:
+            if url in self.sources_visited or url in self.source_candidates:
+                continue
+            self.source_candidates.append(url)
+            added_count += 1
+        return added_count
+
+    def next_source_candidate(self) -> str | None:
+        """Return the first candidate URL that has not been visited."""
+        for url in self.source_candidates:
+            if url not in self.sources_visited:
+                return url
+        return None
 
     def add_evidence(self, *, url: str, title: str, claims: list[str], credibility_score: float) -> None:
         """Append extracted evidence to the session record."""
