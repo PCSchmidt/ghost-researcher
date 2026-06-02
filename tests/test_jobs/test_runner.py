@@ -156,6 +156,31 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, session.steps_taken)
         self.assertEqual(1, len(session.evidence_records))
 
+    async def test_runner_executes_finalize_report(self) -> None:
+        runner = ResearchRunner(Settings.from_env({}))
+        session = AgentSession(research_goal="Finalize research")
+        session.add_evidence(
+            url="https://faa.gov/example",
+            title="FAA Example",
+            claims=["Example claim"],
+            credibility_score=0.82,
+        )
+
+        payload = await runner.execute_tool_call(
+            name="finalize_report",
+            arguments={
+                "confidence": 0.82,
+                "sources_used": ["https://faa.gov/example"],
+                "termination_reason": "sufficient_coverage",
+            },
+            session=session,
+        )
+
+        self.assertTrue(payload["accepted"])
+        self.assertTrue(payload["queued_for_synthesis"])
+        self.assertEqual("finalized", session.termination_state)
+        self.assertEqual("sufficient_coverage", session.termination_reason)
+
 
 if __name__ == "__main__":
     unittest.main()

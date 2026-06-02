@@ -94,8 +94,20 @@ stage.
 - Exit token: `EVALS CONFIRMED`
 - Status: Complete
 
+### v0.15.0 - Live Capability Alignment
+
+- Exit artifacts: multi-source deterministic planner flow, executable `finalize_report`, improved offline eval artifact
+- Exit token: `LIVE CAPABILITY ALIGNMENT CONFIRMED`
+- Status: Complete
+
+### v0.16.0 - Real Search and Live Evals
+
+- Exit artifacts: real search provider boundary, opt-in live eval mode, live-provider smoke tests
+- Exit token: `LIVE SEARCH CONFIRMED`
+- Status: Next
+
 ### v1.0.0 - Deployment
 
 - Exit artifacts: Railway backend/cloakserve, Vercel frontend, healthy production endpoints
 - Exit token: `DEPLOY CONFIRMED`
-- Status: Next
+- Status: Planned

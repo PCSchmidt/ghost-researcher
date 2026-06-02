@@ -11,8 +11,8 @@ shipped yet.
 
 ## Current Status
 
-Current checkpoint: v0.14.0 - Evals Harness complete.
-Next stage: v1.0.0 - Deployment.
+Current checkpoint: v0.15.0 - Live Capability Alignment complete.
+Next stage: v0.16.0 - Real Search and Live Evals.
 
 Implemented now:
 
@@ -25,12 +25,14 @@ Implemented now:
 - Deterministic planner skeleton
 - Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
 - Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
+- Multi-source deterministic orchestration with explicit `finalize_report` execution
 - OpenRouter planner adapter with tool-call validation, usage accounting, and cost-limit stops
 - Report synthesis skeleton with source-trace validation
 - Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
 - Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
 - Next.js research workbench with submission form, status stream view, report view, and source cards
 - Offline benchmark eval runner with source traceability, report quality, and criteria coverage scoring
+- Offline evals that can satisfy benchmark minimum source counts before synthesis
 - Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
 
 Not implemented yet:
@@ -136,7 +138,7 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Current validated result: 77 backend tests passing.
+Current validated result: 80 backend tests passing.
 
 Run the offline eval harness:
 
@@ -144,10 +146,10 @@ Run the offline eval harness:
 python -m evals.eval_runner --limit 3
 ```
 
-Current v0.14 result: 3 benchmark prompts completed in deterministic offline mode,
-average score 0.786, with results persisted under `evals/results/`. The current
-deterministic planner assesses one source per prompt, so eval artifacts correctly
-flag source-count coverage below the benchmark minimum.
+Current v0.15 result: 3 benchmark prompts completed in deterministic offline mode,
+average score 1.0, with results persisted under `evals/results/`. The deterministic
+planner now assesses enough offline benchmark sources to satisfy each prompt's
+minimum source count before calling `finalize_report`.
 
 Run frontend checks:
 
@@ -237,6 +239,8 @@ The build is intentionally staged:
 - v0.12.0 - Live Status Stream
 - v0.13.0 - Frontend Research UI
 - v0.14.0 - Evals Harness
+- v0.15.0 - Live Capability Alignment
+- v0.16.0 - Real Search and Live Evals
 - v1.0.0 - Deployment
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).

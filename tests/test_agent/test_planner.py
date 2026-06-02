@@ -91,7 +91,7 @@ class PlannerSkeletonTests(unittest.TestCase):
         self.assertEqual("https://example.com/report", decision.tool_call.arguments["url"])
         self.assertEqual("Latest FAA guidance from 2026", decision.tool_call.arguments["content_snippet"])
 
-    def test_planner_stops_after_credibility_step(self) -> None:
+    def test_planner_finalizes_after_minimum_evidence(self) -> None:
         planner = PlannerSkeleton()
         session = AgentSession(research_goal="Review https://example.com/report")
         session.add_evidence(
@@ -103,8 +103,27 @@ class PlannerSkeletonTests(unittest.TestCase):
 
         decision = planner.plan_next(session)
 
-        self.assertTrue(decision.should_stop)
-        self.assertEqual("sufficient_coverage", decision.termination_reason)
+        self.assertFalse(decision.should_stop)
+        self.assertEqual("finalize_report", decision.tool_call.name)
+        self.assertEqual("sufficient_coverage", decision.tool_call.arguments["termination_reason"])
+        self.assertEqual(["https://example.com/report"], decision.tool_call.arguments["sources_used"])
+
+    def test_planner_continues_to_next_candidate_before_minimum_evidence(self) -> None:
+        planner = PlannerSkeleton(min_sources=2)
+        session = AgentSession(research_goal="Find FAA BVLOS guidance")
+        session.add_source_candidates(["https://faa.gov/one", "https://federalregister.gov/two"])
+        session.register_source("https://faa.gov/one")
+        session.add_evidence(
+            url="https://faa.gov/one",
+            title="FAA One",
+            claims=["First claim"],
+            credibility_score=0.8,
+        )
+
+        decision = planner.plan_next(session)
+
+        self.assertEqual("navigate_to_url", decision.tool_call.name)
+        self.assertEqual("https://federalregister.gov/two", decision.tool_call.arguments["url"])
 
 
 if __name__ == "__main__":

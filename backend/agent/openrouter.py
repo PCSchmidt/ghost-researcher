@@ -104,13 +104,7 @@ class OpenRouterPlanner:
         if session.running_cost_usd >= self._settings.max_model_cost_per_job_usd:
             return PlannerDecision(tool_call=None, termination_reason="cost_limit")
 
-        tool_call = _extract_tool_call(response)
-        if tool_call.name == "finalize_report":
-            return PlannerDecision(
-                tool_call=None,
-                termination_reason=str(tool_call.arguments.get("termination_reason", "sufficient_coverage")),
-            )
-        return PlannerDecision(tool_call=tool_call)
+        return PlannerDecision(tool_call=_extract_tool_call(response))
 
     def _request_payload(
         self,

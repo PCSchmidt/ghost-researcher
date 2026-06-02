@@ -100,4 +100,30 @@ class ResearchRunner:
             )
             return result.to_dict()
 
+        if name == "finalize_report":
+            confidence = arguments.get("confidence")
+            sources_used = arguments.get("sources_used")
+            termination_reason = str(arguments.get("termination_reason", "sufficient_coverage"))
+            if not isinstance(confidence, (int, float)) or isinstance(confidence, bool):
+                raise ValueError("invalid_confidence")
+            if confidence < 0 or confidence > 1:
+                raise ValueError("invalid_confidence")
+            if not isinstance(sources_used, list):
+                raise ValueError("invalid_sources_used")
+            evidence_urls = {record.url for record in session.evidence_records}
+            unsupported_sources = [str(url) for url in sources_used if str(url) not in evidence_urls]
+            if unsupported_sources:
+                raise ValueError("unsupported_finalize_source")
+            if termination_reason == "sufficient_coverage" and not sources_used:
+                raise ValueError("no_sources_selected")
+            session.increment_step()
+            session.finalize(termination_reason)
+            return {
+                "accepted": True,
+                "queued_for_synthesis": termination_reason == "sufficient_coverage" and bool(sources_used),
+                "termination_reason": termination_reason,
+                "confidence": round(float(confidence), 3),
+                "sources_used": [str(url) for url in sources_used],
+            }
+
         raise NotImplementedError(f"unsupported_tool:{name}")

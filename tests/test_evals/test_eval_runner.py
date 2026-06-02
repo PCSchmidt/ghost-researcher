@@ -61,7 +61,8 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, payload["benchmark_count"])
         self.assertEqual("deterministic_offline", payload["mode"])
         self.assertEqual("test", payload["cases"][0]["id"])
-        self.assertIn("source_count_below_benchmark_minimum", payload["cases"][0]["limitations"])
+        self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
+        self.assertNotIn("source_count_below_benchmark_minimum", payload["cases"][0]["limitations"])
 
     def test_write_eval_results_creates_json_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -80,7 +81,7 @@ def _prompt() -> BenchmarkPrompt:
         expected_source_types=["gov"],
         expected_sources=["faa.gov", "federalregister.gov"],
         min_sources=2,
-        max_steps=4,
+        max_steps=8,
         eval_criteria={
             "must_include": ["deadline", "affected operations"],
             "must_not_hallucinate": ["dates"],

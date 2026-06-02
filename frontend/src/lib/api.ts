@@ -25,6 +25,7 @@ export type SessionState = {
   running_tokens: number;
   running_cost_usd: number;
   sources_visited: string[];
+  current_source_url: string | null;
   search_queries: string[];
   source_candidates: string[];
   termination_state: string;

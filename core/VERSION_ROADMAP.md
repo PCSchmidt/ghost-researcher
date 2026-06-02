@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v1.0.0 - Deployment
+Current stage: v0.16.0 - Real Search and Live Evals
 
 Recently completed:
 
@@ -44,6 +44,7 @@ Recently completed:
 - v0.12.0 live status stream
 - v0.13.0 frontend research UI
 - v0.14.0 evals harness
+- v0.15.0 live capability alignment
 
 Foundation items resolved on 2026-05-29:
 
@@ -356,6 +357,51 @@ Status: Complete. v0.14 artifact: `evals/results/eval_results_20260602T114237Z.j
 
 ---
 
+## v0.15.0 - Live Capability Alignment
+
+Goal: Close the biggest alignment gap before live integrations by making the deterministic agent loop collect multiple sources and execute `finalize_report` as a real tool.
+
+Ships:
+
+- Multi-source deterministic planning with configurable `min_sources`
+- Active source tracking in `AgentSession`
+- `finalize_report` execution in `ResearchRunner`
+- OpenRouter adapter preserves `finalize_report` as a tool call for runner execution
+- Offline eval runner passes benchmark minimum source counts for the first 3 prompts
+- Updated tests for planner, runner, orchestrator, OpenRouter adapter, and eval harness
+
+Exit criteria:
+
+- Deterministic URL-free benchmark runs can assess multiple sources before synthesis
+- `finalize_report` returns accepted/queued status and finalizes session state
+- Backend regression suite passes
+- Updated eval artifact is persisted under `evals/results/`
+
+Status: Complete. v0.15 artifact: `evals/results/eval_results_20260602T121216Z.json`.
+
+---
+
+## v0.16.0 - Real Search and Live Evals
+
+Goal: Replace deterministic-only source discovery with a configurable real search provider path and add opt-in live eval execution.
+
+Ships:
+
+- Search provider abstraction with deterministic provider retained for tests
+- One real provider integration behind environment configuration
+- `evals/eval_runner.py --mode offline|live`
+- Skipped-by-default live smoke tests for search, OpenRouter, and CloakBrowser where practical
+
+Exit criteria:
+
+- Offline tests remain dependency-free
+- Live mode can run at least 3 benchmark prompts with real search candidates when env vars are configured
+- Eval artifacts clearly label offline vs live mode and provider configuration
+
+Status: Next.
+
+---
+
 ## v1.0.0 - Deployment
 
 Goal: Deploy backend and frontend with health checks and rollback path.
@@ -373,4 +419,4 @@ Exit criteria:
 - `POST /research` works against deployed backend
 - Frontend can run a demo research job
 
-Status: Next.
+Status: Planned.

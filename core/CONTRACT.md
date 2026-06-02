@@ -1,7 +1,7 @@
 # CONTRACT.md
 
 Project name: GhostResearcher  
-Stack: OpenRouter model gateway / optional Anthropic fallback / CloakBrowser / FastAPI / Redis / Postgres / Next.js 14
+Stack: OpenRouter model gateway / optional Anthropic fallback / CloakBrowser / FastAPI / Redis / Postgres / Next.js 16
 Purpose: Agentic web research engine - planner + executor + synthesizer  
 Repo: [PCSchmidt/ghost-researcher](https://github.com/PCSchmidt/ghost-researcher)  
 Related: SkySigint (CDP pattern reference), CloakBrowser, Syntaris, AeroIntel  

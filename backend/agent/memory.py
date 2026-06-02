@@ -36,6 +36,7 @@ class AgentSession:
     running_tokens: int = 0
     running_cost_usd: float = 0.0
     sources_visited: set[str] = field(default_factory=set)
+    current_source_url: str | None = None
     search_queries: list[str] = field(default_factory=list)
     source_candidates: list[str] = field(default_factory=list)
     evidence_records: list[EvidenceRecord] = field(default_factory=list)
@@ -59,6 +60,7 @@ class AgentSession:
 
     def register_source(self, url: str) -> bool:
         """Return True only when a source is first seen in this session."""
+        self.current_source_url = url
         if url in self.sources_visited:
             return False
         self.sources_visited.add(url)

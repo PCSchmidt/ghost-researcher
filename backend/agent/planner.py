@@ -35,6 +35,9 @@ class PlannerDecision:
 class PlannerSkeleton:
     """Small deterministic planner used before the LLM planner loop exists."""
 
+    def __init__(self, *, min_sources: int = 1) -> None:
+        self._min_sources = max(1, min_sources)
+
     def plan_next(
         self,
         session: AgentSession,
@@ -43,8 +46,30 @@ class PlannerSkeleton:
     ) -> PlannerDecision:
         """Choose the next tool call from the current session state."""
         del last_tool_result
+        evidence_urls = {record.url for record in session.evidence_records}
+        current_source_needs_extraction = (
+            session.current_source_url is not None
+            and session.current_source_url in session.sources_visited
+            and session.current_source_url not in evidence_urls
+        )
+        if len(session.evidence_records) >= self._min_sources:
+            return self._plan_finalize(session, termination_reason="sufficient_coverage")
+        if not session.evidence_records and session.sources_visited:
+            next_url = self._first_unvisited_url(session)
+            if next_url is not None:
+                return self._plan_navigation(session)
+        if session.session_summary is not None and current_source_needs_extraction:
+            return self._plan_credibility(session)
+        if current_source_needs_extraction:
+            return self._plan_extraction()
         if session.evidence_records:
-            return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
+            candidate = session.next_source_candidate()
+            if candidate is not None:
+                return self._plan_navigation(session)
+            query = self._search_query(session)
+            if query not in session.search_queries:
+                return self._plan_search(session)
+            return self._plan_finalize(session, termination_reason="no_new_sources")
         if session.session_summary is not None:
             return self._plan_credibility(session)
         if session.sources_visited:
@@ -55,6 +80,27 @@ class PlannerSkeleton:
         if session.steps_taken > 0 or session.source_candidates:
             return self._plan_navigation(session)
         return self._plan_navigation(session)
+
+    def _plan_finalize(self, session: AgentSession, *, termination_reason: str) -> PlannerDecision:
+        if not session.evidence_records and termination_reason == "sufficient_coverage":
+            return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
+        confidence = 0.0
+        if session.evidence_records:
+            confidence = round(
+                sum(record.credibility_score for record in session.evidence_records) / len(session.evidence_records),
+                3,
+            )
+        tool = get_tool("finalize_report")
+        return PlannerDecision(
+            tool_call=ToolCall(
+                name=tool["name"],
+                arguments={
+                    "confidence": confidence,
+                    "sources_used": [record.url for record in session.evidence_records],
+                    "termination_reason": termination_reason,
+                },
+            )
+        )
 
     def _plan_navigation(self, session: AgentSession) -> PlannerDecision:
         next_url = self._first_unvisited_url(session) or session.next_source_candidate()
@@ -96,11 +142,12 @@ class PlannerSkeleton:
             return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
 
         tool = get_tool("assess_credibility")
+        source_url = session.current_source_url or sorted(session.sources_visited)[-1]
         return PlannerDecision(
             tool_call=ToolCall(
                 name=tool["name"],
                 arguments={
-                    "url": sorted(session.sources_visited)[-1],
+                    "url": source_url,
                     "content_snippet": session.session_summary,
                 },
             )

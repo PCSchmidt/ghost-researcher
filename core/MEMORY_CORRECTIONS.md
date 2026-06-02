@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.15.0 -- Live Capability Alignment
+
+Date: 2026-06-02
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: The one-source eval limitation was not in the eval scorer; it came from planner state ordering and implicit finalization after credibility. Making `finalize_report` executable required the planner to track whether the current source still needed extraction before looking for more candidates.
+CORRECTION FOR FUTURE: When adding multi-step loops, model state around the active unit of work explicitly. Check unfinished current work before aggregate completion rules.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.14.0 -- Evals Harness
 
 Date: 2026-06-02

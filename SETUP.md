@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.14.0 - Evals Harness complete.
-Next stage: v1.0.0 - Deployment.
+Current checkpoint: v0.15.0 - Live Capability Alignment complete.
+Next stage: v0.16.0 - Real Search and Live Evals.
 
 Gate 1 is confirmed:
 
@@ -87,7 +87,7 @@ Run the full backend regression suite:
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Expected current result: 77 backend tests passing.
+Expected current result: 80 backend tests passing.
 
 Run the offline eval harness:
 
@@ -96,9 +96,9 @@ python -m evals.eval_runner --limit 3
 ```
 
 Expected current eval result: 3 benchmark prompts run in deterministic offline
-mode, average score 0.786, and a JSON artifact written under `evals/results/`.
-The current planner assesses one source per prompt, so source-count limitations
-are expected in the artifact.
+mode, average score 1.0, and a JSON artifact written under `evals/results/`.
+The deterministic planner now assesses enough offline benchmark sources to meet
+the prompt minimum source counts before finalization.
 
 Run the frontend checks:
 
@@ -174,8 +174,8 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v1.0.0: deploy the backend, CloakBrowser service, and
-frontend with health checks and rollback documentation.
+The next build slice is v0.16.0: add a real search provider boundary and a live
+eval mode while keeping deterministic offline tests as the default baseline.
 
 ---
 
@@ -197,4 +197,6 @@ frontend with health checks and rollback documentation.
 | v0.12.0 | SSE live status stream | Complete |
 | v0.13.0 | Frontend research UI | Complete |
 | v0.14.0 | Evals harness | Complete |
-| v1.0.0 | Railway and Vercel deployment | Next |
+| v0.15.0 | Live capability alignment | Complete |
+| v0.16.0 | Real search and live evals | Next |
+| v1.0.0 | Railway and Vercel deployment | Planned |

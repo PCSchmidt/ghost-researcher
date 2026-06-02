@@ -53,7 +53,7 @@ to the existing inference optimization and ML pipeline work in the portfolio.
 | API framework | FastAPI (Python 3.11+) |
 | Job queue | Redis (research job queue) |
 | Persistence | Postgres (research reports, source logs) |
-| Frontend | Next.js 14 (App Router) |
+| Frontend | Next.js 16 (App Router) |
 | Containerization | Docker — cloakserve + ghostresearcher-api |
 | Frontend deploy | Vercel |
 | Backend deploy | Railway (cloakserve + ghostresearcher-api) |
@@ -65,7 +65,7 @@ to the existing inference optimization and ML pipeline work in the portfolio.
   - `cloakserve`: persistent CDP server, internal port 9222
   - `ghostresearcher-api`: FastAPI, public port 8000
 - **Frontend**: Vercel
-  - Next.js 14 App Router
+    - Next.js 16 App Router
   - Connects to Railway backend via `NEXT_PUBLIC_API_URL`
 
 ## Directory Structure (Target State)
@@ -109,7 +109,7 @@ ghost-researcher/
 │       ├── research.py             # POST /research, GET /research/{job_id}
 │       ├── reports.py              # GET /reports, GET /reports/{id}
 │       └── health.py               # /health
-├── frontend/                       # Next.js 14
+├── frontend/                       # Next.js 16
 │   ├── app/
 │   │   ├── page.tsx                # Research prompt submission
 │   │   ├── reports/
@@ -371,9 +371,9 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v0.14.0 - Evals Harness complete
-- Next stage: v1.0.0 - Deployment
-- Current regression baseline: 77 backend tests passing
+- Current checkpoint: v0.15.0 - Live Capability Alignment complete
+- Next stage: v0.16.0 - Real Search and Live Evals
+- Current regression baseline: 80 backend tests passing
 - Current frontend baseline: lint clean, 8 tests passing, production build passing
 - `web_search` is a deterministic skeleton, not a real provider integration yet
 - URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
@@ -383,7 +383,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - Status events are persisted with research jobs and exposed through `GET /research/{job_id}/events` as a replayable SSE stream; true background live execution remains later queue work
 - Frontend workbench lives in `frontend/`; it submits research goals, consumes the SSE stream via EventSource, renders reports, and displays source credibility cards
 - Offline eval harness lives in `evals/eval_runner.py`; it runs deterministic benchmark checks and writes JSON artifacts under `evals/results/`
-- v0.14 eval artifact: `evals/results/eval_results_20260602T114237Z.json`, 3 prompts, average score 0.786. Expected limitation: deterministic planner currently assesses one source per prompt, below benchmark minimum source counts.
+- v0.14 eval artifact: `evals/results/eval_results_20260602T114237Z.json`, 3 prompts, average score 0.786. Historical limitation: deterministic planner assessed one source per prompt.
+- v0.15 eval artifact: `evals/results/eval_results_20260602T121216Z.json`, 3 prompts, average score 1.0. Deterministic planner now assesses prompt minimum source counts before `finalize_report`.
 
 ## Resume Checklist
 
@@ -399,6 +400,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v0.12.0 live status stream complete and documented
 - [x] v0.13.0 frontend research UI complete and documented
 - [x] v0.14.0 evals harness complete and documented
+- [x] v0.15.0 live capability alignment complete and documented
 
 ## Session Start Command
 

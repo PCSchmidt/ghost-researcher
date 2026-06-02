@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.14.0
-**Gate Name:** Evals Harness
+**Version:** v0.15.0
+**Gate Name:** Live Capability Alignment
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Turn the seeded benchmark prompts into repeatable report/source quality checks:
-run at least three prompts through a deterministic offline harness, score source
-coverage and source traceability, and persist results as eval artifacts.
+Close the largest gap between the deterministic scaffold and the live research-agent
+goal: collect multiple sources before synthesis, execute `finalize_report` as a
+real runner tool, and improve offline eval source coverage before adding live search.
 
 ---
 
@@ -86,14 +86,20 @@ coverage and source traceability, and persist results as eval artifacts.
 - [x] Score benchmark completion, source count, expected source overlap, source traceability, criteria coverage, and freshness
 - [x] Add [tests/test_evals/test_eval_runner.py](../tests/test_evals/test_eval_runner.py) eval harness tests
 - [x] Run first 3 benchmark prompts and persist [evals/results/eval_results_20260602T114237Z.json](../evals/results/eval_results_20260602T114237Z.json)
+- [x] Add active source tracking to [backend/agent/memory.py](../backend/agent/memory.py)
+- [x] Extend [backend/agent/planner.py](../backend/agent/planner.py) with configurable multi-source deterministic planning
+- [x] Execute `finalize_report` through [backend/jobs/runner.py](../backend/jobs/runner.py)
+- [x] Preserve OpenRouter `finalize_report` calls as executable tool calls in [backend/agent/openrouter.py](../backend/agent/openrouter.py)
+- [x] Update [evals/eval_runner.py](../evals/eval_runner.py) to pass benchmark `min_sources` into orchestration
+- [x] Run first 3 benchmark prompts and persist [evals/results/eval_results_20260602T121216Z.json](../evals/results/eval_results_20260602T121216Z.json)
 
 ---
 
 ## EXIT CRITERIA
 
-1. Eval runner loads [evals/benchmark_prompts.json](../evals/benchmark_prompts.json)
-2. At least 3 benchmark prompts run end to end in deterministic offline mode
-3. Eval scoring reports completion, source count, expected source overlap, source traceability, criteria coverage, freshness, and limitations
+1. Deterministic planner can continue from one assessed source to the next source candidate before synthesis
+2. `finalize_report` executes through `ResearchRunner` and finalizes session state
+3. Offline evals can meet the first 3 benchmark prompts' minimum source counts
 4. Results are persisted under [evals/results](../evals/results)
 5. Backend regression suite, frontend lint, frontend tests, and frontend production build pass
 
@@ -144,6 +150,10 @@ coverage and source traceability, and persist results as eval artifacts.
 - Eval scoring for source coverage, expected-source overlap, source traceability, criteria coverage, and freshness
 - Persisted v0.14 eval artifact in [evals/results/eval_results_20260602T114237Z.json](../evals/results/eval_results_20260602T114237Z.json)
 - Focused eval harness tests in [tests/test_evals/test_eval_runner.py](../tests/test_evals/test_eval_runner.py)
+- Active source tracking in `AgentSession`
+- Configurable `min_sources` deterministic planner behavior
+- First-class `finalize_report` execution through `ResearchRunner`
+- Persisted v0.15 eval artifact in [evals/results/eval_results_20260602T121216Z.json](../evals/results/eval_results_20260602T121216Z.json)
 
 ---
 
@@ -157,15 +167,16 @@ coverage and source traceability, and persist results as eval artifacts.
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
 - No deployed frontend yet; v0.13 is local/dev frontend only
 - No live eval mode yet; v0.14 runs deterministic offline checks rather than real OpenRouter/search/CloakBrowser jobs
-- Deterministic planner currently assesses one source per prompt, so v0.14 eval artifacts are expected to flag source-count gaps
+- No real search provider yet; v0.16 owns that integration
+- No live eval mode yet; v0.16 will add an offline/live mode split
 
 ---
 
 ## NEXT GATE
 
-### v1.0.0 - Deployment
+### v0.16.0 - Real Search and Live Evals
 
-Deploy the backend, CloakBrowser service, and frontend with health checks and rollback documentation.
+Add a real search provider boundary and opt-in live eval mode while preserving deterministic offline tests.
 
 ---
 

@@ -80,7 +80,7 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(PlannerAdapterError, "argument_above_maximum:num_results"):
             await planner.plan_next(AgentSession(research_goal="FAA BVLOS guidance"))
 
-    async def test_finalize_report_maps_to_stop_decision(self) -> None:
+    async def test_finalize_report_returns_validated_tool_call(self) -> None:
         async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:
             return _tool_response(
                 "finalize_report",
@@ -94,8 +94,9 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
         planner = OpenRouterPlanner(Settings.from_env({}), transport=fake_transport)
         decision = await planner.plan_next(AgentSession(research_goal="FAA BVLOS guidance"))
 
-        self.assertTrue(decision.should_stop)
-        self.assertEqual("sufficient_coverage", decision.termination_reason)
+        self.assertFalse(decision.should_stop)
+        self.assertEqual("finalize_report", decision.tool_call.name)
+        self.assertEqual("sufficient_coverage", decision.tool_call.arguments["termination_reason"])
 
     async def test_cost_limit_prevents_model_call(self) -> None:
         async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:

@@ -149,7 +149,11 @@ async def _run_prompt(prompt: BenchmarkPrompt, settings: Settings) -> PlannerSeq
         assess=assess_credibility,
     )
     orchestrator = ResearchOrchestrator(settings, runner=runner)
-    return await orchestrator.run_sequence(prompt.prompt, max_steps=min(prompt.max_steps, settings.max_steps_per_job))
+    return await orchestrator.run_sequence(
+        prompt.prompt,
+        max_steps=min(prompt.max_steps, settings.max_steps_per_job),
+        min_sources=prompt.min_sources,
+    )
 
 
 def _fake_search(prompt: BenchmarkPrompt):

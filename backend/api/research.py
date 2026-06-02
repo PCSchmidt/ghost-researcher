@@ -18,7 +18,7 @@ from backend.synthesizer.schema import ResearchReport
 
 
 class ResearchOrchestratorLike(Protocol):
-    async def run_sequence(self, research_goal: str) -> PlannerSequenceResult: ...
+    async def run_sequence(self, research_goal: str, **kwargs: Any) -> PlannerSequenceResult: ...
 
 
 class ResearchRequest(BaseModel):
@@ -47,6 +47,7 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
         "running_tokens": session.running_tokens,
         "running_cost_usd": session.running_cost_usd,
         "sources_visited": sorted(session.sources_visited),
+        "current_source_url": session.current_source_url,
         "search_queries": session.search_queries,
         "source_candidates": session.source_candidates,
         "detection_events": [
