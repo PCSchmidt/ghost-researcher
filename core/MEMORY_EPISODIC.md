@@ -14,6 +14,7 @@ Updated at gate close with gate outcome rows.
 | 2026-05-30 | GhostResearcher | v0.8.0 | COMPLETE | 48 passing | Added deterministic web_search skeleton, queued source candidates, and search-first URL-free sequence |
 | 2026-05-30 | GhostResearcher | v0.9.0 | COMPLETE | 54 passing | Added fake-tested OpenRouter planner adapter, prompt templates, validation, and model usage accounting |
 | 2026-05-30 | GhostResearcher | v0.10.0 | COMPLETE | 63 passing | Added report schema, source-trace validation, synthesizer skeleton, and API synthesis serialization |
+| 2026-06-01 | GhostResearcher | v0.11.0 | COMPLETE | 68 passing | Added research repository boundary, job IDs, JSON-file durability, and `GET /research/{job_id}` |
 
 ## STOP EVENTS
 

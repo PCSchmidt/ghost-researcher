@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.10.0
-**Gate Name:** Synthesizer Skeleton
+**Version:** v0.11.0
+**Gate Name:** Persistence and Job State
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Produce a structured report from extracted evidence without allowing unsupported
-claims. The synthesizer uses deterministic fallback when no model transport is
-configured and validates every cited claim against session evidence.
+Persist completed research job state behind a repository boundary, expose job
+retrieval by ID, and prove restart durability with a JSON-file repository while
+keeping production Postgres/Redis wiring deferred.
 
 ---
 
@@ -67,15 +67,20 @@ configured and validates every cited claim against session evidence.
 - [x] Extend [backend/jobs/research.py](../backend/jobs/research.py) to synthesize after sufficient coverage
 - [x] Extend [backend/api/research.py](../backend/api/research.py) to serialize synthesized reports
 - [x] Add [tests/test_synthesizer/test_schema.py](../tests/test_synthesizer/test_schema.py) and [tests/test_synthesizer/test_report.py](../tests/test_synthesizer/test_report.py)
+- [x] Add [backend/persistence/repository.py](../backend/persistence/repository.py) repository boundary, in-memory store, and JSON-file store
+- [x] Extend [backend/api/research.py](../backend/api/research.py) to persist `POST /research` responses
+- [x] Add `GET /research/{job_id}` for job retrieval
+- [x] Extend [backend/main.py](../backend/main.py) with injectable research repository
+- [x] Add [tests/test_persistence/test_repository.py](../tests/test_persistence/test_repository.py) repository durability tests
 
 ---
 
 ## EXIT CRITERIA
 
-1. Report contains cited claims only
-2. Unsupported claims fail validation
-3. `synthesis` is returned from `POST /research` when sufficient evidence exists
-4. Deterministic fallback works without live OpenRouter credentials
+1. Research job responses include stable `job_id`, `created_at`, and `updated_at`
+2. `GET /research/{job_id}` retrieves stored job state
+3. Repository abstraction supports in-memory tests and JSON-file restart durability
+4. Missing jobs return 404
 5. Current backend regression suite passes
 
 ---
@@ -109,6 +114,10 @@ configured and validates every cited claim against session evidence.
 - Source-trace validation for every report source and finding
 - Report synthesizer skeleton with deterministic fallback and fakeable model transport
 - API synthesis serialization after sufficient coverage
+- Research repository protocol
+- In-memory repository for dependency-free API tests and local runs
+- JSON-file repository that survives new repository instances
+- Persisted job metadata and `GET /research/{job_id}` retrieval
 
 ---
 
@@ -119,17 +128,17 @@ configured and validates every cited claim against session evidence.
 - No real browser integration test yet; executor tests use fakes
 - No real search provider yet; `web_search` is a deterministic skeleton
 - No live OpenRouter integration test yet; adapter tests use fake transport
-- No persistence layer yet
+- No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 
 ---
 
 ## NEXT GATE
 
-### v0.11.0 - Persistence and Job State
+### v0.12.0 - Live Status Stream
 
-Persist research jobs, step events, sources, and synthesized reports.
+Add SSE job status streaming for frontend integration.
 
 ---
 
-**Last updated:** 2026-05-30
+**Last updated:** 2026-06-01
 **Updated by:** GitHub Copilot

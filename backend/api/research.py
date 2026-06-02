@@ -11,6 +11,7 @@ from backend.agent.memory import AgentSession
 from backend.agent.planner import PlannerDecision, ToolCall
 from backend.config import Settings
 from backend.jobs.research import PlannerRunResult, PlannerSequenceResult, ResearchOrchestrator
+from backend.persistence import InMemoryResearchRepository, ResearchRepository
 from backend.synthesizer.schema import ResearchReport
 
 
@@ -90,10 +91,12 @@ def create_research_router(
     settings: Settings,
     *,
     orchestrator: ResearchOrchestratorLike | None = None,
+    repository: ResearchRepository | None = None,
 ) -> APIRouter:
     """Create the research endpoint bound to current settings."""
     router = APIRouter(tags=["research"])
     active_orchestrator = orchestrator or ResearchOrchestrator(settings)
+    active_repository = repository or InMemoryResearchRepository()
 
     @router.post("/research")
     async def create_research(request: ResearchRequest) -> dict[str, Any]:
@@ -101,12 +104,20 @@ def create_research_router(
         if not research_goal:
             raise HTTPException(status_code=422, detail="research_goal cannot be blank")
         result = await active_orchestrator.run_sequence(research_goal)
-        return _serialize_sequence_result(result)
+        return active_repository.save(_serialize_sequence_result(result))
+
+    @router.get("/research/{job_id}")
+    async def get_research(job_id: str) -> dict[str, Any]:
+        payload = active_repository.get(job_id)
+        if payload is None:
+            raise HTTPException(status_code=404, detail="research job not found")
+        return payload
 
     return router
 
 
 __all__ = [
     "ResearchRequest",
+    "ResearchRepository",
     "create_research_router",
 ]

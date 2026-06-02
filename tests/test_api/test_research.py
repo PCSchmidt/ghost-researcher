@@ -10,6 +10,7 @@ from backend.agent.memory import AgentSession
 from backend.agent.planner import PlannerDecision, ToolCall
 from backend.jobs.research import PlannerSequenceResult
 from backend.main import create_app
+from backend.persistence import InMemoryResearchRepository
 from backend.synthesizer.schema import ResearchReport, ReportClaim
 
 
@@ -54,11 +55,45 @@ class ResearchRouteTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual("completed", payload["status"])
         self.assertEqual("navigate_to_url", payload["decisions"][0]["tool_call"]["name"])
+        self.assertIn("job_id", payload)
+        self.assertIn("created_at", payload)
+        self.assertIn("updated_at", payload)
         self.assertEqual("https://example.com/report", payload["tool_results"][0]["final_url"])
         self.assertEqual(["https://example.com/report"], payload["session"]["sources_visited"])
         self.assertEqual([], payload["session"]["source_candidates"])
         self.assertIsNone(payload["synthesis"])
         self.assertEqual("Review https://example.com/report", orchestrator.received_goal)
+
+    def test_research_route_persists_and_fetches_job_by_id(self) -> None:
+        session = AgentSession(research_goal="Review https://example.com/report")
+        result = PlannerSequenceResult(
+            session=session,
+            decisions=[PlannerDecision(tool_call=None, termination_reason="no_new_sources")],
+            tool_results=[],
+        )
+        repository = InMemoryResearchRepository()
+        client = TestClient(
+            create_app(
+                {},
+                research_orchestrator=FakeResearchOrchestrator(result),
+                research_repository=repository,
+            )
+        )
+
+        create_response = client.post("/research", json={"research_goal": "Review https://example.com/report"})
+        job_id = create_response.json()["job_id"]
+        get_response = client.get(f"/research/{job_id}")
+
+        self.assertEqual(200, get_response.status_code)
+        self.assertEqual(job_id, get_response.json()["job_id"])
+        self.assertEqual("Review https://example.com/report", get_response.json()["session"]["research_goal"])
+
+    def test_research_route_returns_404_for_missing_job(self) -> None:
+        client = TestClient(create_app({}))
+
+        response = client.get("/research/missing-job")
+
+        self.assertEqual(404, response.status_code)
 
     def test_research_route_serializes_synthesis_when_available(self) -> None:
         session = AgentSession(research_goal="Review https://example.com/report")

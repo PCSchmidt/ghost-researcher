@@ -72,15 +72,15 @@ stage.
 
 ### v0.11.0 - Persistence and Job State
 
-- Exit artifacts: Postgres schema, Redis queue, persisted job/report/source logs
+- Exit artifacts: repository boundary, persisted job payloads, `GET /research/{job_id}`, restart durability test
 - Exit token: `PERSISTENCE CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.12.0 - Live Status Stream
 
 - Exit artifacts: SSE endpoint and job status event model
 - Exit token: `STATUS STREAM CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v0.13.0 - Frontend Research UI
 

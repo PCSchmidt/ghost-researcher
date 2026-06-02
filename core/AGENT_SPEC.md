@@ -389,3 +389,4 @@ Routing rules:
 - OpenRouter is the default model gateway; direct Anthropic use is a premium fallback path only
 - The OpenRouter planner adapter uses fakeable transport in tests and validates every tool call against `backend/agent/tools.py` before execution
 - The synthesizer must reject any report claim or `sources_used` URL that is absent from `evidence_records`
+- Research job state is accessed through a repository boundary; API responses include `job_id` for retrieval and later persistence backends

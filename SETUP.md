@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.10.0 - Synthesizer Skeleton complete.
-Next stage: v0.11.0 - Persistence and Job State.
+Current checkpoint: v0.11.0 - Persistence and Job State complete.
+Next stage: v0.12.0 - Live Status Stream.
 
 Gate 1 is confirmed:
 
@@ -83,10 +83,10 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 Run the full backend regression suite:
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research
 ```
 
-Expected current result: 63 tests passing.
+Expected current result: 68 tests passing.
 
 ---
 
@@ -111,7 +111,8 @@ curl -X POST http://localhost:8000/research \
 ```
 
 The response currently includes planner decisions, tool results, session state,
-and `synthesis` when sufficient evidence exists.
+`synthesis` when sufficient evidence exists, and a `job_id` for retrieval with
+`GET /research/{job_id}`.
 
 ---
 
@@ -140,8 +141,8 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v0.11.0: persist research jobs, step events, sources,
-and synthesized reports so runs survive process restarts.
+The next build slice is v0.12.0: add live status stream events so a frontend can
+observe tool calls and synthesis progress without polling.
 
 ---
 
@@ -159,8 +160,8 @@ and synthesized reports so runs survive process restarts.
 | v0.8.0 | Search tool skeleton | Complete |
 | v0.9.0 | OpenRouter planner adapter | Complete |
 | v0.10.0 | Synthesizer skeleton | Complete |
-| v0.11.0 | Persistence and job state | Next |
-| v0.12.0 | SSE live status stream | Planned |
+| v0.11.0 | Persistence and job state | Complete |
+| v0.12.0 | SSE live status stream | Next |
 | v0.13.0 | Frontend research UI | Planned |
 | v0.14.0 | Evals harness | Planned |
 | v1.0.0 | Railway and Vercel deployment | Planned |

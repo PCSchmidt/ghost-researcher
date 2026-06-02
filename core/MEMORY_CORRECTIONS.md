@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.11.0 -- Persistence and Job State
+
+Date: 2026-06-01
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: Full Postgres/Redis persistence would be premature before status streaming and deployment shape are fixed. A repository boundary plus JSON-file durability gives testable job state without locking database schema too early.
+CORRECTION FOR FUTURE: Add persistence behind a narrow repository protocol first, then swap backing stores once API retrieval and event models settle.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.10.0 -- Synthesizer Skeleton
 
 Date: 2026-05-30

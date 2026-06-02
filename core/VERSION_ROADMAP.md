@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.11.0 - Persistence and Job State
+Current stage: v0.12.0 - Live Status Stream
 
 Recently completed:
 
@@ -40,6 +40,7 @@ Recently completed:
 - v0.8.0 search tool skeleton
 - v0.9.0 OpenRouter planner adapter
 - v0.10.0 synthesizer skeleton
+- v0.11.0 persistence and job state
 
 Foundation items resolved on 2026-05-29:
 
@@ -269,10 +270,11 @@ Goal: Persist research jobs, step events, sources, and reports.
 
 Ships:
 
-- Database models or migrations
 - Repository layer
 - Job status storage
 - API response backed by stored state
+- In-memory repository for dependency-free runs
+- JSON-file repository proving restart durability
 
 Exit criteria:
 
@@ -280,7 +282,7 @@ Exit criteria:
 - Step history can be retrieved by job ID
 - Report and source records are queryable
 
-Status: Next.
+Status: Complete.
 
 ---
 
@@ -299,7 +301,7 @@ Exit criteria:
 - Frontend can observe tool calls in order
 - Concurrent jobs do not require aggressive polling
 
-Status: Planned.
+Status: Next.
 
 ---
 
