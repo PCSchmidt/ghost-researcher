@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.13.0 -- Frontend Research UI
+
+Date: 2026-06-01
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: The frontend could stay thin because v0.12 already exposed persisted status events. The one backend support task needed for a real browser workflow was CORS configuration for local and deployed frontend origins.
+CORRECTION FOR FUTURE: When a frontend gate starts consuming an API from a different origin, add CORS as part of the frontend integration slice and validate it with backend config tests.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.12.0 -- Live Status Stream
 
 Date: 2026-06-01

@@ -22,6 +22,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(0.02, settings.warn_model_cost_per_job_usd)
         self.assertTrue(settings.scrape_enabled)
         self.assertEqual("INFO", settings.log_level)
+        self.assertEqual(["http://localhost:3000", "http://127.0.0.1:3000"], settings.cors_allowed_origins)
 
     def test_boolean_and_numeric_overrides_parse(self) -> None:
         settings = Settings.from_env(
@@ -33,6 +34,7 @@ class SettingsTests(unittest.TestCase):
                 "DEFAULT_PLANNER_MODEL": "qwen/test-model",
                 "SCRAPE_ENABLED": "false",
                 "LOG_LEVEL": "DEBUG",
+                "CORS_ALLOWED_ORIGINS": "https://ghost.example, http://localhost:3000",
             }
         )
 
@@ -43,6 +45,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual("qwen/test-model", settings.default_planner_model)
         self.assertFalse(settings.scrape_enabled)
         self.assertEqual("DEBUG", settings.log_level)
+        self.assertEqual(["https://ghost.example", "http://localhost:3000"], settings.cors_allowed_origins)
 
 
 if __name__ == "__main__":

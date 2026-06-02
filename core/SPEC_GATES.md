@@ -86,13 +86,13 @@ stage.
 
 - Exit artifacts: Next.js research form, job status stream view, report viewer, source cards
 - Exit token: `FRONTEND CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.14.0 - Evals Harness
 
 - Exit artifacts: eval runner, benchmark scoring, results artifacts
 - Exit token: `EVALS CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v1.0.0 - Deployment
 

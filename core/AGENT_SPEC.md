@@ -391,3 +391,4 @@ Routing rules:
 - The synthesizer must reject any report claim or `sources_used` URL that is absent from `evidence_records`
 - Research job state is accessed through a repository boundary; API responses include `job_id` for retrieval and later persistence backends
 - Research job status is represented as ordered `status_events[]` and exposed through `GET /research/{job_id}/events` as a replayable SSE stream until background jobs add live publication
+- Browser frontend access is allowed through configured `CORS_ALLOWED_ORIGINS`; keep local and deployed frontend origins explicit

@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.13.0 - Frontend Research UI
+Current stage: v0.14.0 - Evals Harness
 
 Recently completed:
 
@@ -42,6 +42,7 @@ Recently completed:
 - v0.10.0 synthesizer skeleton
 - v0.11.0 persistence and job state
 - v0.12.0 live status stream
+- v0.13.0 frontend research UI
 
 Foundation items resolved on 2026-05-29:
 
@@ -314,17 +315,22 @@ Goal: Build the first usable Next.js interface around real backend behavior.
 
 Ships:
 
+- Next.js App Router frontend in `frontend/`
 - Research submission form
-- Job status view
+- Job status stream view backed by `EventSource`
 - Source and credibility display
-- Report placeholder state until synthesis is complete
+- Report viewer and placeholder state until synthesis is complete
+- Frontend lint, component tests, API client tests, and production build validation
+- Backend CORS origin settings for local frontend/API development
 
 Exit criteria:
 
-- User can submit a goal and watch steps execute
-- UI renders navigation, extraction, and credibility events clearly
+- User can submit a goal from the browser and receive a persisted research job
+- UI renders status events, source cards, credibility scores, and synthesized reports
+- Frontend lint, tests, and production build pass
+- Backend accepts configured frontend origins through CORS
 
-Status: Next.
+Status: Complete.
 
 ---
 
@@ -343,7 +349,7 @@ Exit criteria:
 - At least 3 benchmark prompts run end to end
 - Results are persisted as eval artifacts
 
-Status: Planned.
+Status: Next.
 
 ---
 

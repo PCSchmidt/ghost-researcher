@@ -16,6 +16,7 @@ Updated at gate close with gate outcome rows.
 | 2026-05-30 | GhostResearcher | v0.10.0 | COMPLETE | 63 passing | Added report schema, source-trace validation, synthesizer skeleton, and API synthesis serialization |
 | 2026-06-01 | GhostResearcher | v0.11.0 | COMPLETE | 68 passing | Added research repository boundary, job IDs, JSON-file durability, and `GET /research/{job_id}` |
 | 2026-06-01 | GhostResearcher | v0.12.0 | COMPLETE | 73 passing | Added persisted status events and `GET /research/{job_id}/events` SSE stream |
+| 2026-06-01 | GhostResearcher | v0.13.0 | COMPLETE | 73 backend, 8 frontend | Added Next.js research workbench, EventSource status view, report/source cards, and CORS settings |
 
 ## STOP EVENTS
 

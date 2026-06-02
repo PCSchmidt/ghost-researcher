@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Mapping
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api import create_health_router, create_research_router
 from backend.config import Settings
@@ -24,6 +25,13 @@ def create_app(
     """Build the FastAPI app with environment-backed settings."""
     settings = Settings.from_env(env)
     app = FastAPI(title="GhostResearcher API", version="0.1.0")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allowed_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
     app.include_router(create_health_router(settings, browser_health_resolver=browser_health_resolver))
     app.include_router(
         create_research_router(

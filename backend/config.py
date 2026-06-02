@@ -16,6 +16,10 @@ def _parse_bool(value: str, *, default: bool) -> bool:
     return default
 
 
+def _parse_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     openrouter_api_key: str | None
@@ -40,6 +44,7 @@ class Settings:
     scrape_enabled: bool
     log_level: str
     next_public_api_url: str | None
+    cors_allowed_origins: list[str]
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -68,4 +73,7 @@ class Settings:
             scrape_enabled=scrape_enabled,
             log_level=source.get("LOG_LEVEL", "INFO"),
             next_public_api_url=source.get("NEXT_PUBLIC_API_URL"),
+            cors_allowed_origins=_parse_csv(
+                source.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+            ),
         )

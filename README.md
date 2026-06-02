@@ -3,15 +3,15 @@
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
 session state, synthesis skeleton, job-state persistence boundary, replayable
-status events, and a minimal FastAPI API. Frontend, live browser integration
-tests, and deployment are planned but not shipped yet.
+status events, and a Next.js research workbench. Live browser integration tests
+and deployment are planned but not shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.12.0 - Live Status Stream complete.
-Next stage: v0.13.0 - Frontend Research UI.
+Current checkpoint: v0.13.0 - Frontend Research UI complete.
+Next stage: v0.14.0 - Evals Harness.
 
 Implemented now:
 
@@ -28,13 +28,13 @@ Implemented now:
 - Report synthesis skeleton with source-trace validation
 - Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
 - Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
-- Unit tests for config, API routes, planner, runner, and executor modules
+- Next.js research workbench with submission form, status stream view, report view, and source cards
+- Unit tests for backend modules and focused frontend UI/API behavior
 
 Not implemented yet:
 
 - Real search provider integration
 - Postgres/Redis production persistence
-- Frontend UI
 - Docker/Railway/Vercel deployment
 - Live CloakBrowser integration test
 
@@ -89,6 +89,7 @@ ghost-researcher/
 |   +-- main.py         # FastAPI app factory
 +-- core/               # Blueprint/Syntaris contract, spec, roadmap, decisions, memory
 +-- evals/              # Benchmark prompt seed
++-- frontend/           # Next.js research workbench
 +-- tests/              # Unit tests for current backend slices
 +-- .env.example
 +-- requirements.txt
@@ -117,6 +118,13 @@ For the current fake-tested backend slices, no live OpenRouter, Redis, Postgres,
 CloakBrowser service is required. A live CloakBrowser instance will be required
 for later integration testing.
 
+Install frontend dependencies separately:
+
+```bash
+cd frontend
+npm install
+```
+
 ---
 
 ## Run Tests
@@ -126,6 +134,17 @@ python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agen
 ```
 
 Current validated result: 73 tests passing.
+
+Run frontend checks:
+
+```bash
+cd frontend
+npm run lint
+npm test
+npm run build
+```
+
+Current frontend result: 8 tests passing, lint clean, production build passing.
 
 ---
 
@@ -181,6 +200,7 @@ WARN_MODEL_COST_PER_JOB_USD=0.02
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
 NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
 ```
 
 ---

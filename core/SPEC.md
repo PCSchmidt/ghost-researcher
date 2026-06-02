@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.12.0
-**Gate Name:** Live Status Stream
+**Version:** v0.13.0
+**Gate Name:** Frontend Research UI
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Expose ordered research job status events for frontend integration by persisting
-status events with each completed job and streaming them through a Server-Sent
-Events endpoint while keeping true background job execution deferred.
+Build the first usable Next.js research workbench around the existing backend:
+submit a research goal, render persisted status events through EventSource,
+display source credibility, and show the synthesized report when available.
 
 ---
 
@@ -77,16 +77,21 @@ Events endpoint while keeping true background job execution deferred.
 - [x] Add `GET /research/{job_id}/events` SSE endpoint
 - [x] Add [tests/test_jobs/test_status.py](../tests/test_jobs/test_status.py) status event and SSE encoding tests
 - [x] Extend [tests/test_api/test_research.py](../tests/test_api/test_research.py) with SSE endpoint coverage
+- [x] Scaffold [frontend](../frontend) as a Next.js App Router project
+- [x] Add typed frontend API client for `POST /research` and status event URLs
+- [x] Add research submission form, status stream view, report viewer, and source cards
+- [x] Add frontend tests for API client, form submission, status rendering, and report rendering
+- [x] Add backend CORS configuration for frontend origin access
 
 ---
 
 ## EXIT CRITERIA
 
-1. Research job responses include ordered `status_events[]`
-2. `GET /research/{job_id}/events` streams persisted status events as `text/event-stream`
-3. Events include job start, tool start, tool completion, planner stop, synthesis completion, and job completion where applicable
-4. Missing job event streams return 404
-5. Current backend regression suite passes
+1. Frontend can submit a research goal to `POST /research`
+2. Frontend can render status events through `EventSource` against `GET /research/{job_id}/events`
+3. UI shows run metrics, planner decisions, source cards, credibility scores, and report output/placeholder state
+4. Backend CORS settings allow configured frontend origins
+5. Backend regression suite, frontend lint, frontend tests, and frontend production build pass
 
 ---
 
@@ -126,26 +131,31 @@ Events endpoint while keeping true background job execution deferred.
 - Status event model with stable `sequence`, `event_type`, `status`, `message`, `tool_name`, and `payload` fields
 - Persisted `status_events[]` on `POST /research` and `GET /research/{job_id}` responses
 - Replayable SSE endpoint at `GET /research/{job_id}/events`
+- Next.js App Router frontend in `frontend/`
+- Typed frontend API client using `NEXT_PUBLIC_API_URL`
+- Research workbench with submission form, status stream, report viewer, and source cards
+- Frontend Vitest setup and focused component/API tests
+- Backend CORS settings through `CORS_ALLOWED_ORIGINS`
 
 ---
 
 ## WHAT DOES NOT SHIP IN THIS GATE
 
-- No frontend UI yet
 - No rich report formatting yet; v0.10 ships the structured skeleton only
 - No real browser integration test yet; executor tests use fakes
 - No real search provider yet; `web_search` is a deterministic skeleton
 - No live OpenRouter integration test yet; adapter tests use fake transport
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
+- No deployed frontend yet; v0.13 is local/dev frontend only
 
 ---
 
 ## NEXT GATE
 
-### v0.13.0 - Frontend Research UI
+### v0.14.0 - Evals Harness
 
-Build the first usable Next.js research UI around the existing API and SSE stream.
+Turn benchmark prompts into repeatable report/source quality checks.
 
 ---
 
