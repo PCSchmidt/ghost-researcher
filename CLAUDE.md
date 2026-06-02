@@ -371,9 +371,9 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v0.13.0 - Frontend Research UI complete
-- Next stage: v0.14.0 - Evals Harness
-- Current regression baseline: 73 tests passing
+- Current checkpoint: v0.14.0 - Evals Harness complete
+- Next stage: v1.0.0 - Deployment
+- Current regression baseline: 77 backend tests passing
 - Current frontend baseline: lint clean, 8 tests passing, production build passing
 - `web_search` is a deterministic skeleton, not a real provider integration yet
 - URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
@@ -382,6 +382,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - Job state persists through repository boundary; JSON-file repository proves restart durability, API default remains in-memory for dependency-free tests
 - Status events are persisted with research jobs and exposed through `GET /research/{job_id}/events` as a replayable SSE stream; true background live execution remains later queue work
 - Frontend workbench lives in `frontend/`; it submits research goals, consumes the SSE stream via EventSource, renders reports, and displays source credibility cards
+- Offline eval harness lives in `evals/eval_runner.py`; it runs deterministic benchmark checks and writes JSON artifacts under `evals/results/`
+- v0.14 eval artifact: `evals/results/eval_results_20260602T114237Z.json`, 3 prompts, average score 0.786. Expected limitation: deterministic planner currently assesses one source per prompt, below benchmark minimum source counts.
 
 ## Resume Checklist
 
@@ -396,7 +398,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v0.11.0 persistence and job state complete and documented
 - [x] v0.12.0 live status stream complete and documented
 - [x] v0.13.0 frontend research UI complete and documented
-- [ ] v0.14.0 evals harness not started
+- [x] v0.14.0 evals harness complete and documented
 
 ## Session Start Command
 

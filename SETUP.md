@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.13.0 - Frontend Research UI complete.
-Next stage: v0.14.0 - Evals Harness.
+Current checkpoint: v0.14.0 - Evals Harness complete.
+Next stage: v1.0.0 - Deployment.
 
 Gate 1 is confirmed:
 
@@ -20,9 +20,9 @@ Gate 1 is confirmed:
 - [evals/benchmark_prompts.json](evals/benchmark_prompts.json) contains 10 benchmark prompts.
 - [backend/agent/tools.py](backend/agent/tools.py) contains the schema-locked tool catalog.
 
-The current backend is fake-tested. No live OpenRouter, Redis, Postgres,
-CloakBrowser service, or real search provider is required to run the regression
-suite.
+The current backend and eval harness are fake-tested. No live OpenRouter, Redis,
+Postgres, CloakBrowser service, or real search provider is required to run the
+regression suite or offline benchmark eval.
 
 ---
 
@@ -84,10 +84,21 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
 Run the full backend regression suite:
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Expected current result: 73 tests passing.
+Expected current result: 77 backend tests passing.
+
+Run the offline eval harness:
+
+```bash
+python -m evals.eval_runner --limit 3
+```
+
+Expected current eval result: 3 benchmark prompts run in deterministic offline
+mode, average score 0.786, and a JSON artifact written under `evals/results/`.
+The current planner assesses one source per prompt, so source-count limitations
+are expected in the artifact.
 
 Run the frontend checks:
 
@@ -163,8 +174,8 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v0.14.0: add the evals harness around benchmark prompts,
-source traceability, and report quality scoring.
+The next build slice is v1.0.0: deploy the backend, CloakBrowser service, and
+frontend with health checks and rollback documentation.
 
 ---
 
@@ -185,5 +196,5 @@ source traceability, and report quality scoring.
 | v0.11.0 | Persistence and job state | Complete |
 | v0.12.0 | SSE live status stream | Complete |
 | v0.13.0 | Frontend research UI | Complete |
-| v0.14.0 | Evals harness | Next |
-| v1.0.0 | Railway and Vercel deployment | Planned |
+| v0.14.0 | Evals harness | Complete |
+| v1.0.0 | Railway and Vercel deployment | Next |

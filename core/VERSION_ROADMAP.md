@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.14.0 - Evals Harness
+Current stage: v1.0.0 - Deployment
 
 Recently completed:
 
@@ -43,6 +43,7 @@ Recently completed:
 - v0.11.0 persistence and job state
 - v0.12.0 live status stream
 - v0.13.0 frontend research UI
+- v0.14.0 evals harness
 
 Foundation items resolved on 2026-05-29:
 
@@ -341,15 +342,17 @@ Goal: Turn benchmark prompts into repeatable quality checks.
 Ships:
 
 - `evals/eval_runner.py`
+- Deterministic offline benchmark execution against `evals/benchmark_prompts.json`
 - Scoring outputs in `evals/results/`
-- Report quality and source traceability checks
+- Report quality, expected source overlap, benchmark criteria coverage, freshness, and source traceability checks
+- Focused eval harness tests
 
 Exit criteria:
 
 - At least 3 benchmark prompts run end to end
 - Results are persisted as eval artifacts
 
-Status: Next.
+Status: Complete. v0.14 artifact: `evals/results/eval_results_20260602T114237Z.json`.
 
 ---
 
@@ -370,4 +373,4 @@ Exit criteria:
 - `POST /research` works against deployed backend
 - Frontend can run a demo research job
 
-Status: Planned.
+Status: Next.

@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.13.0
-**Gate Name:** Frontend Research UI
+**Version:** v0.14.0
+**Gate Name:** Evals Harness
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Build the first usable Next.js research workbench around the existing backend:
-submit a research goal, render persisted status events through EventSource,
-display source credibility, and show the synthesized report when available.
+Turn the seeded benchmark prompts into repeatable report/source quality checks:
+run at least three prompts through a deterministic offline harness, score source
+coverage and source traceability, and persist results as eval artifacts.
 
 ---
 
@@ -82,15 +82,19 @@ display source credibility, and show the synthesized report when available.
 - [x] Add research submission form, status stream view, report viewer, and source cards
 - [x] Add frontend tests for API client, form submission, status rendering, and report rendering
 - [x] Add backend CORS configuration for frontend origin access
+- [x] Add [evals/eval_runner.py](../evals/eval_runner.py) offline benchmark runner
+- [x] Score benchmark completion, source count, expected source overlap, source traceability, criteria coverage, and freshness
+- [x] Add [tests/test_evals/test_eval_runner.py](../tests/test_evals/test_eval_runner.py) eval harness tests
+- [x] Run first 3 benchmark prompts and persist [evals/results/eval_results_20260602T114237Z.json](../evals/results/eval_results_20260602T114237Z.json)
 
 ---
 
 ## EXIT CRITERIA
 
-1. Frontend can submit a research goal to `POST /research`
-2. Frontend can render status events through `EventSource` against `GET /research/{job_id}/events`
-3. UI shows run metrics, planner decisions, source cards, credibility scores, and report output/placeholder state
-4. Backend CORS settings allow configured frontend origins
+1. Eval runner loads [evals/benchmark_prompts.json](../evals/benchmark_prompts.json)
+2. At least 3 benchmark prompts run end to end in deterministic offline mode
+3. Eval scoring reports completion, source count, expected source overlap, source traceability, criteria coverage, freshness, and limitations
+4. Results are persisted under [evals/results](../evals/results)
 5. Backend regression suite, frontend lint, frontend tests, and frontend production build pass
 
 ---
@@ -136,6 +140,10 @@ display source credibility, and show the synthesized report when available.
 - Research workbench with submission form, status stream, report viewer, and source cards
 - Frontend Vitest setup and focused component/API tests
 - Backend CORS settings through `CORS_ALLOWED_ORIGINS`
+- Offline eval harness in [evals/eval_runner.py](../evals/eval_runner.py)
+- Eval scoring for source coverage, expected-source overlap, source traceability, criteria coverage, and freshness
+- Persisted v0.14 eval artifact in [evals/results/eval_results_20260602T114237Z.json](../evals/results/eval_results_20260602T114237Z.json)
+- Focused eval harness tests in [tests/test_evals/test_eval_runner.py](../tests/test_evals/test_eval_runner.py)
 
 ---
 
@@ -148,16 +156,18 @@ display source credibility, and show the synthesized report when available.
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
 - No deployed frontend yet; v0.13 is local/dev frontend only
+- No live eval mode yet; v0.14 runs deterministic offline checks rather than real OpenRouter/search/CloakBrowser jobs
+- Deterministic planner currently assesses one source per prompt, so v0.14 eval artifacts are expected to flag source-count gaps
 
 ---
 
 ## NEXT GATE
 
-### v0.14.0 - Evals Harness
+### v1.0.0 - Deployment
 
-Turn benchmark prompts into repeatable report/source quality checks.
+Deploy the backend, CloakBrowser service, and frontend with health checks and rollback documentation.
 
 ---
 
-**Last updated:** 2026-06-01
+**Last updated:** 2026-06-02
 **Updated by:** GitHub Copilot

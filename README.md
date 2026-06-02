@@ -3,15 +3,16 @@
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
 session state, synthesis skeleton, job-state persistence boundary, replayable
-status events, and a Next.js research workbench. Live browser integration tests
-and deployment are planned but not shipped yet.
+status events, a Next.js research workbench, and a repeatable offline eval
+harness. Live browser integration tests and deployment are planned but not
+shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.13.0 - Frontend Research UI complete.
-Next stage: v0.14.0 - Evals Harness.
+Current checkpoint: v0.14.0 - Evals Harness complete.
+Next stage: v1.0.0 - Deployment.
 
 Implemented now:
 
@@ -29,11 +30,13 @@ Implemented now:
 - Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
 - Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
 - Next.js research workbench with submission form, status stream view, report view, and source cards
-- Unit tests for backend modules and focused frontend UI/API behavior
+- Offline benchmark eval runner with source traceability, report quality, and criteria coverage scoring
+- Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
 
 Not implemented yet:
 
 - Real search provider integration
+- Live eval run against real search, OpenRouter, and CloakBrowser
 - Postgres/Redis production persistence
 - Docker/Railway/Vercel deployment
 - Live CloakBrowser integration test
@@ -88,7 +91,7 @@ ghost-researcher/
 |   +-- config.py       # Environment-backed settings
 |   +-- main.py         # FastAPI app factory
 +-- core/               # Blueprint/Syntaris contract, spec, roadmap, decisions, memory
-+-- evals/              # Benchmark prompt seed
++-- evals/              # Benchmark prompts, eval runner, and persisted result artifacts
 +-- frontend/           # Next.js research workbench
 +-- tests/              # Unit tests for current backend slices
 +-- .env.example
@@ -130,10 +133,21 @@ npm install
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Current validated result: 73 tests passing.
+Current validated result: 77 backend tests passing.
+
+Run the offline eval harness:
+
+```bash
+python -m evals.eval_runner --limit 3
+```
+
+Current v0.14 result: 3 benchmark prompts completed in deterministic offline mode,
+average score 0.786, with results persisted under `evals/results/`. The current
+deterministic planner assesses one source per prompt, so eval artifacts correctly
+flag source-count coverage below the benchmark minimum.
 
 Run frontend checks:
 

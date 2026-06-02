@@ -1,0 +1,176 @@
+{
+  "average_score": 0.786,
+  "benchmark_count": 3,
+  "cases": [
+    {
+      "domain": "defense_aerospace",
+      "evidence_urls": [
+        "https://sam.gov/ghostresearcher-eval/bp_001"
+      ],
+      "id": "bp_001",
+      "limitations": [
+        "source_count_below_benchmark_minimum",
+        "expected_source_coverage_incomplete"
+      ],
+      "metrics": {
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "sam.gov"
+        ],
+        "expected_source_score": 0.333,
+        "freshness_score": 1.0,
+        "min_sources": 3,
+        "report_generated": true,
+        "source_count": 1,
+        "source_count_score": 0.333,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility"
+        ]
+      },
+      "prompt": "Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.",
+      "report": {
+        "confidence": 0.807,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://sam.gov/ghostresearcher-eval/bp_001"
+            ],
+            "text": "Evidence for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. latest recent 2026."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://sam.gov/ghostresearcher-eval/bp_001"
+        ],
+        "summary": "Evidence for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. latest recent 2026.",
+        "title": "Research Report: Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications."
+      },
+      "score": 0.767,
+      "sources": [
+        "https://sam.gov/ghostresearcher-eval/bp_001"
+      ]
+    },
+    {
+      "domain": "aviation_regulatory",
+      "evidence_urls": [
+        "https://faa.gov/ghostresearcher-eval/bp_002"
+      ],
+      "id": "bp_002",
+      "limitations": [
+        "source_count_below_benchmark_minimum",
+        "expected_source_coverage_incomplete"
+      ],
+      "metrics": {
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "faa.gov"
+        ],
+        "expected_source_score": 0.333,
+        "freshness_score": 1.0,
+        "min_sources": 3,
+        "report_generated": true,
+        "source_count": 1,
+        "source_count_score": 0.333,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility"
+        ]
+      },
+      "prompt": "What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?",
+      "report": {
+        "confidence": 0.807,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://faa.gov/ghostresearcher-eval/bp_002"
+            ],
+            "text": "Evidence for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. latest recent 2026."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://faa.gov/ghostresearcher-eval/bp_002"
+        ],
+        "summary": "Evidence for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. latest recent 2026.",
+        "title": "Research Report: What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?"
+      },
+      "score": 0.767,
+      "sources": [
+        "https://faa.gov/ghostresearcher-eval/bp_002"
+      ]
+    },
+    {
+      "domain": "aviation_operational",
+      "evidence_urls": [
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003"
+      ],
+      "id": "bp_003",
+      "limitations": [
+        "source_count_below_benchmark_minimum",
+        "expected_source_coverage_incomplete"
+      ],
+      "metrics": {
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "notams.aim.faa.gov"
+        ],
+        "expected_source_score": 0.5,
+        "freshness_score": 1.0,
+        "min_sources": 2,
+        "report_generated": true,
+        "source_count": 1,
+        "source_count_score": 0.5,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility"
+        ]
+      },
+      "prompt": "What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?",
+      "report": {
+        "confidence": 0.807,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003"
+            ],
+            "text": "Evidence for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. latest recent 2026."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003"
+        ],
+        "summary": "Evidence for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. latest recent 2026.",
+        "title": "Research Report: What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?"
+      },
+      "score": 0.825,
+      "sources": [
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003"
+      ]
+    }
+  ],
+  "generated_at": "2026-06-02T11:42:37.959182+00:00",
+  "mode": "deterministic_offline"
+}

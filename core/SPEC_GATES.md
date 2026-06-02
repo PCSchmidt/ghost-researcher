@@ -92,10 +92,10 @@ stage.
 
 - Exit artifacts: eval runner, benchmark scoring, results artifacts
 - Exit token: `EVALS CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v1.0.0 - Deployment
 
 - Exit artifacts: Railway backend/cloakserve, Vercel frontend, healthy production endpoints
 - Exit token: `DEPLOY CONFIRMED`
-- Status: Planned
+- Status: Next

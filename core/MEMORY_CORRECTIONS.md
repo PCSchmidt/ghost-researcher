@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.14.0 -- Evals Harness
+
+Date: 2026-06-02
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: The eval harness could reuse ResearchOrchestrator, but the default runner would require Playwright/CloakBrowser during navigation. A deterministic offline runner was needed so benchmark scoring stays repeatable before live browser/search integration exists.
+CORRECTION FOR FUTURE: Build eval scoring as importable pure functions, then provide offline and live executor modes separately. Let early artifacts expose source-count gaps instead of masking them.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.13.0 -- Frontend Research UI
 
 Date: 2026-06-01
