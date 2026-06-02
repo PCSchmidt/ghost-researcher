@@ -33,6 +33,13 @@ npm test
 npm run build
 ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Current validated baseline: lint clean, 8 Vitest tests passing, production build passing.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment Target
+
+The frontend deployment target is Vercel. Deployment is planned after v0.17 live
+integration smoke tests verify the configured backend, search provider,
+OpenRouter, and CloakBrowser paths.
+
+See [../README.md](../README.md) and [../SETUP.md](../SETUP.md) for the current
+project checkpoint and full validation baseline.

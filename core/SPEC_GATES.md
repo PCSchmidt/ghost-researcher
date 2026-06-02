@@ -102,7 +102,7 @@ stage.
 
 ### v0.16.0 - Real Search and Live Evals
 
-- Exit artifacts: real search provider boundary, opt-in live eval mode, live-provider smoke tests
+- Exit artifacts: real search provider boundary, opt-in live eval mode, mode-labeled offline eval artifact
 - Exit token: `LIVE SEARCH CONFIRMED`
 - Status: Complete
 
