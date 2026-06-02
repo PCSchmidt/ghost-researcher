@@ -363,6 +363,7 @@ PROXY_USER=
 PROXY_PASS=
 
 # Agent behavior
+GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
 MAX_MODEL_COST_PER_JOB_USD=0.05
@@ -376,14 +377,14 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v0.16.0 - Real Search and Live Evals complete
-- Next stage: v0.17.0 - Live Integration Smoke Tests
-- Current regression baseline: 85 backend tests passing
+- Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete
+- Next stage: v1.0.0 - Deployment
+- Current regression baseline: 90 backend tests OK by default, with 85 executed and 5 live smoke tests skipped
 - Current frontend baseline: lint clean, 8 tests passing, production build passing
-- `web_search` is a deterministic skeleton, not a real provider integration yet
+- `web_search` defaults to deterministic offline results and has an opt-in Brave Search provider boundary
 - URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
-- OpenRouter planner adapter is fake-tested; no live OpenRouter integration test yet
-- Report synthesis is source-validated and fake-tested; no live synthesizer integration test yet
+- OpenRouter planner and synthesizer live smoke tests exist but are skipped unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` and `OPENROUTER_API_KEY` are configured
+- CloakBrowser health/navigation live smoke tests exist but are skipped unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` and `CLOAK_CDP_URL` are configured
 - Job state persists through repository boundary; JSON-file repository proves restart durability, API default remains in-memory for dependency-free tests
 - Status events are persisted with research jobs and exposed through `GET /research/{job_id}/events` as a replayable SSE stream; true background live execution remains later queue work
 - Frontend workbench lives in `frontend/`; it submits research goals, consumes the SSE stream via EventSource, renders reports, and displays source credibility cards
@@ -408,6 +409,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v0.14.0 evals harness complete and documented
 - [x] v0.15.0 live capability alignment complete and documented
 - [x] v0.16.0 real search provider boundary and eval modes complete and documented
+- [x] v0.17.0 skipped-by-default live smoke tests complete and documented
 
 ## Session Start Command
 

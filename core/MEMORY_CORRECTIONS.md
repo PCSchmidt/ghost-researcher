@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.17.0 -- Live Integration Smoke Tests
+
+Date: 2026-06-02
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: Live validation should be available without making local regression depend on secrets, network, or running services. A single explicit `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` flag plus provider-specific env checks keeps failures intentional and skip reasons clear.
+CORRECTION FOR FUTURE: Add live smoke tests as opt-in unittest modules first, then only promote them into deployment gates once service credentials and runtime ownership are settled.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.16.0 -- Real Search and Live Evals
 
 Date: 2026-06-02

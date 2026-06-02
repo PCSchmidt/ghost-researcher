@@ -37,9 +37,8 @@ Current validated baseline: lint clean, 8 Vitest tests passing, production build
 
 ## Deployment Target
 
-The frontend deployment target is Vercel. Deployment is planned after v0.17 live
-integration smoke tests verify the configured backend, search provider,
-OpenRouter, and CloakBrowser paths.
+The frontend deployment target is Vercel. Deployment is the next planned stage
+after the v0.17 live smoke harness.
 
 See [../README.md](../README.md) and [../SETUP.md](../SETUP.md) for the current
 project checkpoint and full validation baseline.

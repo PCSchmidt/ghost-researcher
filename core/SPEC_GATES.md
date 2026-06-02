@@ -110,7 +110,7 @@ stage.
 
 - Exit artifacts: skipped-by-default live smoke tests for search provider, OpenRouter, and CloakBrowser path
 - Exit token: `LIVE SMOKE CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v1.0.0 - Deployment
 

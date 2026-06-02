@@ -20,6 +20,7 @@ Updated at gate close with gate outcome rows.
 | 2026-06-02 | GhostResearcher | v0.14.0 | COMPLETE | 77 backend, 8 frontend | Added offline eval runner, benchmark scoring, source-trace checks, and persisted 3-prompt eval artifact |
 | 2026-06-02 | GhostResearcher | v0.15.0 | COMPLETE | 80 backend, 8 frontend | Added multi-source deterministic planning, executable `finalize_report`, and 3-prompt eval artifact with source counts met |
 | 2026-06-02 | GhostResearcher | v0.16.0 | COMPLETE | 85 backend, 8 frontend | Added search provider boundary, Brave adapter, eval `--mode offline|live`, and mode-labeled eval artifact |
+| 2026-06-02 | GhostResearcher | v0.17.0 | COMPLETE | 90 backend OK, 8 frontend | Added skipped-by-default live smoke tests for Brave Search, OpenRouter planner/synthesizer, and CloakBrowser health/navigation |
 
 ## STOP EVENTS
 

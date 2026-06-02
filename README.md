@@ -3,16 +3,16 @@
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
 session state, synthesis skeleton, job-state persistence boundary, replayable
-status events, a Next.js research workbench, and a repeatable offline eval
-harness. Live browser integration tests and deployment are planned but not
-shipped yet.
+status events, a Next.js research workbench, a repeatable offline eval harness,
+and skipped-by-default live integration smoke tests. Deployment is planned but
+not shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.16.0 - Real Search and Live Evals complete.
-Next stage: v0.17.0 - Live Integration Smoke Tests.
+Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete.
+Next stage: v1.0.0 - Deployment.
 
 Implemented now:
 
@@ -35,14 +35,14 @@ Implemented now:
 - Offline benchmark eval runner with source traceability, report quality, and criteria coverage scoring
 - Offline evals that can satisfy benchmark minimum source counts before synthesis
 - Eval CLI modes: `--mode offline|live`
+- Skipped-by-default live smoke tests for Brave Search, OpenRouter, and CloakBrowser
 - Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
 
 Not implemented yet:
 
-- Live eval run against configured real search, OpenRouter, and CloakBrowser services
 - Postgres/Redis production persistence
 - Docker/Railway/Vercel deployment
-- Live CloakBrowser integration test
+- Committed live eval artifact from a real provider run
 
 See [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md) for the full staged plan.
 
@@ -120,9 +120,9 @@ Create a local environment file when needed:
 cp .env.example .env
 ```
 
-For the current fake-tested backend slices, no live OpenRouter, Redis, Postgres, or
-CloakBrowser service is required. A live CloakBrowser instance will be required
-for later integration testing.
+For the default backend and eval checks, no live OpenRouter, Redis, Postgres,
+CloakBrowser service, or search API key is required. Live smoke tests are
+available but skip unless explicitly enabled.
 
 Install frontend dependencies separately:
 
@@ -136,10 +136,11 @@ npm install
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 85 backend tests passing.
+Current validated result: 90 backend tests OK by default, with 85 executed and
+5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -151,6 +152,15 @@ Current v0.16 result: 3 benchmark prompts completed in offline mode with the
 deterministic search provider, average score 1.0, with results persisted under
 `evals/results/`. Live mode is opt-in and requires `SEARCH_PROVIDER=brave`,
 `SEARCH_API_KEY`, and live browser/search dependencies.
+
+Run live smoke tests only when local services and keys are configured:
+
+```bash
+GHOSTRESEARCHER_RUN_LIVE_TESTS=1 SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENROUTER_API_KEY=... CLOAK_CDP_URL=http://localhost:9222 python -m unittest tests.test_live.test_smoke
+```
+
+If any required variable is absent, the corresponding smoke test is skipped with
+a clear reason. The normal regression suite must remain dependency-free.
 
 Run frontend checks:
 
@@ -217,6 +227,7 @@ MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
 MAX_MODEL_COST_PER_JOB_USD=0.05
 WARN_MODEL_COST_PER_JOB_USD=0.02
+GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
 NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app

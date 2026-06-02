@@ -7,16 +7,16 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.16.0
-**Gate Name:** Real Search and Live Evals
+**Version:** v0.17.0
+**Gate Name:** Live Integration Smoke Tests
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Add the real search provider boundary and an offline/live eval mode split while
-keeping deterministic offline tests dependency-free.
+Add skipped-by-default live smoke tests for configured search, OpenRouter, and
+CloakBrowser paths while keeping the default regression suite dependency-free.
 
 ---
 
@@ -97,16 +97,22 @@ keeping deterministic offline tests dependency-free.
 - [x] Add `--mode offline|live` to [evals/eval_runner.py](../evals/eval_runner.py)
 - [x] Label eval artifacts with mode and search provider
 - [x] Run first 3 benchmark prompts in offline mode and persist [evals/results/eval_results_20260602T122647Z.json](../evals/results/eval_results_20260602T122647Z.json)
+- [x] Add [tests/test_live/test_smoke.py](../tests/test_live/test_smoke.py) for skipped-by-default live smoke tests
+- [x] Gate live smoke tests behind `GHOSTRESEARCHER_RUN_LIVE_TESTS=1`
+- [x] Add Brave Search live smoke coverage gated by `SEARCH_PROVIDER=brave` and `SEARCH_API_KEY`
+- [x] Add OpenRouter planner and synthesizer live smoke coverage gated by `OPENROUTER_API_KEY`
+- [x] Add CloakBrowser health and navigation live smoke coverage gated by `CLOAK_CDP_URL`
+- [x] Document live smoke commands and skip behavior in [README.md](../README.md), [SETUP.md](../SETUP.md), and [.env.example](../.env.example)
 
 ---
 
 ## EXIT CRITERIA
 
-1. Deterministic search remains the default provider and requires no secrets or network
-2. Brave Search provider can normalize live API results through an injectable, testable boundary
-3. Eval CLI supports `--mode offline|live`
-4. Eval artifacts include mode and search provider metadata
-5. Backend regression suite, frontend lint, frontend tests, and frontend production build pass
+1. Default backend regression suite remains dependency-free
+2. Live smoke tests skip clearly when env vars are absent
+3. Brave Search smoke test can return normalized candidates when configured
+4. OpenRouter planner and synthesizer smoke tests exercise schema/source validation when configured
+5. CloakBrowser health and navigation smoke tests exercise the CDP path when configured
 
 ---
 
@@ -163,29 +169,36 @@ keeping deterministic offline tests dependency-free.
 - Brave Search provider adapter in [backend/executor/search.py](../backend/executor/search.py)
 - Eval `--mode offline|live` CLI switch
 - Persisted v0.16 eval artifact in [evals/results/eval_results_20260602T122647Z.json](../evals/results/eval_results_20260602T122647Z.json)
+- Skipped-by-default live smoke test package in [tests/test_live](../tests/test_live)
+- `GHOSTRESEARCHER_RUN_LIVE_TESTS` explicit opt-in flag
+- Brave Search live smoke test
+- OpenRouter planner live smoke test
+- OpenRouter synthesizer live smoke test
+- CloakBrowser health live smoke test
+- CloakBrowser navigation live smoke test
 
 ---
 
 ## WHAT DOES NOT SHIP IN THIS GATE
 
 - No rich report formatting yet; v0.10 ships the structured skeleton only
-- No real browser integration test yet; executor tests use fakes
-- No live search smoke test yet; provider tests use injected HTTP responses
-- No live OpenRouter integration test yet; adapter tests use fake transport
+- No always-on live browser integration test; CloakBrowser smoke tests are opt-in and skipped by default
+- No always-on live search integration test; Brave smoke tests are opt-in and skipped by default
+- No always-on live OpenRouter integration test; planner/synthesizer smoke tests are opt-in and skipped by default
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
 - No deployed frontend yet; v0.13 is local/dev frontend only
 - No committed live eval artifact yet; v0.16 adds the mode and provider boundary, but the checked artifact remains offline/deterministic
-- No live smoke test suite yet; v0.17 owns opt-in live provider/runtime validation
-- No deployed frontend/backend yet; deployment remains planned after live smoke validation
+- No live smoke test result artifact is committed; live smoke execution depends on local secrets/services
+- No deployed frontend/backend yet; deployment is the next planned stage
 
 ---
 
 ## NEXT GATE
 
-### v0.17.0 - Live Integration Smoke Tests
+### v1.0.0 - Deployment
 
-Add skipped-by-default live smoke tests for configured search, OpenRouter, and CloakBrowser paths.
+Prepare Railway backend/CloakBrowser services and Vercel frontend deployment.
 
 ---
 

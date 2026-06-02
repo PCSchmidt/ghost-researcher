@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.17.0 - Live Integration Smoke Tests
+Current stage: v1.0.0 - Deployment
 
 Recently completed:
 
@@ -46,6 +46,7 @@ Recently completed:
 - v0.14.0 evals harness
 - v0.15.0 live capability alignment
 - v0.16.0 real search and live eval modes
+- v0.17.0 live integration smoke tests
 
 Foundation items resolved on 2026-05-29:
 
@@ -421,7 +422,7 @@ Exit criteria:
 - Live smoke tests are discoverable and skipped clearly when env vars are absent
 - At least one configured live search smoke test can return normalized candidate sources
 
-Status: Next.
+Status: Complete. The smoke suite lives in [tests/test_live/test_smoke.py](../tests/test_live/test_smoke.py) and skips by default unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` is set.
 
 ---
 
@@ -442,4 +443,4 @@ Exit criteria:
 - `POST /research` works against deployed backend
 - Frontend can run a demo research job
 
-Status: Planned.
+Status: Next.

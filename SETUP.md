@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.16.0 - Real Search and Live Evals complete.
-Next stage: v0.17.0 - Live Integration Smoke Tests.
+Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete.
+Next stage: v1.0.0 - Deployment.
 
 Gate 1 is confirmed:
 
@@ -20,9 +20,10 @@ Gate 1 is confirmed:
 - [evals/benchmark_prompts.json](evals/benchmark_prompts.json) contains 10 benchmark prompts.
 - [backend/agent/tools.py](backend/agent/tools.py) contains the schema-locked tool catalog.
 
-The current backend and eval harness are fake-tested. No live OpenRouter, Redis,
-Postgres, CloakBrowser service, or real search provider is required to run the
-regression suite or offline benchmark eval.
+The current backend and eval harness remain dependency-free by default. No live
+OpenRouter, Redis, Postgres, CloakBrowser service, or real search provider is
+required to run the regression suite or offline benchmark eval. Live smoke tests
+are present but skipped unless explicitly enabled.
 
 ---
 
@@ -74,6 +75,7 @@ MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
 MAX_MODEL_COST_PER_JOB_USD=0.05
 WARN_MODEL_COST_PER_JOB_USD=0.02
+GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
 NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
@@ -87,10 +89,11 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
 Run the full backend regression suite:
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Expected current result: 85 backend tests passing.
+Expected current result: 90 backend tests OK by default, with 85 executed and
+5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -110,6 +113,17 @@ SEARCH_PROVIDER=brave SEARCH_API_KEY=... python -m evals.eval_runner --mode live
 
 Live mode uses configured provider/runtime services and is not part of the
 dependency-free regression suite.
+
+Run skipped-by-default live smoke tests when all required services are available:
+
+```bash
+GHOSTRESEARCHER_RUN_LIVE_TESTS=1 SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENROUTER_API_KEY=... CLOAK_CDP_URL=http://localhost:9222 python -m unittest tests.test_live.test_smoke
+```
+
+The live smoke suite covers Brave Search normalization, OpenRouter planner tool
+calls, OpenRouter source-grounded synthesis, CloakBrowser health, and
+CloakBrowser navigation to `https://example.com`. Missing env vars produce skips,
+not failures.
 
 Run the frontend checks:
 
@@ -160,10 +174,10 @@ The frontend defaults to `NEXT_PUBLIC_API_URL=http://localhost:8000`.
 
 ---
 
-## CloakBrowser Setup For Later Gates
+## CloakBrowser Setup For Live Smoke Tests
 
-Live browser integration is not required for the current fake-tested backend
-baseline. Before live executor tests, clone and verify CloakBrowser separately:
+Live browser integration is not required for the default backend baseline.
+Before enabling live smoke tests, clone and verify CloakBrowser separately:
 
 ```bash
 git clone https://github.com/PCSchmidt/CloakBrowser.git
@@ -185,8 +199,8 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v0.17.0: add skipped-by-default live smoke tests for the
-configured search provider, OpenRouter, and CloakBrowser path.
+The next build slice is v1.0.0: deployment prep for Railway backend/CloakBrowser
+services and Vercel frontend hosting.
 
 ---
 
@@ -210,5 +224,5 @@ configured search provider, OpenRouter, and CloakBrowser path.
 | v0.14.0 | Evals harness | Complete |
 | v0.15.0 | Live capability alignment | Complete |
 | v0.16.0 | Real search and live evals | Complete |
-| v0.17.0 | Live integration smoke tests | Next |
+| v0.17.0 | Live integration smoke tests | Complete |
 | v1.0.0 | Railway and Vercel deployment | Planned |
