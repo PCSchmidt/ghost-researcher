@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.16.0 -- Real Search and Live Evals
+
+Date: 2026-06-02
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: A live eval mode should not make the default eval path live. The clean boundary is provider selection in `web_search`, with deterministic as default and Brave as opt-in through env vars.
+CORRECTION FOR FUTURE: Keep live integrations behind explicit mode/env switches and injectable fetch/orchestrator boundaries so tests remain dependency-free.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.15.0 -- Live Capability Alignment
 
 Date: 2026-06-02

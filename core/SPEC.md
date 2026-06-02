@@ -7,17 +7,16 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.15.0
-**Gate Name:** Live Capability Alignment
+**Version:** v0.16.0
+**Gate Name:** Real Search and Live Evals
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Close the largest gap between the deterministic scaffold and the live research-agent
-goal: collect multiple sources before synthesis, execute `finalize_report` as a
-real runner tool, and improve offline eval source coverage before adding live search.
+Add the real search provider boundary and an offline/live eval mode split while
+keeping deterministic offline tests dependency-free.
 
 ---
 
@@ -92,15 +91,21 @@ real runner tool, and improve offline eval source coverage before adding live se
 - [x] Preserve OpenRouter `finalize_report` calls as executable tool calls in [backend/agent/openrouter.py](../backend/agent/openrouter.py)
 - [x] Update [evals/eval_runner.py](../evals/eval_runner.py) to pass benchmark `min_sources` into orchestration
 - [x] Run first 3 benchmark prompts and persist [evals/results/eval_results_20260602T121216Z.json](../evals/results/eval_results_20260602T121216Z.json)
+- [x] Add search provider settings to [backend/config.py](../backend/config.py) and [.env.example](../.env.example)
+- [x] Add stdlib-only Brave Search provider boundary in [backend/executor/search.py](../backend/executor/search.py)
+- [x] Keep deterministic search as the default provider for dependency-free tests
+- [x] Add `--mode offline|live` to [evals/eval_runner.py](../evals/eval_runner.py)
+- [x] Label eval artifacts with mode and search provider
+- [x] Run first 3 benchmark prompts in offline mode and persist [evals/results/eval_results_20260602T122647Z.json](../evals/results/eval_results_20260602T122647Z.json)
 
 ---
 
 ## EXIT CRITERIA
 
-1. Deterministic planner can continue from one assessed source to the next source candidate before synthesis
-2. `finalize_report` executes through `ResearchRunner` and finalizes session state
-3. Offline evals can meet the first 3 benchmark prompts' minimum source counts
-4. Results are persisted under [evals/results](../evals/results)
+1. Deterministic search remains the default provider and requires no secrets or network
+2. Brave Search provider can normalize live API results through an injectable, testable boundary
+3. Eval CLI supports `--mode offline|live`
+4. Eval artifacts include mode and search provider metadata
 5. Backend regression suite, frontend lint, frontend tests, and frontend production build pass
 
 ---
@@ -154,6 +159,10 @@ real runner tool, and improve offline eval source coverage before adding live se
 - Configurable `min_sources` deterministic planner behavior
 - First-class `finalize_report` execution through `ResearchRunner`
 - Persisted v0.15 eval artifact in [evals/results/eval_results_20260602T121216Z.json](../evals/results/eval_results_20260602T121216Z.json)
+- Search provider config: `SEARCH_PROVIDER`, `SEARCH_API_KEY`, and `SEARCH_API_URL`
+- Brave Search provider adapter in [backend/executor/search.py](../backend/executor/search.py)
+- Eval `--mode offline|live` CLI switch
+- Persisted v0.16 eval artifact in [evals/results/eval_results_20260602T122647Z.json](../evals/results/eval_results_20260602T122647Z.json)
 
 ---
 
@@ -161,22 +170,22 @@ real runner tool, and improve offline eval source coverage before adding live se
 
 - No rich report formatting yet; v0.10 ships the structured skeleton only
 - No real browser integration test yet; executor tests use fakes
-- No real search provider yet; `web_search` is a deterministic skeleton
+- No live search smoke test yet; provider tests use injected HTTP responses
 - No live OpenRouter integration test yet; adapter tests use fake transport
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
 - No deployed frontend yet; v0.13 is local/dev frontend only
-- No live eval mode yet; v0.14 runs deterministic offline checks rather than real OpenRouter/search/CloakBrowser jobs
-- No real search provider yet; v0.16 owns that integration
-- No live eval mode yet; v0.16 will add an offline/live mode split
+- No committed live eval artifact yet; v0.16 adds the mode and provider boundary, but the checked artifact remains offline/deterministic
+- No live smoke test suite yet; v0.17 owns opt-in live provider/runtime validation
+- No deployed frontend/backend yet; deployment remains planned after live smoke validation
 
 ---
 
 ## NEXT GATE
 
-### v0.16.0 - Real Search and Live Evals
+### v0.17.0 - Live Integration Smoke Tests
 
-Add a real search provider boundary and opt-in live eval mode while preserving deterministic offline tests.
+Add skipped-by-default live smoke tests for configured search, OpenRouter, and CloakBrowser paths.
 
 ---
 

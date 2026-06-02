@@ -34,6 +34,9 @@ class Settings:
     cloak_cdp_url: str
     database_url: str | None
     redis_url: str | None
+    search_provider: str
+    search_api_key: str | None
+    search_api_url: str
     proxy_url: str | None
     proxy_user: str | None
     proxy_pass: str | None
@@ -63,6 +66,9 @@ class Settings:
             cloak_cdp_url=source.get("CLOAK_CDP_URL", "http://localhost:9222"),
             database_url=source.get("DATABASE_URL"),
             redis_url=source.get("REDIS_URL"),
+            search_provider=source.get("SEARCH_PROVIDER", "deterministic"),
+            search_api_key=source.get("SEARCH_API_KEY"),
+            search_api_url=source.get("SEARCH_API_URL", "https://api.search.brave.com/res/v1/web/search"),
             proxy_url=source.get("PROXY_URL"),
             proxy_user=source.get("PROXY_USER"),
             proxy_pass=source.get("PROXY_PASS"),

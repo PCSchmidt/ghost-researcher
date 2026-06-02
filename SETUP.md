@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.15.0 - Live Capability Alignment complete.
-Next stage: v0.16.0 - Real Search and Live Evals.
+Current checkpoint: v0.16.0 - Real Search and Live Evals complete.
+Next stage: v0.17.0 - Live Integration Smoke Tests.
 
 Gate 1 is confirmed:
 
@@ -64,6 +64,9 @@ ANTHROPIC_API_KEY=
 CLOAK_CDP_URL=http://localhost:9222
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 REDIS_URL=redis://host:6379
+SEARCH_PROVIDER=deterministic
+SEARCH_API_KEY=
+SEARCH_API_URL=https://api.search.brave.com/res/v1/web/search
 PROXY_URL=
 PROXY_USER=
 PROXY_PASS=
@@ -87,18 +90,26 @@ Run the full backend regression suite:
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Expected current result: 80 backend tests passing.
+Expected current result: 85 backend tests passing.
 
 Run the offline eval harness:
 
 ```bash
-python -m evals.eval_runner --limit 3
+python -m evals.eval_runner --mode offline --limit 3
 ```
 
-Expected current eval result: 3 benchmark prompts run in deterministic offline
-mode, average score 1.0, and a JSON artifact written under `evals/results/`.
-The deterministic planner now assesses enough offline benchmark sources to meet
-the prompt minimum source counts before finalization.
+Expected current eval result: 3 benchmark prompts run in offline mode with the
+deterministic search provider, average score 1.0, and a JSON artifact written
+under `evals/results/`.
+
+Live eval mode is opt-in:
+
+```bash
+SEARCH_PROVIDER=brave SEARCH_API_KEY=... python -m evals.eval_runner --mode live --limit 3
+```
+
+Live mode uses configured provider/runtime services and is not part of the
+dependency-free regression suite.
 
 Run the frontend checks:
 
@@ -174,8 +185,8 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v0.16.0: add a real search provider boundary and a live
-eval mode while keeping deterministic offline tests as the default baseline.
+The next build slice is v0.17.0: add skipped-by-default live smoke tests for the
+configured search provider, OpenRouter, and CloakBrowser path.
 
 ---
 
@@ -198,5 +209,6 @@ eval mode while keeping deterministic offline tests as the default baseline.
 | v0.13.0 | Frontend research UI | Complete |
 | v0.14.0 | Evals harness | Complete |
 | v0.15.0 | Live capability alignment | Complete |
-| v0.16.0 | Real search and live evals | Next |
+| v0.16.0 | Real search and live evals | Complete |
+| v0.17.0 | Live integration smoke tests | Next |
 | v1.0.0 | Railway and Vercel deployment | Planned |

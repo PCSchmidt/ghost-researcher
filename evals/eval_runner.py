@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from backend.config import Settings
 from backend.executor.credibility import assess_credibility
@@ -65,18 +65,29 @@ async def run_eval_suite(
     *,
     prompts: list[BenchmarkPrompt],
     settings: Settings | None = None,
+    mode: str = "offline",
+    orchestrator_factory: Callable[[Settings], Any] | None = None,
 ) -> dict[str, Any]:
-    """Run benchmark prompts through the deterministic offline harness."""
+    """Run benchmark prompts through the offline or live harness."""
+    normalized_mode = mode.strip().lower()
+    if normalized_mode not in {"offline", "live"}:
+        raise ValueError("invalid_eval_mode")
     active_settings = settings or Settings.from_env({})
     cases: list[dict[str, Any]] = []
     for prompt in prompts:
-        result = await _run_prompt(prompt, active_settings)
+        result = await _run_prompt(
+            prompt,
+            active_settings,
+            mode=normalized_mode,
+            orchestrator_factory=orchestrator_factory,
+        )
         cases.append(score_prompt(prompt, result))
 
     average_score = round(sum(case["score"] for case in cases) / len(cases), 3) if cases else 0.0
     return {
         "generated_at": datetime.now(UTC).isoformat(),
-        "mode": "deterministic_offline",
+        "mode": normalized_mode,
+        "search_provider": active_settings.search_provider,
         "benchmark_count": len(cases),
         "average_score": average_score,
         "cases": cases,
@@ -140,7 +151,23 @@ def write_eval_results(payload: dict[str, Any], *, results_dir: Path = DEFAULT_R
     return path
 
 
-async def _run_prompt(prompt: BenchmarkPrompt, settings: Settings) -> PlannerSequenceResult:
+async def _run_prompt(
+    prompt: BenchmarkPrompt,
+    settings: Settings,
+    *,
+    mode: str,
+    orchestrator_factory: Callable[[Settings], Any] | None = None,
+) -> PlannerSequenceResult:
+    if mode == "live":
+        if settings.search_provider.strip().lower() in {"", "deterministic", "offline"}:
+            raise ValueError("live_search_provider_required")
+        orchestrator = orchestrator_factory(settings) if orchestrator_factory else ResearchOrchestrator(settings)
+        return await orchestrator.run_sequence(
+            prompt.prompt,
+            max_steps=min(prompt.max_steps, settings.max_steps_per_job),
+            min_sources=prompt.min_sources,
+        )
+
     runner = ResearchRunner(
         settings,
         search=_fake_search(prompt),
@@ -307,6 +334,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run GhostResearcher benchmark evals.")
     parser.add_argument("--benchmark", type=Path, default=DEFAULT_BENCHMARK_PATH)
     parser.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
+    parser.add_argument("--mode", choices=["offline", "live"], default="offline")
     parser.add_argument("--limit", type=int, default=3, help="Number of benchmark prompts to run. Use 0 for all prompts.")
     parser.add_argument("--no-write", action="store_true", help="Print results without writing an artifact.")
     return parser.parse_args()
@@ -316,7 +344,7 @@ async def _main() -> None:
     args = _parse_args()
     prompts = load_benchmark_prompts(args.benchmark)
     selected_prompts = prompts if args.limit == 0 else prompts[: args.limit]
-    payload = await run_eval_suite(prompts=selected_prompts)
+    payload = await run_eval_suite(prompts=selected_prompts, mode=args.mode)
     if not args.no_write:
         path = write_eval_results(payload, results_dir=args.results_dir)
         payload["artifact_path"] = str(path)

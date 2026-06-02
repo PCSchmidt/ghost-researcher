@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from backend.agent.memory import AgentSession
+from backend.config import Settings
 from backend.jobs.research import PlannerSequenceResult
 from backend.synthesizer.schema import ResearchReport, ReportClaim
 from evals.eval_runner import BenchmarkPrompt, load_benchmark_prompts, run_eval_suite, score_prompt, write_eval_results
@@ -59,10 +60,66 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         payload = await run_eval_suite(prompts=[_prompt()])
 
         self.assertEqual(1, payload["benchmark_count"])
-        self.assertEqual("deterministic_offline", payload["mode"])
+        self.assertEqual("offline", payload["mode"])
+        self.assertEqual("deterministic", payload["search_provider"])
         self.assertEqual("test", payload["cases"][0]["id"])
         self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
         self.assertNotIn("source_count_below_benchmark_minimum", payload["cases"][0]["limitations"])
+
+    async def test_live_eval_requires_non_deterministic_search_provider(self) -> None:
+        with self.assertRaisesRegex(ValueError, "live_search_provider_required"):
+            await run_eval_suite(prompts=[_prompt()], mode="live", settings=Settings.from_env({}))
+
+    async def test_live_eval_can_use_injected_orchestrator(self) -> None:
+        class FakeLiveOrchestrator:
+            def __init__(self, settings: Settings) -> None:
+                self.settings = settings
+
+            async def run_sequence(self, research_goal: str, **kwargs: object) -> PlannerSequenceResult:
+                session = AgentSession(research_goal=research_goal)
+                for source_url in [
+                    "https://faa.gov/ghostresearcher-eval/test",
+                    "https://federalregister.gov/ghostresearcher-eval/test",
+                ]:
+                    session.register_source(source_url)
+                    session.add_evidence(
+                        url=source_url,
+                        title=source_url,
+                        claims=["Evidence includes deadline and affected operations with recent 2026 context."],
+                        credibility_score=0.9,
+                    )
+                session.finalize("sufficient_coverage")
+                return PlannerSequenceResult(
+                    session=session,
+                    decisions=[],
+                    tool_results=[],
+                    synthesis=ResearchReport(
+                        title="Live report",
+                        summary="Evidence includes deadline and affected operations with recent 2026 context.",
+                        key_findings=[
+                            ReportClaim(
+                                text="Evidence includes deadline and affected operations with recent 2026 context.",
+                                source_urls=["https://faa.gov/ghostresearcher-eval/test"],
+                            )
+                        ],
+                        sources_used=[
+                            "https://faa.gov/ghostresearcher-eval/test",
+                            "https://federalregister.gov/ghostresearcher-eval/test",
+                        ],
+                        confidence=0.9,
+                    ),
+                )
+
+        payload = await run_eval_suite(
+            prompts=[_prompt()],
+            mode="live",
+            settings=Settings.from_env({"SEARCH_PROVIDER": "brave", "SEARCH_API_KEY": "test-key"}),
+            orchestrator_factory=FakeLiveOrchestrator,
+        )
+
+        self.assertEqual("live", payload["mode"])
+        self.assertEqual("brave", payload["search_provider"])
+        self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
 
     def test_write_eval_results_creates_json_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

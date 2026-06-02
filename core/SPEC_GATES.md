@@ -104,6 +104,12 @@ stage.
 
 - Exit artifacts: real search provider boundary, opt-in live eval mode, live-provider smoke tests
 - Exit token: `LIVE SEARCH CONFIRMED`
+- Status: Complete
+
+### v0.17.0 - Live Integration Smoke Tests
+
+- Exit artifacts: skipped-by-default live smoke tests for search provider, OpenRouter, and CloakBrowser path
+- Exit token: `LIVE SMOKE CONFIRMED`
 - Status: Next
 
 ### v1.0.0 - Deployment

@@ -11,8 +11,8 @@ shipped yet.
 
 ## Current Status
 
-Current checkpoint: v0.15.0 - Live Capability Alignment complete.
-Next stage: v0.16.0 - Real Search and Live Evals.
+Current checkpoint: v0.16.0 - Real Search and Live Evals complete.
+Next stage: v0.17.0 - Live Integration Smoke Tests.
 
 Implemented now:
 
@@ -22,6 +22,7 @@ Implemented now:
 - Agent session state model
 - CloakBrowser CDP health client
 - Executor skeletons for `web_search`, `navigate_to_url`, `extract_structured_data`, and `assess_credibility`
+- Search provider boundary with deterministic default and opt-in Brave Search provider
 - Deterministic planner skeleton
 - Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
 - Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
@@ -33,12 +34,12 @@ Implemented now:
 - Next.js research workbench with submission form, status stream view, report view, and source cards
 - Offline benchmark eval runner with source traceability, report quality, and criteria coverage scoring
 - Offline evals that can satisfy benchmark minimum source counts before synthesis
+- Eval CLI modes: `--mode offline|live`
 - Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
 
 Not implemented yet:
 
-- Real search provider integration
-- Live eval run against real search, OpenRouter, and CloakBrowser
+- Live eval run against configured real search, OpenRouter, and CloakBrowser services
 - Postgres/Redis production persistence
 - Docker/Railway/Vercel deployment
 - Live CloakBrowser integration test
@@ -138,18 +139,18 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner
 ```
 
-Current validated result: 80 backend tests passing.
+Current validated result: 85 backend tests passing.
 
 Run the offline eval harness:
 
 ```bash
-python -m evals.eval_runner --limit 3
+python -m evals.eval_runner --mode offline --limit 3
 ```
 
-Current v0.15 result: 3 benchmark prompts completed in deterministic offline mode,
-average score 1.0, with results persisted under `evals/results/`. The deterministic
-planner now assesses enough offline benchmark sources to satisfy each prompt's
-minimum source count before calling `finalize_report`.
+Current v0.16 result: 3 benchmark prompts completed in offline mode with the
+deterministic search provider, average score 1.0, with results persisted under
+`evals/results/`. Live mode is opt-in and requires `SEARCH_PROVIDER=brave`,
+`SEARCH_API_KEY`, and live browser/search dependencies.
 
 Run frontend checks:
 
@@ -206,6 +207,9 @@ ANTHROPIC_API_KEY=
 CLOAK_CDP_URL=http://localhost:9222
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 REDIS_URL=redis://host:6379
+SEARCH_PROVIDER=deterministic
+SEARCH_API_KEY=
+SEARCH_API_URL=https://api.search.brave.com/res/v1/web/search
 PROXY_URL=
 PROXY_USER=
 PROXY_PASS=
@@ -241,6 +245,7 @@ The build is intentionally staged:
 - v0.14.0 - Evals Harness
 - v0.15.0 - Live Capability Alignment
 - v0.16.0 - Real Search and Live Evals
+- v0.17.0 - Live Integration Smoke Tests
 - v1.0.0 - Deployment
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).

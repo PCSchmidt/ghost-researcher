@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.16.0 - Real Search and Live Evals
+Current stage: v0.17.0 - Live Integration Smoke Tests
 
 Recently completed:
 
@@ -45,6 +45,7 @@ Recently completed:
 - v0.13.0 frontend research UI
 - v0.14.0 evals harness
 - v0.15.0 live capability alignment
+- v0.16.0 real search and live eval modes
 
 Foundation items resolved on 2026-05-29:
 
@@ -388,15 +389,37 @@ Goal: Replace deterministic-only source discovery with a configurable real searc
 Ships:
 
 - Search provider abstraction with deterministic provider retained for tests
-- One real provider integration behind environment configuration
+- Brave Search provider integration behind `SEARCH_PROVIDER=brave` and `SEARCH_API_KEY`
 - `evals/eval_runner.py --mode offline|live`
-- Skipped-by-default live smoke tests for search, OpenRouter, and CloakBrowser where practical
+- Eval artifacts labeled with mode and search provider
+- Dependency-free tests for provider selection, Brave response normalization, and eval mode behavior
 
 Exit criteria:
 
 - Offline tests remain dependency-free
 - Live mode can run at least 3 benchmark prompts with real search candidates when env vars are configured
 - Eval artifacts clearly label offline vs live mode and provider configuration
+
+Status: Complete. v0.16 artifact: `evals/results/eval_results_20260602T122647Z.json`.
+
+---
+
+## v0.17.0 - Live Integration Smoke Tests
+
+Goal: Add opt-in smoke tests that exercise the configured live provider/runtime path without making CI or local regression tests depend on secrets or external services.
+
+Ships:
+
+- Skipped-by-default Brave Search smoke test gated by `SEARCH_PROVIDER=brave` and `SEARCH_API_KEY`
+- Skipped-by-default OpenRouter planner/synthesizer smoke tests gated by `OPENROUTER_API_KEY`
+- Skipped-by-default CloakBrowser navigation smoke test gated by `CLOAK_CDP_URL` and an explicit live-test flag
+- Documentation for running live smoke tests and interpreting failures
+
+Exit criteria:
+
+- Default backend suite remains dependency-free
+- Live smoke tests are discoverable and skipped clearly when env vars are absent
+- At least one configured live search smoke test can return normalized candidate sources
 
 Status: Next.
 
