@@ -2,16 +2,16 @@
 
 GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
-session state, synthesis skeleton, job-state persistence boundary, and a minimal
-FastAPI API. Frontend, live browser integration tests, and deployment are
-planned but not shipped yet.
+session state, synthesis skeleton, job-state persistence boundary, replayable
+status events, and a minimal FastAPI API. Frontend, live browser integration
+tests, and deployment are planned but not shipped yet.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.11.0 - Persistence and Job State complete.
-Next stage: v0.12.0 - Live Status Stream.
+Current checkpoint: v0.12.0 - Live Status Stream complete.
+Next stage: v0.13.0 - Frontend Research UI.
 
 Implemented now:
 
@@ -27,6 +27,7 @@ Implemented now:
 - OpenRouter planner adapter with tool-call validation, usage accounting, and cost-limit stops
 - Report synthesis skeleton with source-trace validation
 - Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
+- Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
 - Unit tests for config, API routes, planner, runner, and executor modules
 
 Not implemented yet:
@@ -47,7 +48,7 @@ See [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md) for the full staged plan.
 User research goal
         |
         v
-FastAPI /research + /research/{job_id}
+FastAPI /research + /research/{job_id} + /research/{job_id}/events
         |
         v
 ResearchOrchestrator
@@ -64,7 +65,7 @@ PlannerSkeleton/OpenRouterPlanner -> ResearchRunner -> Executor tools
         |        AgentSession state -> ReportSynthesizer
         |
         v
-Persisted response with job_id, decisions[], tool_results[], session, synthesis
+Persisted response with job_id, status_events[], decisions[], tool_results[], session, synthesis
 ```
 
 The production target remains an OpenRouter-backed planner, CloakBrowser executor, credibility
@@ -121,10 +122,10 @@ for later integration testing.
 ## Run Tests
 
 ```bash
-python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research
+python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status
 ```
 
-Current validated result: 68 tests passing.
+Current validated result: 73 tests passing.
 
 ---
 
@@ -148,9 +149,10 @@ curl -X POST http://localhost:8000/research \
   -d '{"research_goal":"Review https://example.com/report"}'
 ```
 
-The response currently returns planner decisions, tool results, session state,
-`synthesis` when sufficient evidence exists, and a `job_id` that can be fetched
-with `GET /research/{job_id}`.
+The response currently returns planner decisions, tool results, status events,
+session state, `synthesis` when sufficient evidence exists, and a `job_id` that
+can be fetched with `GET /research/{job_id}`. Status events can be streamed as
+SSE with `GET /research/{job_id}/events`.
 
 ---
 

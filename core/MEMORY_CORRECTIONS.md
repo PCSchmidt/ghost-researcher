@@ -21,6 +21,17 @@ MEMORY_SEMANTIC.md UPDATE: [pattern added/updated or none]
 
 ## ESTIMATION CALIBRATION LOG
 
+## REFLEXION: v0.12.0 -- Live Status Stream
+
+Date: 2026-06-01
+Project: GhostResearcher
+ESTIMATE: Predicted n/a, Actual n/a, Variance n/a
+TECHNICAL PREDICTIONS VS REALITY: A true live stream needs background job execution, but the current API still runs jobs synchronously. The useful v0.12 slice was a replayable SSE contract over persisted status events, which gives the frontend EventSource semantics without introducing Redis workers early.
+CORRECTION FOR FUTURE: Add status events as persisted, ordered domain records before queueing; swap the producer from replay to live publication once background execution exists.
+MEMORY_SEMANTIC.md UPDATE: none.
+
+---
+
 ## REFLEXION: v0.11.0 -- Persistence and Job State
 
 Date: 2026-06-01

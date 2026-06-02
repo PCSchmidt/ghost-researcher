@@ -7,17 +7,17 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.11.0
-**Gate Name:** Persistence and Job State
+**Version:** v0.12.0
+**Gate Name:** Live Status Stream
 **Status:** DONE
 
 ---
 
 ## GOAL
 
-Persist completed research job state behind a repository boundary, expose job
-retrieval by ID, and prove restart durability with a JSON-file repository while
-keeping production Postgres/Redis wiring deferred.
+Expose ordered research job status events for frontend integration by persisting
+status events with each completed job and streaming them through a Server-Sent
+Events endpoint while keeping true background job execution deferred.
 
 ---
 
@@ -72,15 +72,20 @@ keeping production Postgres/Redis wiring deferred.
 - [x] Add `GET /research/{job_id}` for job retrieval
 - [x] Extend [backend/main.py](../backend/main.py) with injectable research repository
 - [x] Add [tests/test_persistence/test_repository.py](../tests/test_persistence/test_repository.py) repository durability tests
+- [x] Add [backend/jobs/status.py](../backend/jobs/status.py) status event model and SSE encoder
+- [x] Extend [backend/api/research.py](../backend/api/research.py) to persist `status_events[]` with research jobs
+- [x] Add `GET /research/{job_id}/events` SSE endpoint
+- [x] Add [tests/test_jobs/test_status.py](../tests/test_jobs/test_status.py) status event and SSE encoding tests
+- [x] Extend [tests/test_api/test_research.py](../tests/test_api/test_research.py) with SSE endpoint coverage
 
 ---
 
 ## EXIT CRITERIA
 
-1. Research job responses include stable `job_id`, `created_at`, and `updated_at`
-2. `GET /research/{job_id}` retrieves stored job state
-3. Repository abstraction supports in-memory tests and JSON-file restart durability
-4. Missing jobs return 404
+1. Research job responses include ordered `status_events[]`
+2. `GET /research/{job_id}/events` streams persisted status events as `text/event-stream`
+3. Events include job start, tool start, tool completion, planner stop, synthesis completion, and job completion where applicable
+4. Missing job event streams return 404
 5. Current backend regression suite passes
 
 ---
@@ -118,6 +123,9 @@ keeping production Postgres/Redis wiring deferred.
 - In-memory repository for dependency-free API tests and local runs
 - JSON-file repository that survives new repository instances
 - Persisted job metadata and `GET /research/{job_id}` retrieval
+- Status event model with stable `sequence`, `event_type`, `status`, `message`, `tool_name`, and `payload` fields
+- Persisted `status_events[]` on `POST /research` and `GET /research/{job_id}` responses
+- Replayable SSE endpoint at `GET /research/{job_id}/events`
 
 ---
 
@@ -129,14 +137,15 @@ keeping production Postgres/Redis wiring deferred.
 - No real search provider yet; `web_search` is a deterministic skeleton
 - No live OpenRouter integration test yet; adapter tests use fake transport
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
+- No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
 
 ---
 
 ## NEXT GATE
 
-### v0.12.0 - Live Status Stream
+### v0.13.0 - Frontend Research UI
 
-Add SSE job status streaming for frontend integration.
+Build the first usable Next.js research UI around the existing API and SSE stream.
 
 ---
 

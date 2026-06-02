@@ -80,13 +80,13 @@ stage.
 
 - Exit artifacts: SSE endpoint and job status event model
 - Exit token: `STATUS STREAM CONFIRMED`
-- Status: Next
+- Status: Complete
 
 ### v0.13.0 - Frontend Research UI
 
 - Exit artifacts: Next.js research form, job status stream view, report viewer, source cards
 - Exit token: `FRONTEND CONFIRMED`
-- Status: Planned
+- Status: Next
 
 ### v0.14.0 - Evals Harness
 

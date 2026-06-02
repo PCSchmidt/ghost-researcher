@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v0.12.0 - Live Status Stream
+Current stage: v0.13.0 - Frontend Research UI
 
 Recently completed:
 
@@ -41,6 +41,7 @@ Recently completed:
 - v0.9.0 OpenRouter planner adapter
 - v0.10.0 synthesizer skeleton
 - v0.11.0 persistence and job state
+- v0.12.0 live status stream
 
 Foundation items resolved on 2026-05-29:
 
@@ -292,16 +293,18 @@ Goal: Add SSE job status streaming for frontend integration.
 
 Ships:
 
-- SSE endpoint
-- Step event publisher
-- Polling fallback only if needed
+- `backend/jobs/status.py` status event model
+- Persisted `status_events[]` on research job responses
+- `GET /research/{job_id}/events` SSE endpoint
+- SSE wire-format tests
 
 Exit criteria:
 
-- Frontend can observe tool calls in order
-- Concurrent jobs do not require aggressive polling
+- Frontend can consume ordered job, tool, planner stop, synthesis, and completion events
+- Status views can use EventSource against a persisted job without polling `GET /research/{job_id}`
+- Missing job streams return 404
 
-Status: Next.
+Status: Complete.
 
 ---
 
@@ -321,7 +324,7 @@ Exit criteria:
 - User can submit a goal and watch steps execute
 - UI renders navigation, extraction, and credibility events clearly
 
-Status: Planned.
+Status: Next.
 
 ---
 

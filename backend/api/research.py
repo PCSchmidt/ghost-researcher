@@ -5,12 +5,14 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.agent.memory import AgentSession
 from backend.agent.planner import PlannerDecision, ToolCall
 from backend.config import Settings
 from backend.jobs.research import PlannerRunResult, PlannerSequenceResult, ResearchOrchestrator
+from backend.jobs.status import build_status_events, encode_sse_event
 from backend.persistence import InMemoryResearchRepository, ResearchRepository
 from backend.synthesizer.schema import ResearchReport
 
@@ -80,6 +82,7 @@ def _serialize_sequence_result(result: PlannerSequenceResult) -> dict[str, Any]:
     status = "completed" if result.tool_results else "stopped"
     return {
         "status": status,
+        "status_events": build_status_events(result),
         "session": _serialize_session(result.session),
         "decisions": [_serialize_decision(decision) for decision in result.decisions],
         "tool_results": result.tool_results,
@@ -112,6 +115,22 @@ def create_research_router(
         if payload is None:
             raise HTTPException(status_code=404, detail="research job not found")
         return payload
+
+    @router.get("/research/{job_id}/events")
+    async def stream_research_events(job_id: str) -> StreamingResponse:
+        payload = active_repository.get(job_id)
+        if payload is None:
+            raise HTTPException(status_code=404, detail="research job not found")
+        status_events = payload.get("status_events", [])
+        if not isinstance(status_events, list):
+            status_events = []
+
+        async def event_stream():
+            for event in status_events:
+                if isinstance(event, dict):
+                    yield encode_sse_event(event)
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     return router
 

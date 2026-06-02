@@ -58,6 +58,10 @@ class ResearchRouteTests(unittest.TestCase):
         self.assertIn("job_id", payload)
         self.assertIn("created_at", payload)
         self.assertIn("updated_at", payload)
+        self.assertEqual(
+            ["job_started", "tool_started", "tool_completed", "job_completed"],
+            [event["event_type"] for event in payload["status_events"]],
+        )
         self.assertEqual("https://example.com/report", payload["tool_results"][0]["final_url"])
         self.assertEqual(["https://example.com/report"], payload["session"]["sources_visited"])
         self.assertEqual([], payload["session"]["source_candidates"])
@@ -87,6 +91,50 @@ class ResearchRouteTests(unittest.TestCase):
         self.assertEqual(200, get_response.status_code)
         self.assertEqual(job_id, get_response.json()["job_id"])
         self.assertEqual("Review https://example.com/report", get_response.json()["session"]["research_goal"])
+
+    def test_research_route_streams_persisted_status_events(self) -> None:
+        session = AgentSession(research_goal="Review https://example.com/report")
+        session.finalize("sufficient_coverage")
+        result = PlannerSequenceResult(
+            session=session,
+            decisions=[
+                PlannerDecision(
+                    tool_call=ToolCall(
+                        name="navigate_to_url",
+                        arguments={"url": "https://example.com/report"},
+                    )
+                )
+            ],
+            tool_results=[{"final_url": "https://example.com/report"}],
+        )
+        repository = InMemoryResearchRepository()
+        client = TestClient(
+            create_app(
+                {},
+                research_orchestrator=FakeResearchOrchestrator(result),
+                research_repository=repository,
+            )
+        )
+
+        create_response = client.post("/research", json={"research_goal": "Review https://example.com/report"})
+        job_id = create_response.json()["job_id"]
+        stream_response = client.get(f"/research/{job_id}/events")
+
+        self.assertEqual(200, stream_response.status_code)
+        self.assertEqual("text/event-stream; charset=utf-8", stream_response.headers["content-type"])
+        body = stream_response.text
+        self.assertIn("event: job_started", body)
+        self.assertIn("event: tool_started", body)
+        self.assertIn("event: tool_completed", body)
+        self.assertIn("event: job_completed", body)
+        self.assertIn('"tool_name": "navigate_to_url"', body)
+
+    def test_research_route_returns_404_for_missing_event_stream(self) -> None:
+        client = TestClient(create_app({}))
+
+        response = client.get("/research/missing-job/events")
+
+        self.assertEqual(404, response.status_code)
 
     def test_research_route_returns_404_for_missing_job(self) -> None:
         client = TestClient(create_app({}))
