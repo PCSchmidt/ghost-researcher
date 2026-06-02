@@ -4,15 +4,15 @@ GhostResearcher is an agentic web research engine in progress. The current build
 focuses on the backend control path: planner decisions, executor tool dispatch,
 session state, synthesis skeleton, job-state persistence boundary, replayable
 status events, a Next.js research workbench, a repeatable offline eval harness,
-and skipped-by-default live integration smoke tests. Deployment is planned but
-not shipped yet.
+and skipped-by-default live integration smoke tests. Deployment setup has been prepared
+(see `docs/DEPLOYMENT.md`).
 
 ---
 
 ## Current Status
 
-Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete.
-Next stage: v1.0.0 - Deployment.
+Current checkpoint: v1.0.0 - Deployment Setup Complete.
+Next stage: Manual Project Promotion to Railway and Vercel.
 
 Implemented now:
 

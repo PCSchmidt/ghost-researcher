@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/playwright/python:v1.44.0-jammy
+
+ENV PYTHONUNBUFFERED=1 \
+    PORT=9222
+
+WORKDIR /app
+
+# Ensure we have what we need
+COPY requirements.txt .
+RUN pip install -r requirements.txt playwright
+# Ensure playwright browsers are installed
+RUN playwright install chromium
+
+COPY backend/scripts/start_cloakserve.py ./backend/scripts/start_cloakserve.py
+
+# A naive healthcheck for WebSocket
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/json/version || exit 1
+
+EXPOSE ${PORT}
+
+# Run the CDP server
+CMD ["python", "backend/scripts/start_cloakserve.py"]

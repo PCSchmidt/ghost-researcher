@@ -198,7 +198,8 @@ CloakBrowser paths while keeping the default regression suite dependency-free.
 
 ### v1.0.0 - Deployment
 
-Prepare Railway backend/CloakBrowser services and Vercel frontend deployment.
+Prepare Railway backend/CloakBrowser services and Vercel frontend deployment. [DONE]
+Includes Dockerfiles, docker-compose, and `docs/DEPLOYMENT.md` detailing env maps, health checks, and rollback plans.
 
 ---
 

@@ -432,10 +432,10 @@ Goal: Deploy backend and frontend with health checks and rollback path.
 
 Ships:
 
-- Railway backend deployment
-- Railway CloakBrowser service
-- Vercel frontend deployment
-- Environment configuration docs
+- Railway backend deployment (Prep complete)
+- Railway CloakBrowser service (Prep complete)
+- Vercel frontend deployment (Prep complete)
+- Environment configuration docs (docs/DEPLOYMENT.md)
 
 Exit criteria:
 
@@ -443,4 +443,4 @@ Exit criteria:
 - `POST /research` works against deployed backend
 - Frontend can run a demo research job
 
-Status: Next.
+Status: Prep Complete. Ready for manual deployment.

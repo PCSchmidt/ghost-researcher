@@ -377,8 +377,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete
-- Next stage: v1.0.0 - Deployment
+- Current checkpoint: v1.0.0 - Deployment Prep Complete
+- Next stage: Production operation
 - Current regression baseline: 90 backend tests OK by default, with 85 executed and 5 live smoke tests skipped
 - Current frontend baseline: lint clean, 8 tests passing, production build passing
 - `web_search` defaults to deterministic offline results and has an opt-in Brave Search provider boundary
@@ -410,6 +410,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v0.15.0 live capability alignment complete and documented
 - [x] v0.16.0 real search provider boundary and eval modes complete and documented
 - [x] v0.17.0 skipped-by-default live smoke tests complete and documented
+- [x] v1.0.0 deployment prep (Railway/Vercel config + documentation) complete
 
 ## Session Start Command
 

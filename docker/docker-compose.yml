@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  cloakserve:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cloak
+    ports:
+      - "9222:9222"
+    environment:
+      - PORT=9222
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - CLOAK_CDP_URL=http://cloakserve:9222
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEFAULT_PLANNER_MODEL=${DEFAULT_PLANNER_MODEL:-deepseek/deepseek-v4-flash}
+      - GHOSTRESEARCHER_RUN_LIVE_TESTS=${GHOSTRESEARCHER_RUN_LIVE_TESTS:-0}
+    depends_on:
+      cloakserve:
+        condition: service_healthy

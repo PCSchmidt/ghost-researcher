@@ -1,0 +1,114 @@
+# v1.0.0 Deployment Guide: GhostResearcher
+
+This document details the configuration, deployment, health verification, and rollback procedures for the v1.0.0 GhostResearcher stack across Railway and Vercel.
+
+## 1. System Architecture
+
+The GhostResearcher v1.0.0 stack runs on three primary nodes:
+
+-   **Backend API (`ghostresearcher-api`)**: Python 3.11+ FastAPI service handling LLM orchestration, openrouter integration, and job queues. (Deployed to Railway)
+-   **CloakBrowser Server (`cloakserve`)**: Playwright Chromium CDP server running stealth routines. (Deployed to Railway)
+-   **Frontend App**: Next.js 16 App Router UI. (Deployed to Vercel)
+
+---
+
+## 2. Environment Variables
+
+### Backend (Railway)
+Ensure the following variables are configured in both Railway services where applicable:
+
+| Variable | Description | Required? | Default |
+| :--- | :--- | :--- | :--- |
+| `OPENROUTER_API_KEY` | OpenRouter access token for planner/synth orchestration. | Yes | None |
+| `OPENROUTER_BASE_URL` | OpenRouter API base URL | No | `https://openrouter.ai/api/v1` |
+| `CLOAK_CDP_URL` | Internal Railway URL pointing to `cloakserve` on port 9222. | Yes | `http://cloakserve.railway.internal:9222` |
+| `DEFAULT_PLANNER_MODEL` | Default LLM for logical planning. | No | `deepseek/deepseek-v4-flash` |
+| `SEARCH_PROVIDER` | `deterministic` for offline/evals or `brave` for live web searches. | No | `deterministic` |
+| `SEARCH_API_KEY` | Brave API Key if `SEARCH_PROVIDER=brave` | Conditional | None |
+| `PORT` | Public port the API binds to (assigned by Railway automatically). | No | `8000` |
+| `MAX_STEPS_PER_JOB` | Hard limit for agent planner execution loop. | No | `20` |
+
+### Frontend (Vercel)
+Ensure the following is configured in your Vercel Project Settings:
+
+| Variable | Description | Required? |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | Public URL of the FastAPI Railway service (e.g. `https://api.ghostresearcher.up.railway.app`). | Yes |
+
+---
+
+## 3. Infrastructure Configuration
+
+### 3.1 Railway Setup (`cloakserve` and `ghostresearcher-api`)
+1. Create a new Railway project.
+2. Select **Deploy from GitHub repo** -> `ghost-researcher`.
+3. Add **two separate services** from the same github repository.
+
+**Service 1: `cloakserve`**
+*   **Build/Root Directory:** `/`
+*   **Dockerfile Path:** `docker/Dockerfile.cloak`
+*   **Start Command:** Uses native CMD from Dockerfile.
+*   **Networking:** Expose port `9222`. Ensure this is exposed to the private Railway network.
+
+**Service 2: `ghostresearcher-api`**
+*   **Build/Root Directory:** `/`
+*   **Dockerfile Path:** `docker/Dockerfile.backend`
+*   **Start Command:** Uses native CMD from Dockerfile.
+*   **Networking:** Generate a Public Domain (e.g. `https://api.ghostresearcher.app`). Use this in your Vercel frontend.
+*   **Healthcheck Route:** set to `/health`.
+
+### 3.2 Vercel Setup (Frontend)
+1. Go to Vercel and create a new project targeting `ghost-researcher`.
+2. Set the **Root Directory** to `frontend/`.
+3. Select **Next.js** framework preset.
+4. Input your `NEXT_PUBLIC_API_URL` pointing to the public URL for `ghostresearcher-api`.
+5. Deploy.
+
+---
+
+## 4. Health Checks
+
+### API Readiness
+After deployment, verify the backend structure via the `/health` endpoint:
+
+```bash
+curl -X GET https://<YOUR_RAILWAY_API_DOMAIN>/health
+```
+**Expected Response Sequence:**
+```json
+{
+  "status": "ok",
+  "service": "ghostresearcher-api",
+  "version": "0.1.0",
+  "dependencies": {
+    "anthropic": "missing",
+    "cloak_cdp": {
+      "status": "healthy",
+      "version": "Browser/124.0.0.0"
+    },
+    "database": "missing",
+    "redis": "missing"
+  },
+  "limits": {
+    "max_steps_per_job": 20,
+    "max_tokens_per_job": 50000
+  }
+}
+```
+
+*Crucial Step:* If `dependencies.cloak_cdp.status` returns anything other than `healthy`, the `ghostresearcher-api` service cannot resolve the internal `CLOAK_CDP_URL`. Confirm Railway internal networking aliases.
+
+---
+
+## 5. Rollback Procedures
+
+### Rollback Triggers
+Initiate a rollback if:
+1. Railway healthchecks fail for >3 consecutive redeploy attempts.
+2. The SSE streams fail on the Vercel frontend resulting in perpetual stalling immediately after `POST /research`.
+3. `cloakserve` exhibits zombies/memory-leaking from unclosed CDP connections causing OOM kills on Railway.
+
+### How to Rollback
+1. **Frontend (Vercel):** Navigate to the Deployments tab of the Vercel dashboard and click **Promote to Production** on the latest stable `v0.17` commit.
+2. **Backend (Railway):** Navigate to the project dashboard. Locate the previous successful deployment and click the **Rollback** / **Redeploy** button.
+3. If memory leaks occur on `cloakserve`, set a manual restart policy via crontab or Railway instance refresh limit before downgrading entirely.
