@@ -10,19 +10,25 @@ async def main():
     port = os.getenv("PORT", "9222")
     
     async with async_playwright() as p:
-        # Launch Chromium as a persistent CDP server
-        # In a real CloakBrowser setup, we'd supply specific stealth arguments here
-        browser_server = await p.chromium.launch_server(
-            port=int(port),
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--disable-features=IsolateOrigins,site-per-process",
-                "--no-sandbox",
-                "--disable-setuid-sandbox"
-            ]
-        )
-        print(f"CloakBrowser CDP server listening on ws://localhost:{port}", flush=True)
+        executable = p.chromium.executable_path
+        
+        args = [
+            executable,
+            "--headless=new",
+            f"--remote-debugging-port={port}",
+            "--remote-debugging-address=0.0.0.0",
+            "--disable-blink-features=AutomationControlled",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu"
+        ]
+        
+        print(f"Launching Chromium on 0.0.0.0:{port}...", flush=True)
+        
+        # Launch Chromium manually so we can bind to 0.0.0.0 explicitly for Railway
+        process = await asyncio.create_subprocess_exec(*args)
         
         stop_event = asyncio.Event()
         
