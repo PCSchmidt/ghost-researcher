@@ -74,17 +74,21 @@ async def main():
         # Launch Chromium locally and expose it through a TCP proxy for Railway.
         process = await asyncio.create_subprocess_exec(*args)
 
-        proxy_server = await asyncio.start_server(
-            lambda reader, writer: _handle_proxy_client(
+        async def handle_proxy_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+            await _handle_proxy_client(
                 reader,
                 writer,
                 target_host="127.0.0.1",
                 target_port=browser_port,
-            ),
-            host="::",
+            )
+
+        proxy_server = await asyncio.start_server(
+            handle_proxy_client,
+            host="0.0.0.0",
             port=port,
         )
-        print(f"Proxying CDP on [::]:{port} -> 127.0.0.1:{browser_port}", flush=True)
+        sockets = ", ".join(str(sock.getsockname()) for sock in proxy_server.sockets or [])
+        print(f"Proxying CDP on {sockets} -> 127.0.0.1:{browser_port}", flush=True)
         
         stop_event = asyncio.Event()
         
