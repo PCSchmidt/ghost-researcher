@@ -46,8 +46,10 @@ async def main():
             
         await stop_event.wait()
         
-        print("Shutting down CDP server...", flush=True)
-        await browser_server.close()
+        print(f"Shutting down CDP server...", flush=True)
+        if process.returncode is None:
+            process.terminate()
+            await process.wait()
 
 if __name__ == "__main__":
     try:
