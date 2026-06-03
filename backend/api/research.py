@@ -107,7 +107,10 @@ def create_research_router(
         research_goal = request.research_goal.strip()
         if not research_goal:
             raise HTTPException(status_code=422, detail="research_goal cannot be blank")
-        result = await active_orchestrator.run_sequence(research_goal)
+        try:
+            result = await active_orchestrator.run_sequence(research_goal)
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
         return active_repository.save(_serialize_sequence_result(result))
 
     @router.get("/research/{job_id}")

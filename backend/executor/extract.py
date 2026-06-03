@@ -10,6 +10,7 @@ from typing import Any, AsyncIterator, Protocol
 from playwright.async_api import Browser, Page, Playwright, async_playwright
 
 from backend.config import Settings
+from backend.executor.browser import async_resolve_cdp_ws_endpoint
 
 
 class PageLike(Protocol):
@@ -61,7 +62,8 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
     page: Page | None = None
     try:
         playwright = await async_playwright().start()
-        browser = await playwright.chromium.connect_over_cdp(settings.cloak_cdp_url)
+        ws_endpoint = await async_resolve_cdp_ws_endpoint(settings)
+        browser = await playwright.chromium.connect_over_cdp(ws_endpoint)
         context = browser.contexts[0] if browser.contexts else await browser.new_context()
         page = context.pages[-1] if context.pages else await context.new_page()
         yield page

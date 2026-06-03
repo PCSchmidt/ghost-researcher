@@ -74,6 +74,19 @@ async def main():
         # Launch Chromium locally and expose it through a TCP proxy for Railway.
         process = await asyncio.create_subprocess_exec(*args)
 
+        # Wait for Chromium's CDP port to be ready before accepting proxy connections.
+        for _attempt in range(60):
+            try:
+                _r, _w = await asyncio.open_connection("127.0.0.1", browser_port)
+                _w.close()
+                await _w.wait_closed()
+                print(f"Chromium ready on port {browser_port}", flush=True)
+                break
+            except OSError:
+                await asyncio.sleep(0.5)
+        else:
+            print("Chromium did not start in time; proceeding anyway", flush=True)
+
         async def handle_proxy_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
             await _handle_proxy_client(
                 reader,
