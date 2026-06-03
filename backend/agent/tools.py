@@ -7,12 +7,12 @@ from typing import Any
 TOOLS: list[dict[str, Any]] = [
     {
         "name": "navigate_to_url",
-        "description": "Navigate the stealth browser to a URL and return normalized page state.",
+        "description": "Navigate the stealth browser to a URL and return normalized page state. The page always waits for domcontentloaded automatically. Only set wait_for when you need to wait for a specific CSS selector (like '.article-body' or 'h1') to appear after the page loads.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "url": {"type": "string", "format": "uri"},
-                "wait_for": {"type": "string"},
+                "wait_for": {"type": "string", "description": "Optional CSS selector to wait for after navigation, e.g. '.main-content' or 'article'. Do NOT pass 'domcontentloaded' or 'networkidle' here — those are handled automatically."},
                 "fingerprint_seed": {"type": "integer"},
             },
             "required": ["url"],

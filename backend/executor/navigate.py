@@ -131,8 +131,16 @@ async def navigate_to_url(
 
     async with page_context(settings) as page:
         response = await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
-        if wait_for:
-            await page.wait_for_selector(wait_for, timeout=timeout_ms)
+        # Model sometimes passes load-state keywords as wait_for; ignore them.
+        _wait_for = wait_for.strip() if wait_for else ""
+        if _wait_for and _wait_for.lower() not in (
+            "domcontentloaded",
+            "load",
+            "networkidle",
+            "networkidle0",
+            "networkidle2",
+        ):
+            await page.wait_for_selector(_wait_for, timeout=timeout_ms)
         title = await page.title()
         content = await page.content()
         links = await page.eval_on_selector_all(
