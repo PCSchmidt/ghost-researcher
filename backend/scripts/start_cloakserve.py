@@ -63,6 +63,7 @@ async def main():
             executable,
             "--headless=new",
             f"--remote-debugging-port={browser_port}",
+            "--remote-allow-origins=*",
             "--disable-blink-features=AutomationControlled",
             "--disable-features=IsolateOrigins,site-per-process",
             "--no-sandbox",
