@@ -92,9 +92,9 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(120, session.running_tokens)
         self.assertEqual(0.001, session.running_cost_usd)
         self.assertEqual(settings.default_planner_model, captured_payloads[0]["model"])
-        self.assertEqual("required", captured_payloads[0]["tool_choice"])
+        self.assertEqual("auto", captured_payloads[0]["tool_choice"])
 
-    async def test_planner_rejects_free_text_without_tool_call(self) -> None:
+    async def test_planner_treats_free_text_as_implicit_finalize(self) -> None:
         async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:
             return {
                 "choices": [{"message": {"content": "Here is what I found."}}],
@@ -103,8 +103,9 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
 
         planner = OpenRouterPlanner(Settings.from_env({}), transport=fake_transport)
 
-        with self.assertRaisesRegex(PlannerAdapterError, "no_tool_calls_in_response"):
-            await planner.plan_next(AgentSession(research_goal="FAA BVLOS guidance"))
+        decision = await planner.plan_next(AgentSession(research_goal="FAA BVLOS guidance"))
+        self.assertIsNone(decision.tool_call)
+        self.assertEqual("no_new_sources", decision.termination_reason)
 
     async def test_planner_rejects_invalid_tool_arguments(self) -> None:
         async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:

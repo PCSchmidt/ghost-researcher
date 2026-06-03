@@ -98,12 +98,18 @@ class OpenRouterPlanner:
             prompt_tokens=usage.prompt_tokens,
             completion_tokens=usage.completion_tokens,
             cost_usd=usage.cost_usd,
+
         )
         if session.running_tokens >= self._settings.max_tokens_per_job:
             return PlannerDecision(tool_call=None, termination_reason="cost_limit")
         if session.running_cost_usd >= self._settings.max_model_cost_per_job_usd:
             return PlannerDecision(tool_call=None, termination_reason="cost_limit")
 
+        # If the model returned plain text (no tool calls), treat as implicit finalize.
+        choices = response.get("choices") or []
+        message = choices[0].get("message") if choices else {}
+        if not (message.get("tool_calls")):
+            return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
         return PlannerDecision(tool_call=_extract_tool_call(response))
 
     def _request_payload(
@@ -116,7 +122,7 @@ class OpenRouterPlanner:
             "model": self._model,
             "messages": build_planner_messages(session, last_tool_result=last_tool_result),
             "tools": [_to_openai_tool(tool) for tool in TOOLS],
-            "tool_choice": "required",
+            "tool_choice": "auto",
             "temperature": 0,
         }
 

@@ -3,6 +3,8 @@ import contextlib
 import os
 import signal
 import sys
+from urllib.request import urlopen
+from urllib.error import URLError
 from playwright.async_api import async_playwright
 
 
@@ -74,18 +76,21 @@ async def main():
         # Launch Chromium locally and expose it through a TCP proxy for Railway.
         process = await asyncio.create_subprocess_exec(*args)
 
-        # Wait for Chromium's CDP port to be ready before accepting proxy connections.
-        for _attempt in range(60):
+        # Wait for Chromium's /json/version HTTP endpoint to return 200.
+        # TCP-only check is insufficient — Chromium can accept the socket before
+        # its HTTP server is ready, causing /json/version to return 500.
+        version_url = f"http://127.0.0.1:{browser_port}/json/version"
+        for _attempt in range(120):
             try:
-                _r, _w = await asyncio.open_connection("127.0.0.1", browser_port)
-                _w.close()
-                await _w.wait_closed()
-                print(f"Chromium ready on port {browser_port}", flush=True)
-                break
-            except OSError:
-                await asyncio.sleep(0.5)
+                with urlopen(version_url, timeout=1.0) as resp:
+                    if resp.status == 200:
+                        print(f"Chromium HTTP ready on port {browser_port} (attempt {_attempt + 1})", flush=True)
+                        break
+            except (URLError, OSError):
+                pass
+            await asyncio.sleep(0.5)
         else:
-            print("Chromium did not start in time; proceeding anyway", flush=True)
+            print("Chromium did not become HTTP-ready in time; proceeding anyway", flush=True)
 
         async def handle_proxy_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
             await _handle_proxy_client(
