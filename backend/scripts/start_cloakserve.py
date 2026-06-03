@@ -37,6 +37,30 @@ async def _handle_proxy_client(
             await client_writer.wait_closed()
         return
 
+    # Rewrite the Host header to 'localhost' before forwarding to Chromium.
+    # Chromium's DNS-rebinding protection rejects WebSocket and HTTP requests
+    # whose Host header is not localhost or an IP address.  The Railway internal
+    # hostname (cloakbrowser.railway.internal) fails that check with HTTP 500.
+    try:
+        request_line = await asyncio.wait_for(client_reader.readline(), timeout=10.0)
+        if request_line:
+            rewritten: list[bytes] = []
+            while True:
+                line = await asyncio.wait_for(client_reader.readline(), timeout=10.0)
+                if not line or line in (b"\r\n", b"\n"):
+                    rewritten.append(b"\r\n")
+                    break
+                if line.lower().startswith(b"host:"):
+                    rewritten.append(b"Host: localhost\r\n")
+                else:
+                    rewritten.append(line)
+            target_writer.write(request_line)
+            for h in rewritten:
+                target_writer.write(h)
+            await target_writer.drain()
+    except Exception:
+        pass  # fall through to bidirectional pipe for non-HTTP or on timeout
+
     client_to_target = asyncio.create_task(_pipe_stream(client_reader, target_writer))
     target_to_client = asyncio.create_task(_pipe_stream(target_reader, client_writer))
     done, pending = await asyncio.wait(
