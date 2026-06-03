@@ -16,7 +16,7 @@ async def main():
             executable,
             "--headless=new",
             f"--remote-debugging-port={port}",
-            "--remote-debugging-address=0.0.0.0",
+            "--remote-debugging-address=::",
             "--disable-blink-features=AutomationControlled",
             "--disable-features=IsolateOrigins,site-per-process",
             "--no-sandbox",
