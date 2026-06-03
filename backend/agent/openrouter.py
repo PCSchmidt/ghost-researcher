@@ -116,7 +116,7 @@ class OpenRouterPlanner:
             "model": self._model,
             "messages": build_planner_messages(session, last_tool_result=last_tool_result),
             "tools": [_to_openai_tool(tool) for tool in TOOLS],
-            "tool_choice": "auto",
+            "tool_choice": "required",
             "temperature": 0,
         }
 
@@ -151,8 +151,9 @@ def _extract_tool_call(response: dict[str, Any]) -> ToolCall:
     if not isinstance(message, dict):
         raise PlannerAdapterError("missing_message")
     tool_calls = message.get("tool_calls")
-    if not isinstance(tool_calls, list) or len(tool_calls) != 1:
-        raise PlannerAdapterError("expected_one_tool_call")
+    if not isinstance(tool_calls, list) or len(tool_calls) == 0:
+        raise PlannerAdapterError("no_tool_calls_in_response")
+    # Accept first tool call; some models (e.g. DeepSeek) return multiple in one turn.
     function = tool_calls[0].get("function") if isinstance(tool_calls[0], dict) else None
     if not isinstance(function, dict):
         raise PlannerAdapterError("missing_function_call")
