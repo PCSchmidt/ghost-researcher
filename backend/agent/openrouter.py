@@ -116,7 +116,7 @@ class OpenRouterPlanner:
             "model": self._model,
             "messages": build_planner_messages(session, last_tool_result=last_tool_result),
             "tools": [_to_openai_tool(tool) for tool in TOOLS],
-            "tool_choice": "required",
+            "tool_choice": "auto",
             "temperature": 0,
         }
 

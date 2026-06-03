@@ -57,7 +57,7 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(120, session.running_tokens)
         self.assertEqual(0.001, session.running_cost_usd)
         self.assertEqual(settings.default_planner_model, captured_payloads[0]["model"])
-        self.assertEqual("required", captured_payloads[0]["tool_choice"])
+        self.assertEqual("auto", captured_payloads[0]["tool_choice"])
 
     async def test_planner_rejects_free_text_without_tool_call(self) -> None:
         async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:
