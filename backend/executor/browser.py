@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from json import loads
 from typing import Any, Callable
@@ -88,3 +89,37 @@ class CloakBrowserClient:
             browser=payload.get("Browser"),
             websocket_debugger_url=payload.get("webSocketDebuggerUrl"),
         )
+
+
+def resolve_cdp_ws_endpoint(settings: Settings, *, fetch_text: FetchText | None = None) -> str:
+    """Read the debugger URL from /json/version and rewrite it to match the configured host."""
+    client = CloakBrowserClient(settings, fetch_text=fetch_text)
+    version_url = client.version_url
+    raw_payload = (fetch_text or _default_fetch_text)(version_url, 5.0)
+    payload = loads(raw_payload)
+    ws_url = payload.get("webSocketDebuggerUrl")
+    if not ws_url:
+        raise RuntimeError(f"missing_websocket_debugger_url_in_response:{raw_payload}")
+
+    # Rewrite host+port to match the configured CLOAK_CDP_URL
+    configured = urlparse(settings.cloak_cdp_url)
+    fetched = urlparse(ws_url)
+
+    # Use 'ws' if the configured URL is 'http' or 'ws', otherwise 'wss'
+    scheme = "wss" if configured.scheme in {"https", "wss"} else "ws"
+
+    return urlunparse(
+        (
+            scheme,
+            configured.netloc,
+            fetched.path,
+            fetched.params,
+            fetched.query,
+            fetched.fragment,
+        )
+    )
+
+
+async def async_resolve_cdp_ws_endpoint(settings: Settings) -> str:
+    """Async wrapper for the synchronous CDP resolution helper."""
+    return await asyncio.to_thread(resolve_cdp_ws_endpoint, settings)
