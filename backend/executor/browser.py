@@ -37,7 +37,13 @@ class BrowserHealth:
 
 
 def _default_fetch_text(url: str, timeout: float) -> str:
-    with urlopen(url, timeout=timeout) as response:
+    # Chromium's DevTools HTTP server validates the Host header against an
+    # allowlist (localhost, 127.0.0.1, IP addresses) to prevent DNS-rebinding
+    # attacks. When connecting via an internal Railway hostname the Host header
+    # would be rejected with HTTP 500. Override it to 'localhost' here.
+    from urllib.request import Request as _Request
+    req = _Request(url, headers={"Host": "localhost"})
+    with urlopen(req, timeout=timeout) as response:
         return response.read().decode("utf-8")
 
 
