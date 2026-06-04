@@ -141,17 +141,17 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
             synthesizer=FakeSynthesizer(),
         )
 
-        result = await orchestrator.run_sequence("Review https://example.com/report")
+        result = await orchestrator.run_sequence("Review https://example.com/report", min_sources=1)
 
         self.assertEqual(
-            ["navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
+            ["navigate_to_url", "extract_structured_data", "finalize_report"],
             [decision.tool_call.name for decision in result.decisions],
         )
-        self.assertEqual(4, result.session.steps_taken)
+        self.assertEqual(3, result.session.steps_taken)
         self.assertEqual("finalized", result.session.termination_state)
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
         self.assertEqual("Latest FAA guidance from 2026", result.session.session_summary)
-        self.assertEqual(0.81, result.tool_results[-2]["score"])
+        self.assertIsNotNone(result.synthesis)
         self.assertEqual("Synthesized report", result.synthesis.title)
 
     async def test_orchestrator_runs_search_first_for_url_free_goal(self) -> None:
@@ -217,10 +217,10 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
             synthesizer=FakeSynthesizer(),
         )
 
-        result = await orchestrator.run_sequence("Find recent FAA BVLOS guidance")
+        result = await orchestrator.run_sequence("Find recent FAA BVLOS guidance", min_sources=1)
 
         self.assertEqual(
-            ["web_search", "navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
+            ["web_search", "navigate_to_url", "extract_structured_data", "finalize_report"],
             [decision.tool_call.name for decision in result.decisions],
         )
         self.assertEqual(["Find recent FAA BVLOS guidance"], result.session.search_queries)

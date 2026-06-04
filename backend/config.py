@@ -67,7 +67,7 @@ class Settings:
             database_url=source.get("DATABASE_URL"),
             redis_url=source.get("REDIS_URL"),
             search_provider=source.get("SEARCH_PROVIDER", "deterministic"),
-            search_api_key=source.get("SEARCH_API_KEY"),
+            search_api_key=source.get("SEARCH_API_KEY") or source.get("GHOST_RESEARCHER_API_KEY"),
             search_api_url=source.get("SEARCH_API_URL", "https://api.search.brave.com/res/v1/web/search"),
             proxy_url=source.get("PROXY_URL"),
             proxy_user=source.get("PROXY_USER"),

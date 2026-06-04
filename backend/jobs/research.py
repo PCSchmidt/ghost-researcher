@@ -88,7 +88,7 @@ class ResearchOrchestrator:
         )
         return PlannerRunResult(session=session, decision=decision, tool_result=tool_result)
 
-    async def run_sequence(self, research_goal: str, *, max_steps: int = 5, min_sources: int = 1) -> PlannerSequenceResult:
+    async def run_sequence(self, research_goal: str, *, max_steps: int = 25, min_sources: int = 4) -> PlannerSequenceResult:
         """Run a deterministic tool sequence without synthesis or persistence."""
         session = AgentSession(research_goal=research_goal)
         if isinstance(self._planner, PlannerSkeleton):
@@ -115,27 +115,57 @@ class ResearchOrchestrator:
                 session.session_summary = None
             if decision.tool_call.name == "extract_structured_data":
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
+                # Create evidence inline from extraction results.
+                current_url = session.current_source_url or ""
+                if tool_result.get("text_excerpt") and current_url:
+                    session.add_evidence(
+                        url=current_url,
+                        title=current_url,
+                        claims=[str(tool_result["text_excerpt"])],
+                        credibility_score=0.5,
+                    )
             if decision.tool_call.name == "finalize_report":
                 break
             if decision.tool_call.name == "web_search" and tool_result.get("new_result_count", 0) == 0:
                 session.finalize("no_new_sources")
                 break
+
+            # Deterministic fallback: after 2+ consecutive searches with zero navigations,
+            # force navigate+extract on top source candidates.
+            recent = decisions[-3:]
+            recent_searches = sum(1 for d in recent if d.tool_call and d.tool_call.name == "web_search")
+            recent_navs = sum(1 for d in recent if d.tool_call and d.tool_call.name == "navigate_to_url")
+            if recent_searches >= 2 and recent_navs == 0 and session.source_candidates:
+                for candidate_url in session.source_candidates:
+                    if candidate_url in session.sources_visited or not candidate_url.startswith("http"):
+                        continue
+                    nav_result = await self._runner.execute_tool_call(
+                        name="navigate_to_url",
+                        arguments={"url": candidate_url},
+                        session=session,
+                    )
+                    tool_results.append(nav_result)
+                    last_tool_result = nav_result
+                    if not nav_result.get("detection_blocked"):
+                        ext_result = await self._runner.execute_tool_call(
+                            name="extract_structured_data",
+                            arguments={"selector": "body", "extraction_goal": "Extract key facts and data"},
+                            session=session,
+                        )
+                        tool_results.append(ext_result)
+                        last_tool_result = ext_result
+                        if ext_result.get("text_excerpt"):
+                            session.add_evidence(
+                                url=candidate_url,
+                                title=candidate_url,
+                                claims=[str(ext_result["text_excerpt"])],
+                                credibility_score=0.5,
+                            )
+                    break  # one forced navigate+extract per fallback trigger
         else:
             # Exhausted max_steps without explicit finalize_report or stop signal.
             if not session.termination_state:
                 session.finalize("max_steps")
-
-        # Generate evidence records from navigation results when the model
-        # does not call assess_credibility (DeepSeek often skips it).
-        if not session.evidence_records:
-            for name, result in ((d.tool_call.name, tr) for d, tr in zip(decisions, tool_results)):
-                if name == "navigate_to_url" and not result.get("detection_blocked"):
-                    session.add_evidence(
-                        url=result.get("final_url", result.get("url", "")),
-                        title=result.get("title", ""),
-                        claims=[result.get("content_excerpt", "")],
-                        credibility_score=0.5,
-                    )
 
         synthesis = await self._synthesize_if_ready(session)
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results, synthesis=synthesis)

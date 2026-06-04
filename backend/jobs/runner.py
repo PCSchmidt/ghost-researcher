@@ -78,7 +78,7 @@ class ResearchRunner:
         if name == "extract_structured_data":
             result = await self._extract(
                 self._settings,
-                selector=arguments["selector"],
+                selector=arguments.get("selector", "body"),
                 extraction_goal=arguments["extraction_goal"],
                 output_schema=arguments.get("output_schema"),
             )

@@ -79,16 +79,17 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
 async def extract_structured_data(
     settings: Settings,
     *,
-    selector: str,
+    selector: str = "body",
     extraction_goal: str,
     output_schema: dict[str, Any] | None = None,
     page_context_factory: PageContextFactory | None = None,
 ) -> ExtractionResult:
     """Extract text records from the current page using a selector."""
+    _selector = selector.strip() if selector else "body"
     page_context = page_context_factory or _default_page_context
     async with page_context(settings) as page:
         raw_values = await page.eval_on_selector_all(
-            selector,
+            _selector,
             "elements => elements.map((element) => element.innerText || element.textContent || '').filter(Boolean)",
         )
 

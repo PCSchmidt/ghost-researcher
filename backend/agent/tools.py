@@ -51,15 +51,15 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "extract_structured_data",
-        "description": "Extract structured content from the current page for synthesis and scoring.",
+        "description": "Extract structured content from the current page for synthesis and scoring. Common selectors: 'body' (full page), 'article', 'main', '.content', '#content'. If unsure, use 'body'.",
         "input_schema": {
             "type": "object",
             "properties": {
-                "selector": {"type": "string"},
-                "extraction_goal": {"type": "string"},
+                "selector": {"type": "string", "description": "CSS selector for content. Defaults to 'body' if omitted. Examples: 'body', 'article', 'main', '.content'."},
+                "extraction_goal": {"type": "string", "description": "What to extract: key facts, dates, policy statements, statistics, names, findings."},
                 "output_schema": {"type": "object"},
             },
-            "required": ["selector", "extraction_goal"],
+            "required": ["extraction_goal"],
         },
         "output_schema": {
             "type": "object",
