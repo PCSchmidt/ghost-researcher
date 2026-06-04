@@ -125,6 +125,18 @@ class ResearchOrchestrator:
             if not session.termination_state:
                 session.finalize("max_steps")
 
+        # Generate evidence records from navigation results when the model
+        # does not call assess_credibility (DeepSeek often skips it).
+        if not session.evidence_records:
+            for name, result in ((d.tool_call.name, tr) for d, tr in zip(decisions, tool_results)):
+                if name == "navigate_to_url" and not result.get("detection_blocked"):
+                    session.add_evidence(
+                        url=result.get("final_url", result.get("url", "")),
+                        title=result.get("title", ""),
+                        claims=[result.get("content_excerpt", "")],
+                        credibility_score=0.5,
+                    )
+
         synthesis = await self._synthesize_if_ready(session)
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results, synthesis=synthesis)
 
