@@ -1,33 +1,55 @@
 # GhostResearcher
 
-GhostResearcher is an agentic web research engine in progress. The current build
-focuses on the backend control path: planner decisions, executor tool dispatch,
-session state, synthesis skeleton, job-state persistence boundary, replayable
-status events, a Next.js research workbench, a repeatable offline eval harness,
-and skipped-by-default live integration smoke tests. Deployment setup has been prepared
-(see `docs/DEPLOYMENT.md`).
+GhostResearcher is an agentic web research engine. You submit a research prompt.
+An OpenRouter-backed LLM planner decomposes it into a multi-step browsing strategy,
+dispatches tool calls to a CloakBrowser executor (stealth Chromium via CDP), extracts
+and credibility-scores sources, and synthesizes a structured intelligence report.
+
+**Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
+CloakBrowser CDP server on Railway. The end-to-end pipeline is operational — the
+planner calls tools, the executor navigates real pages, and the synthesizer produces
+reports. 89 backend tests pass, 8 frontend tests pass.
 
 ---
 
 ## Current Status
 
-Current checkpoint: v1.0.0 - Deployment Setup Complete.
-Next stage: Manual Project Promotion to Railway and Vercel.
+**Current checkpoint**: v1.0.1 — Pipeline Operational, Deep Research In Progress.
 
-Implemented now:
+The v1.0.0 deployment infrastructure is complete and verified. The research pipeline
+runs end-to-end with no 500 errors. CloakBrowser connectivity (CDP WebSocket host
+rewriting, DNS-rebinding bypass, HTTP readiness polling) is stable.
 
-- FastAPI app factory and `/health`
-- `POST /research` endpoint
-- Schema-locked tool catalog
-- Agent session state model
-- CloakBrowser CDP health client
-- Executor skeletons for `web_search`, `navigate_to_url`, `extract_structured_data`, and `assess_credibility`
-- Search provider boundary with deterministic default and opt-in Brave Search provider
-- Deterministic planner skeleton
-- Multi-step orchestrator sequence for URL goals: `navigate_to_url -> extract_structured_data -> assess_credibility`
-- Search-first orchestrator sequence for URL-free goals: `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
-- Multi-source deterministic orchestration with explicit `finalize_report` execution
-- OpenRouter planner adapter with tool-call validation, usage accounting, and cost-limit stops
+**Next session (June 4)**: Phase 1–4 of the deep research fix — Brave Search
+integration, rich planner prompt with research methodology, max_steps=25, inline
+evidence creation on extraction, and LLM-powered synthesis producing detailed
+structured reports with 4–9 cited sources.
+
+Full plan in `/memories/session/plan.md`.
+
+### What's working (deployed)
+
+- FastAPI backend on Railway (`ghostresearcher-api`) — 89 tests passing
+- CloakBrowser CDP server on Railway (`cloakserve`) — Chromium 148 headless
+- Next.js 16 frontend on Vercel — research form, SSE status stream, report viewer
+- OpenRouter planner adapter — DeepSeek V4 Flash with tool-use loop
+- Executor tools — `web_search`, `navigate_to_url`, `extract_structured_data`, `assess_credibility`
+- CDP connectivity — Host header rewriting, DNS-rebinding bypass, HTTP readiness polling
+- Agent session state — sources visited, evidence records, cost tracking
+- Report synthesizer — structured `ResearchReport` with source-trace validation
+- Job persistence — in-memory (default), JSON-file repository for restart durability
+- SSE status stream — `GET /research/{job_id}/events` with replayable events
+- Offline eval harness — `evals/eval_runner.py`, 10 benchmark prompts, scored output
+
+### What's in progress
+
+- **Deep research quality** — The planner loops on search without navigating/extracting.
+  Fix: Brave Search for real URLs, rich research methodology prompt, max_steps=25,
+  evidence creation on extraction, LLM synthesis. See plan for details.
+- **Brave Search integration** — `SEARCH_PROVIDER=brave` env var + API key on Railway.
+  Provider code tested and ready; needs env var configuration.
+- **Frontend synthesis event** — `synthesis_completed` event defined but not emitted.
+  Backend status builder needs the event wired in.
 - Report synthesis skeleton with source-trace validation
 - Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
 - Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
@@ -38,17 +60,17 @@ Implemented now:
 - Skipped-by-default live smoke tests for Brave Search, OpenRouter, and CloakBrowser
 - Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
 
-Not implemented yet:
+### Not yet implemented
 
-- Postgres/Redis production persistence
-- Docker/Railway/Vercel deployment
-- Committed live eval artifact from a real provider run
-
-See [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md) for the full staged plan.
+- Postgres/Redis production persistence (in-memory + JSON-file currently)
+- Full deep research quality (Brave Search, rich planner prompt, LLM synthesis — planned next session)
+- Frontend synthesis_completed event in SSE stream
+- Live eval artifact from a real provider run (next session after deep research fix)
+- Production monitoring and alerting
 
 ---
 
-## Architecture Target
+## Architecture
 
 ```text
 User research goal

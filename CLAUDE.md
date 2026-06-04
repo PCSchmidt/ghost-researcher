@@ -377,21 +377,23 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v1.0.0 - Deployment Prep Complete
-- Next stage: Production operation
-- Current regression baseline: 90 backend tests OK by default, with 85 executed and 5 live smoke tests skipped
-- Current frontend baseline: lint clean, 8 tests passing, production build passing
-- `web_search` defaults to deterministic offline results and has an opt-in Brave Search provider boundary
-- URL-free goals now run `web_search -> navigate_to_url -> extract_structured_data -> assess_credibility`
-- OpenRouter planner and synthesizer live smoke tests exist but are skipped unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` and `OPENROUTER_API_KEY` are configured
-- CloakBrowser health/navigation live smoke tests exist but are skipped unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1` and `CLOAK_CDP_URL` are configured
-- Job state persists through repository boundary; JSON-file repository proves restart durability, API default remains in-memory for dependency-free tests
-- Status events are persisted with research jobs and exposed through `GET /research/{job_id}/events` as a replayable SSE stream; true background live execution remains later queue work
-- Frontend workbench lives in `frontend/`; it submits research goals, consumes the SSE stream via EventSource, renders reports, and displays source credibility cards
-- Offline eval harness lives in `evals/eval_runner.py`; it runs deterministic benchmark checks and writes JSON artifacts under `evals/results/`
-- v0.14 eval artifact: `evals/results/eval_results_20260602T114237Z.json`, 3 prompts, average score 0.786. Historical limitation: deterministic planner assessed one source per prompt.
-- v0.15 eval artifact: `evals/results/eval_results_20260602T121216Z.json`, 3 prompts, average score 1.0. Deterministic planner now assesses prompt minimum source counts before `finalize_report`.
-- v0.16 eval artifact: `evals/results/eval_results_20260602T122647Z.json`, 3 prompts, mode `offline`, search provider `deterministic`, average score 1.0.
+- Current checkpoint: v1.0.1 — Pipeline Operational, Deep Research In Progress
+- Next stage: Phase 1-4 deep research fix (Brave Search, rich planner prompt, max_steps=25, evidence creation, LLM synthesis)
+- Current regression baseline: 89 backend tests pass, 5 live smoke tests skipped
+- Current frontend baseline: 8 tests passing, lint clean, production build passing
+- Backend deployed on Railway (ghostresearcher-api + cloakserve), frontend on Vercel
+- Full plan: /memories/session/plan.md
+- `web_search` defaults to deterministic offline results; Brave Search provider tested, needs env var config
+- OpenRouter planner and synthesizer live smoke tests available but skipped unless `GHOSTRESEARCHER_RUN_LIVE_TESTS=1`
+- CloakBrowser CDP connectivity stable: Host header rewriting, DNS-rebinding bypass, HTTP readiness polling all fixed
+- Job state persists through repository boundary; in-memory default, JSON-file for restart durability
+- Status events persisted with research jobs; SSE stream via `GET /research/{job_id}/events`
+- Frontend workbench submits research goals, consumes SSE stream, renders reports and source cards
+- Offline eval harness: `evals/eval_runner.py`, 10 benchmark prompts, scored JSON artifacts
+- v0.14 eval artifact: `evals/results/eval_results_20260602T114237Z.json`, 3 prompts, average 0.786
+- v0.15 eval artifact: `evals/results/eval_results_20260602T121216Z.json`, 3 prompts, average 1.0
+- v0.16 eval artifact: `evals/results/eval_results_20260602T122647Z.json`, 3 prompts, offline mode, average 1.0
+- v1.0.0 deployment to Railway/Vercel complete; CDP proxy, Host header, DNS-rebinding, wait_for, synthesis gate, and evidence auto-creation fixes deployed
 
 ## Resume Checklist
 
@@ -411,6 +413,10 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v0.16.0 real search provider boundary and eval modes complete and documented
 - [x] v0.17.0 skipped-by-default live smoke tests complete and documented
 - [x] v1.0.0 deployment prep (Railway/Vercel config + documentation) complete
+- [x] v1.0.0 deployment to Railway/Vercel complete
+- [x] v1.0.1 CDP proxy fixes (Host header rewrite, DNS-rebinding bypass, HTTP readiness, wait_for guard)
+- [x] v1.0.1 synthesis gate removal + max_steps finalization + post-loop evidence auto-creation
+- [ ] v1.1.0 deep research quality (Brave Search, rich planner prompt, max_steps=25, evidence on extraction, LLM synthesis)
 
 ## Session Start Command
 
