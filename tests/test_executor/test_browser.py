@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import unittest
+from typing import Any
 from urllib.error import URLError
 
 from backend.config import Settings
-from backend.executor.browser import CloakBrowserClient
+from backend.executor.browser import CloakBrowserClient, resolve_cdp_ws_endpoint
 
 
 class CloakBrowserClientTests(unittest.TestCase):
@@ -55,6 +56,25 @@ class CloakBrowserClientTests(unittest.TestCase):
 
         self.assertEqual("unreachable", health.status)
         self.assertIn("connection refused", health.detail)
+
+    def test_resolve_cdp_ws_endpoint_rewrites_host_to_configured_netloc(self) -> None:
+        def fake_fetch(url: str, timeout: float) -> str:
+            self.assertEqual("http://cloak.internal:9222/json/version", url)
+            return '{"webSocketDebuggerUrl": "ws://127.0.0.1:9223/devtools/browser/abc-123"}'
+
+        settings = Settings.from_env({"CLOAK_CDP_URL": "http://cloak.internal:9222"})
+        ws_url = resolve_cdp_ws_endpoint(settings, fetch_text=fake_fetch)
+
+        # Should match internal host:port but keep the UUID path from the fetched URL
+        self.assertEqual("ws://cloak.internal:9222/devtools/browser/abc-123", ws_url)
+
+    def test_resolve_cdp_ws_endpoint_raises_on_missing_debugger_url(self) -> None:
+        def fake_fetch(url: str, timeout: float) -> str:
+            return '{"Browser": "Chrome/123.0"}'  # Missing webSocketDebuggerUrl
+
+        settings = Settings.from_env({"CLOAK_CDP_URL": "http://localhost:9222"})
+        with self.assertRaisesRegex(RuntimeError, "missing_websocket_debugger_url"):
+            resolve_cdp_ws_endpoint(settings, fetch_text=fake_fetch)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ TOOLS: list[dict[str, Any]] = [
             "type": "object",
             "properties": {
                 "url": {"type": "string", "format": "uri"},
-                "wait_for": {"type": "string", "description": "Optional CSS selector to wait for after navigation, e.g. '.main-content' or 'article'. Do NOT pass 'domcontentloaded' or 'networkidle' here — those are handled automatically."},
+                "wait_for": {"type": "string", "description": "Optional CSS selector to wait for after navigation, e.g. '.main-content' or 'article'. Do NOT use 'domcontentloaded' or 'networkidle' here — those load events are handled automatically."},
                 "fingerprint_seed": {"type": "integer"},
             },
             "required": ["url"],
