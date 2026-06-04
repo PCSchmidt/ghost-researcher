@@ -60,6 +60,15 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
         ],
         "termination_state": session.termination_state,
         "termination_reason": session.termination_reason,
+        "evidence_records": [
+            {
+                "url": ev.url,
+                "title": ev.title,
+                "claims_count": len(ev.claims),
+                "credibility_score": ev.credibility_score,
+            }
+            for ev in session.evidence_records
+        ],
     }
 
 

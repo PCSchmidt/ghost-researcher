@@ -99,8 +99,9 @@ async def extract_structured_data(
             if _normalize_text(value)
         ]
         # Fallback: if body extraction returns nothing (SPA / JS-rendered pages),
-        # grab the full body innerText from the same page.
+        # wait briefly for JS to render, then grab full body innerText.
         if not records and _selector == "body":
+            await page.wait_for_timeout(1000)  # 1s for SPA content to render
             fallback_text = await page.evaluate("document.body ? document.body.innerText : ''")
             if fallback_text and isinstance(fallback_text, str):
                 records = [{"text": _normalize_text(fallback_text), "index": 0}]
