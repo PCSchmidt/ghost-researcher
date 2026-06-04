@@ -97,7 +97,7 @@ class ResearchOrchestrator:
         tool_results: list[dict[str, Any]] = []
         last_tool_result: dict[str, Any] | None = None
 
-        for _ in range(max_steps):
+        for step in range(max_steps):
             decision = await self._plan_next(session, last_tool_result=last_tool_result)
             decisions.append(decision)
             if decision.should_stop or decision.tool_call is None:
@@ -120,12 +120,16 @@ class ResearchOrchestrator:
             if decision.tool_call.name == "web_search" and tool_result.get("new_result_count", 0) == 0:
                 session.finalize("no_new_sources")
                 break
+        else:
+            # Exhausted max_steps without explicit finalize_report or stop signal.
+            if not session.termination_state:
+                session.finalize("max_steps")
 
         synthesis = await self._synthesize_if_ready(session)
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results, synthesis=synthesis)
 
     async def _synthesize_if_ready(self, session: AgentSession) -> ResearchReport | None:
-        if session.termination_reason != "sufficient_coverage" or not session.evidence_records:
+        if not session.evidence_records:
             return None
         try:
             return await self._synthesizer.synthesize(session)
