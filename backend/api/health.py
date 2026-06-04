@@ -25,6 +25,10 @@ def build_health_payload(settings: Settings) -> dict[str, object]:
             "cloak_cdp": cloak_status,
             "database": _status_from_value(settings.database_url),
             "redis": _status_from_value(settings.redis_url),
+            "search": {
+                "provider": settings.search_provider,
+                "key_configured": bool(settings.search_api_key),
+            },
         },
         "limits": {
             "max_steps_per_job": settings.max_steps_per_job,
