@@ -140,7 +140,10 @@ async def navigate_to_url(
             "networkidle0",
             "networkidle2",
         ):
-            await page.wait_for_selector(_wait_for, timeout=timeout_ms)
+            try:
+                await page.wait_for_selector(_wait_for, timeout=timeout_ms)
+            except Exception:
+                pass  # selector may not exist on the target page; continue anyway
         title = await page.title()
         content = await page.content()
         links = await page.eval_on_selector_all(
