@@ -73,6 +73,14 @@ class ResearchRunner:
             session.register_source(result.final_url)
             if result.detection_blocked:
                 session.add_detection_event(url=result.final_url, reason=result.blocked_reason or "detection_blocked")
+            else:
+                # Successful page load — record as evidence
+                session.add_evidence(
+                    url=result.final_url,
+                    title=result.title,
+                    claims=[result.content_excerpt],
+                    credibility_score=0.5,  # Credibility scorer not yet integrated
+                )
             return result.to_dict()
 
         if name == "extract_structured_data":
