@@ -88,7 +88,7 @@ class ResearchOrchestrator:
         )
         return PlannerRunResult(session=session, decision=decision, tool_result=tool_result)
 
-    async def run_sequence(self, research_goal: str, *, max_steps: int = 25, min_sources: int = 4) -> PlannerSequenceResult:
+    async def run_sequence(self, research_goal: str, *, max_steps: int = 15, min_sources: int = 4) -> PlannerSequenceResult:
         """Run a deterministic tool sequence without synthesis or persistence."""
         session = AgentSession(research_goal=research_goal)
         if isinstance(self._planner, PlannerSkeleton):

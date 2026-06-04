@@ -98,6 +98,13 @@ async def extract_structured_data(
         for index, value in enumerate(raw_values)
         if _normalize_text(value)
     ]
+    # Fallback: if body extraction returns nothing (SPA / JS-rendered pages),
+    # grab the full <body> innerText via page.evaluate.
+    if not records and _selector == "body":
+        async with page_context(settings) as page:
+            fallback_text = await page.evaluate("document.body.innerText")
+        if fallback_text and isinstance(fallback_text, str):
+            records = [{"text": _normalize_text(fallback_text), "index": 0}]
     text_excerpt = " ".join(record["text"] for record in records)[:500]
     schema_valid = all(_validate_record_against_schema(record, output_schema) for record in records)
     return ExtractionResult(
