@@ -88,23 +88,20 @@ async def extract_structured_data(
     _selector = selector.strip() if selector else "body"
     page_context = page_context_factory or _default_page_context
     async with page_context(settings) as page:
-        raw_values = await page.eval_on_selector_all(
-            _selector,
-            "elements => elements.map((element) => element.innerText || element.textContent || '').filter(Boolean)",
-        )
-
-        records = [
-            {"text": _normalize_text(value), "index": index}
-            for index, value in enumerate(raw_values)
-            if _normalize_text(value)
-        ]
-        # Fallback: if body extraction returns nothing (SPA / JS-rendered pages),
-        # wait briefly for JS to render, then grab full body innerText.
-        if not records and _selector == "body":
-            await page.wait_for_timeout(1000)  # 1s for SPA content to render
-            fallback_text = await page.evaluate("document.body ? document.body.innerText : ''")
-            if fallback_text and isinstance(fallback_text, str):
-                records = [{"text": _normalize_text(fallback_text), "index": 0}]
+        # Wait a moment for JS-rendered content to populate.
+        await page.wait_for_timeout(1500)
+        # Use page.evaluate for full visible text — eval_on_selector_all
+        # often returns Chrome UI banners (Incognito) before page content.
+        raw_text = await page.evaluate("document.body ? document.body.innerText : ''")
+        if raw_text and isinstance(raw_text, str):
+            # Strip Chrome Incognito banner and other UI noise.
+            clean = raw_text
+            for prefix in ("You've gone Incognito", "You\u2019ve gone Incognito"):
+                if prefix in clean:
+                    clean = clean.split(prefix, 1)[-1].strip()
+            records = [{"text": _normalize_text(clean), "index": 0}] if clean.strip() else []
+        else:
+            records = []
     text_excerpt = " ".join(record["text"] for record in records)[:2000]
     schema_valid = all(_validate_record_against_schema(record, output_schema) for record in records)
     return ExtractionResult(
