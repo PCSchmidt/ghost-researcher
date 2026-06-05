@@ -8,8 +8,8 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v0.17.0 - Live Integration Smoke Tests complete.
-Next stage: v1.0.0 - Deployment.
+Current checkpoint: v1.1.0 - Deep Research Operational.
+Deployed: Railway backend + CloakBrowser, Vercel frontend.
 
 Gate 1 is confirmed:
 
@@ -66,14 +66,15 @@ CLOAK_CDP_URL=http://localhost:9222
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 REDIS_URL=redis://host:6379
 SEARCH_PROVIDER=deterministic
+# Set to brave + SEARCH_API_KEY for real source discovery (required in production)
 SEARCH_API_KEY=
 SEARCH_API_URL=https://api.search.brave.com/res/v1/web/search
 PROXY_URL=
 PROXY_USER=
 PROXY_PASS=
-MAX_STEPS_PER_JOB=20
-MAX_TOKENS_PER_JOB=50000
-MAX_MODEL_COST_PER_JOB_USD=0.05
+MAX_STEPS_PER_JOB=25
+MAX_TOKENS_PER_JOB=125000
+MAX_MODEL_COST_PER_JOB_USD=0.15
 WARN_MODEL_COST_PER_JOB_USD=0.02
 GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 SCRAPE_ENABLED=true
@@ -92,8 +93,7 @@ Run the full backend regression suite:
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Expected current result: 90 backend tests OK by default, with 85 executed and
-5 live smoke tests skipped.
+Expected current result: 89 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -101,9 +101,8 @@ Run the offline eval harness:
 python -m evals.eval_runner --mode offline --limit 3
 ```
 
-Expected current eval result: 3 benchmark prompts run in offline mode with the
-deterministic search provider, average score 1.0, and a JSON artifact written
-under `evals/results/`.
+Expected current eval result: 3 benchmark prompts run in offline mode, average
+score 1.0, and a JSON artifact written under `evals/results/`.
 
 Live eval mode is opt-in:
 

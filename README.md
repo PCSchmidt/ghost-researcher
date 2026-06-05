@@ -6,66 +6,49 @@ dispatches tool calls to a CloakBrowser executor (stealth Chromium via CDP), ext
 and credibility-scores sources, and synthesizes a structured intelligence report.
 
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
-CloakBrowser CDP server on Railway. The end-to-end pipeline is operational — the
-planner calls tools, the executor navigates real pages, and the synthesizer produces
-reports. 89 backend tests pass, 8 frontend tests pass.
+CloakBrowser CDP server on Railway. The full research pipeline is operational — the
+planner navigates 8–15 real sources per run, creates evidence from page content,
+and the synthesizer produces structured reports with cited findings. 89 backend
+tests pass, 8 frontend tests pass.
 
 ---
 
 ## Current Status
 
-**Current checkpoint**: v1.0.1 — Pipeline Operational, Deep Research In Progress.
+**Current checkpoint**: v1.1.0 — Deep Research Operational.
 
-The v1.0.0 deployment infrastructure is complete and verified. The research pipeline
-runs end-to-end with no 500 errors. CloakBrowser connectivity (CDP WebSocket host
-rewriting, DNS-rebinding bypass, HTTP readiness polling) is stable.
-
-**Next session (June 4)**: Phase 1–4 of the deep research fix — Brave Search
-integration, rich planner prompt with research methodology, max_steps=25, inline
-evidence creation on extraction, and LLM-powered synthesis producing detailed
-structured reports with 4–9 cited sources.
-
-Full plan in `/memories/session/plan.md`.
+The research pipeline runs end-to-end with real results. Brave Search supplies live
+URLs, the planner navigates each source using CloakBrowser, evidence is captured
+from page titles and content excerpts, and LLM synthesis produces a structured
+report with 4+ cited findings. The frontend renders the report, source cards, and
+SSE replay — confirmed working June 2026.
 
 ### What's working (deployed)
 
-- FastAPI backend on Railway (`ghostresearcher-api`) — 89 tests passing
+- FastAPI backend on Railway (`ghostresearcher-api`) — 89 tests passing, 5 skipped
 - CloakBrowser CDP server on Railway (`cloakserve`) — Chromium 148 headless
-- Next.js 16 frontend on Vercel — research form, SSE status stream, report viewer
-- OpenRouter planner adapter — DeepSeek V4 Flash with tool-use loop
-- Executor tools — `web_search`, `navigate_to_url`, `extract_structured_data`, `assess_credibility`
-- CDP connectivity — Host header rewriting, DNS-rebinding bypass, HTTP readiness polling
-- Agent session state — sources visited, evidence records, cost tracking
-- Report synthesizer — structured `ResearchReport` with source-trace validation
+- Next.js 16 frontend on Vercel — research form, SSE replay, report viewer, source cards
+- Brave Search — real source URLs, `SEARCH_PROVIDER=brave` configured on Railway
+- OpenRouter planner adapter — DeepSeek V4 Flash, tool-use loop, retry on text response
+- Rich planner prompt — research methodology enforcing search → navigate → extract → finalize
+- Evidence pipeline — navigate_to_url captures title + content_excerpt for each source; extract supplements where page permits
+- LLM synthesis — structured `ResearchReport` with 4+ findings and cited sources per run
+- CDP connectivity — Host header rewriting, DNS-rebinding bypass, HTTP readiness polling, wait_for guard
+- Agent session state — sources visited, evidence records, cost tracking, dedup loop detection
 - Job persistence — in-memory (default), JSON-file repository for restart durability
 - SSE status stream — `GET /research/{job_id}/events` with replayable events
 - Offline eval harness — `evals/eval_runner.py`, 10 benchmark prompts, scored output
 
-### What's in progress
+### Known limits
 
-- **Deep research quality** — The planner loops on search without navigating/extracting.
-  Fix: Brave Search for real URLs, rich research methodology prompt, max_steps=25,
-  evidence creation on extraction, LLM synthesis. See plan for details.
-- **Brave Search integration** — `SEARCH_PROVIDER=brave` env var + API key on Railway.
-  Provider code tested and ready; needs env var configuration.
-- **Frontend synthesis event** — `synthesis_completed` event defined but not emitted.
-  Backend status builder needs the event wired in.
-- Report synthesis skeleton with source-trace validation
-- Research job repository boundary, in-memory job storage, JSON-file restart durability, and `GET /research/{job_id}`
-- Persisted `status_events[]` and `GET /research/{job_id}/events` SSE stream for frontend status views
-- Next.js research workbench with submission form, status stream view, report view, and source cards
-- Offline benchmark eval runner with source traceability, report quality, and criteria coverage scoring
-- Offline evals that can satisfy benchmark minimum source counts before synthesis
-- Eval CLI modes: `--mode offline|live`
-- Skipped-by-default live smoke tests for Brave Search, OpenRouter, and CloakBrowser
-- Unit tests for backend modules, eval harness behavior, and focused frontend UI/API behavior
+- **Credibility scoring** — `assess_credibility` is defined but not called by the live planner; all sources show "Credibility pending" in the UI
+- **Evidence depth** — navigate evidence is limited to 280-char excerpts from raw HTML; paywalled/SPA sites yield thin text
+- **Confidence ceiling** — reports typically score 0.3–0.6 confidence; richer extraction would raise this
 
 ### Not yet implemented
 
 - Postgres/Redis production persistence (in-memory + JSON-file currently)
-- Full deep research quality (Brave Search, rich planner prompt, LLM synthesis — planned next session)
-- Frontend synthesis_completed event in SSE stream
-- Live eval artifact from a real provider run (next session after deep research fix)
+- Live credibility scoring via `assess_credibility` tool
 - Production monitoring and alerting
 
 ---
@@ -90,7 +73,7 @@ PlannerSkeleton/OpenRouterPlanner -> ResearchRunner -> Executor tools
         |              |              +-- assess_credibility
         |              |
         |              v
-        |        AgentSession state -> ReportSynthesizer
+        |        AgentSession state + Evidence records -> ReportSynthesizer
         |
         v
 Persisted response with job_id, status_events[], decisions[], tool_results[], session, synthesis
@@ -161,8 +144,7 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 90 backend tests OK by default, with 85 executed and
-5 live smoke tests skipped.
+Current validated result: 89 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -170,10 +152,9 @@ Run the offline eval harness:
 python -m evals.eval_runner --mode offline --limit 3
 ```
 
-Current v0.16 result: 3 benchmark prompts completed in offline mode with the
-deterministic search provider, average score 1.0, with results persisted under
-`evals/results/`. Live mode is opt-in and requires `SEARCH_PROVIDER=brave`,
-`SEARCH_API_KEY`, and live browser/search dependencies.
+Current result: 3 benchmark prompts completed in offline mode, average score 1.0,
+results persisted under `evals/results/`. Live mode is opt-in and requires
+`SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, and live browser/search dependencies.
 
 Run live smoke tests only when local services and keys are configured:
 

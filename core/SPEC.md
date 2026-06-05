@@ -7,9 +7,33 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v0.17.0
-**Gate Name:** Live Integration Smoke Tests
-**Status:** DONE
+**Version:** v1.1.0
+**Gate Name:** Deep Research Operational
+**Status:** COMPLETE
+
+---
+
+## GOAL
+
+Deliver a working end-to-end research pipeline with Brave Search, real page
+navigation, evidence creation from navigate results, and LLM synthesis producing
+structured reports with cited findings rendered in the frontend.
+
+---
+
+## TASKS
+
+- [x] Enable Brave Search on Railway (`SEARCH_PROVIDER=brave`, `GHOST_RESEARCHER_API_KEY`)
+- [x] Raise token and cost budgets (`MAX_TOKENS_PER_JOB=125000`, `MAX_MODEL_COST_PER_JOB_USD=0.15`)
+- [x] Enrich planner system prompt with full research methodology
+- [x] Add retry logic to OpenRouter adapter when model returns text instead of tool call
+- [x] Fix page sharing between navigate and extract (don't close page in navigate finalizer)
+- [x] Fix extract to use `context.pages[-1]` and strip Chrome Incognito banner
+- [x] Create evidence directly from navigate_to_url results (title + content_excerpt)
+- [x] Synthesize on any termination reason when evidence exists
+- [x] Set `RAILWAY_REQUEST_TIMEOUT=300` for long research runs
+- [x] Confirm frontend renders full report, source cards, and SSE replay
+- [x] Update backend tests to match new orchestrator behavior (89 pass, 5 skipped)
 
 ---
 

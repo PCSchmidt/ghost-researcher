@@ -116,4 +116,16 @@ stage.
 
 - Exit artifacts: Railway backend/cloakserve, Vercel frontend, healthy production endpoints
 - Exit token: `DEPLOY CONFIRMED`
-- Status: Planned
+- Status: Complete
+
+### v1.0.1 - CDP Stability Fixes
+
+- Exit artifacts: Host header rewrite, DNS-rebinding bypass, HTTP readiness polling, wait_for guard, synthesis gate removal
+- Exit token: `CDP STABLE CONFIRMED`
+- Status: Complete
+
+### v1.1.0 - Deep Research Operational
+
+- Exit artifacts: Brave Search live, evidence from navigate results, LLM synthesis with cited findings, frontend report render confirmed
+- Exit token: `DEEP RESEARCH CONFIRMED`
+- Status: Complete

@@ -26,27 +26,14 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v1.0.0 - Deployment
+Current stage: v1.1.0 - Deep Research Operational
 
 Recently completed:
 
-- v0.1.0 foundation docs and memory files
-- v0.2.0 tool schema lock
-- v0.3.0 first executor action, `navigate_to_url`
-- v0.4.0 deterministic planner integration skeleton
-- v0.5.0 `POST /research` API skeleton
-- v0.6.0 extraction and credibility executor skeletons
-- v0.7.0 multi-step planner skeleton
-- v0.8.0 search tool skeleton
-- v0.9.0 OpenRouter planner adapter
-- v0.10.0 synthesizer skeleton
-- v0.11.0 persistence and job state
-- v0.12.0 live status stream
-- v0.13.0 frontend research UI
-- v0.14.0 evals harness
-- v0.15.0 live capability alignment
-- v0.16.0 real search and live eval modes
-- v0.17.0 live integration smoke tests
+- v0.1.0 through v0.17.0 (see entries below)
+- v1.0.0 deployment to Railway + Vercel
+- v1.0.1 CDP proxy fixes
+- v1.1.0 deep research quality (Brave Search, rich prompt, evidence pipeline, LLM synthesis)
 
 Foundation items resolved on 2026-05-29:
 
@@ -444,3 +431,73 @@ Exit criteria:
 - Frontend can run a demo research job
 
 Status: Prep Complete. Ready for manual deployment.
+
+---
+
+## v1.0.0 - Deployment
+
+Goal: Deploy backend and frontend with health checks and rollback path.
+
+Ships:
+
+- Railway backend deployment (ghostresearcher-api)
+- Railway CloakBrowser service (cloakserve)
+- Vercel frontend deployment
+- Environment configuration docs (docs/DEPLOYMENT.md)
+- `RAILWAY_REQUEST_TIMEOUT=300` for long research runs
+
+Exit criteria:
+
+- `/health` returns healthy dependency status
+- `POST /research` works against deployed backend
+- Frontend can run a demo research job
+
+Status: Complete. Backend on Railway, frontend on Vercel. Deployed June 2026.
+
+---
+
+## v1.0.1 - CDP Stability Fixes
+
+Goal: Fix CloakBrowser connectivity issues discovered after first deployment.
+
+Ships:
+
+- CDP WebSocket Host header rewriting (Railway internal DNS)
+- DNS-rebinding protection bypass
+- HTTP readiness polling before CDP connect
+- `wait_for` selector guard in navigate_to_url
+- Post-loop evidence auto-creation
+- Synthesis gate removal (synthesize whenever evidence exists)
+
+Exit criteria:
+
+- CDP connects reliably on Railway internal network
+- Research runs complete without CDP connection errors
+
+Status: Complete.
+
+---
+
+## v1.1.0 - Deep Research Operational
+
+Goal: Deliver a working end-to-end pipeline with real sources, evidence, and LLM synthesis.
+
+Ships:
+
+- Brave Search enabled on Railway (`SEARCH_PROVIDER=brave`)
+- Raised budgets: `MAX_TOKENS_PER_JOB=125000`, `MAX_MODEL_COST_PER_JOB_USD=0.15`
+- Rich planner system prompt with full research methodology
+- OpenRouter adapter retry when model returns text instead of tool call
+- Page sharing fix: navigate keeps page open, extract reuses `context.pages[-1]`
+- Extract Chrome Incognito banner stripping and HTML fallback
+- Evidence created directly from navigate_to_url results (title + content_excerpt)
+- Synthesis triggered on any termination reason when evidence exists
+
+Exit criteria:
+
+- Planner navigates 8+ real sources per run
+- Synthesis produces structured report with 4+ cited findings
+- Frontend renders full report and source cards
+- 89 backend tests pass, 5 skipped
+
+Status: Complete. Confirmed working June 5, 2026.

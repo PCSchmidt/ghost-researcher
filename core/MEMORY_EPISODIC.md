@@ -21,6 +21,9 @@ Updated at gate close with gate outcome rows.
 | 2026-06-02 | GhostResearcher | v0.15.0 | COMPLETE | 80 backend, 8 frontend | Added multi-source deterministic planning, executable `finalize_report`, and 3-prompt eval artifact with source counts met |
 | 2026-06-02 | GhostResearcher | v0.16.0 | COMPLETE | 85 backend, 8 frontend | Added search provider boundary, Brave adapter, eval `--mode offline|live`, and mode-labeled eval artifact |
 | 2026-06-02 | GhostResearcher | v0.17.0 | COMPLETE | 90 backend OK, 8 frontend | Added skipped-by-default live smoke tests for Brave Search, OpenRouter planner/synthesizer, and CloakBrowser health/navigation |
+| 2026-06-03 | GhostResearcher | v1.0.0 | COMPLETE | 89 backend, 8 frontend | Deployed backend to Railway (ghostresearcher-api + cloakserve) and frontend to Vercel; RAILWAY_REQUEST_TIMEOUT=300 set |
+| 2026-06-04 | GhostResearcher | v1.0.1 | COMPLETE | 89 backend, 8 frontend | Fixed CDP Host header rewriting, DNS-rebinding bypass, HTTP readiness polling, wait_for guard, synthesis gate removal, evidence auto-creation |
+| 2026-06-05 | GhostResearcher | v1.1.0 | COMPLETE | 89 backend, 8 frontend | Deep research operational: Brave Search, rich planner prompt, evidence from navigate results, LLM synthesis — full report rendered in frontend |
 
 ## STOP EVENTS
 
