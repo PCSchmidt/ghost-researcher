@@ -105,11 +105,29 @@ class OpenRouterPlanner:
         if session.running_cost_usd >= self._settings.max_model_cost_per_job_usd:
             return PlannerDecision(tool_call=None, termination_reason="cost_limit")
 
-        # If the model returned plain text (no tool calls), treat as implicit finalize.
+        # If the model returned plain text (no tool calls), retry once
+        # with a stronger instruction. DeepSeek sometimes returns text
+        # instead of a tool call after seeing search results.
         choices = response.get("choices") or []
         message = choices[0].get("message") if choices else {}
         if not (message.get("tool_calls")):
-            return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
+            # Retry with an explicit instruction to use tools.
+            retry_payload = self._request_payload(session, last_tool_result=last_tool_result)
+            retry_payload["messages"].append({
+                "role": "user",
+                "content": "You MUST call a tool. Do not return plain text. Pick navigate_to_url if there are unvisited source candidates, or web_search if you need more sources."
+            })
+            response = await self._transport(retry_payload)
+            retry_usage = _extract_usage(response, default_model=self._model)
+            session.record_model_usage(
+                prompt_tokens=retry_usage.prompt_tokens,
+                completion_tokens=retry_usage.completion_tokens,
+                cost_usd=retry_usage.cost_usd,
+            )
+            choices = response.get("choices") or []
+            message = choices[0].get("message") if choices else {}
+            if not (message.get("tool_calls")):
+                return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
         return PlannerDecision(tool_call=_extract_tool_call(response))
 
     def _request_payload(
