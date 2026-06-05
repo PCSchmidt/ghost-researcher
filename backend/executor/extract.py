@@ -67,6 +67,11 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
         context = browser.contexts[0] if browser.contexts else await browser.new_context()
         # Reuse the most recent page left open by navigate_to_url.
         page = context.pages[-1] if context.pages else await context.new_page()
+        # Wait for any in-flight navigation to settle.
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
         yield page
     finally:
         if browser is not None:
