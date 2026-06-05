@@ -113,6 +113,19 @@ class ResearchOrchestrator:
             last_tool_result = tool_result
             if decision.tool_call.name == "navigate_to_url":
                 session.session_summary = None
+                # Create baseline evidence from the navigate result itself.
+                # Extraction may fail on JS-heavy/paywalled sites, but navigate
+                # always captures the page title and a text excerpt from full HTML.
+                if not tool_result.get("detection_blocked"):
+                    title = tool_result.get("title", "") or tool_result.get("final_url", "")
+                    excerpt = tool_result.get("content_excerpt", "")
+                    if excerpt or title:
+                        session.add_evidence(
+                            url=tool_result.get("final_url", tool_result.get("url", "")),
+                            title=title,
+                            claims=[excerpt] if excerpt else [title],
+                            credibility_score=0.5,
+                        )
             if decision.tool_call.name == "extract_structured_data":
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
                 # Create evidence inline from extraction results.

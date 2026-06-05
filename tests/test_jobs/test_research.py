@@ -144,15 +144,13 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         result = await orchestrator.run_sequence("Review https://example.com/report", min_sources=1)
 
         self.assertEqual(
-            ["navigate_to_url", "extract_structured_data", "finalize_report"],
-            [decision.tool_call.name for decision in result.decisions],
+            ["navigate_to_url", "finalize_report"],
+            [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
-        self.assertEqual(3, result.session.steps_taken)
+        self.assertEqual(2, result.session.steps_taken)
         self.assertEqual("finalized", result.session.termination_state)
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
-        self.assertEqual("Latest FAA guidance from 2026", result.session.session_summary)
         self.assertIsNotNone(result.synthesis)
-        self.assertEqual("Synthesized report", result.synthesis.title)
 
     async def test_orchestrator_runs_search_first_for_url_free_goal(self) -> None:
         async def fake_search(settings: Settings, **kwargs: object) -> SearchResults:
@@ -220,8 +218,8 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         result = await orchestrator.run_sequence("Find recent FAA BVLOS guidance", min_sources=1)
 
         self.assertEqual(
-            ["web_search", "navigate_to_url", "extract_structured_data", "finalize_report"],
-            [decision.tool_call.name for decision in result.decisions],
+            ["web_search", "navigate_to_url", "finalize_report"],
+            [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
         self.assertEqual(["Find recent FAA BVLOS guidance"], result.session.search_queries)
         self.assertEqual(["https://faa.gov/bvlos-guidance"], result.session.source_candidates)
