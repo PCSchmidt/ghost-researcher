@@ -65,11 +65,10 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
         ws_endpoint = await async_resolve_cdp_ws_endpoint(settings)
         browser = await playwright.chromium.connect_over_cdp(ws_endpoint)
         context = browser.contexts[0] if browser.contexts else await browser.new_context()
+        # Reuse the most recent page left open by navigate_to_url.
         page = context.pages[-1] if context.pages else await context.new_page()
         yield page
     finally:
-        if page is not None:
-            await page.close()
         if browser is not None:
             await browser.close()
         if playwright is not None:

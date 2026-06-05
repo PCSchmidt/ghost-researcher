@@ -105,8 +105,8 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
         page = await context.new_page()
         yield page
     finally:
-        if page is not None:
-            await page.close()
+        # Don't close the page — extract needs it. Chromium keeps the page
+        # alive in its context so the next Playwright connection sees it.
         if browser is not None:
             await browser.close()
         if playwright is not None:
