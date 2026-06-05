@@ -104,6 +104,26 @@ async def extract_structured_data(
                 if prefix in clean:
                     clean = clean.split(prefix, 1)[-1].strip()
             records = [{"text": _normalize_text(clean), "index": 0}] if clean.strip() else []
+
+        # If innerText returned only Chrome UI noise (Incognito banner, privacy
+        # interstitial), fall back to raw HTML text extraction.
+        if not records or any(
+            marker in (records[0].get("text", "") if records else "")
+            for marker in ("won't see your activity", "Chrome", "third-party cookies")
+        ):
+            html = await page.content()
+            # Strip HTML tags, scripts, styles
+            import re as _re
+            text = _re.sub(r"<script[^>]*>.*?</script>", "", html, flags=_re.DOTALL)
+            text = _re.sub(r"<style[^>]*>.*?</style>", "", text, flags=_re.DOTALL)
+            text = _re.sub(r"<[^>]+>", " ", text)
+            text = _re.sub(r"\s+", " ", text).strip()
+            # Strip Chrome incognito banner from HTML source too
+            for prefix in ("You've gone Incognito", "You\u2019ve gone Incognito"):
+                if prefix in text:
+                    text = text.split(prefix, 1)[-1].strip()
+            if text and len(text) > 100:
+                records = [{"text": _normalize_text(text), "index": 0}]
         else:
             records = []
     text_excerpt = " ".join(record["text"] for record in records)[:2000]
