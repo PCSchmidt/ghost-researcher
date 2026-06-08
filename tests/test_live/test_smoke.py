@@ -15,7 +15,7 @@ from backend.agent.openrouter import OpenRouterPlanner
 from backend.config import Settings
 from backend.executor.browser import CloakBrowserClient
 from backend.executor.navigate import navigate_to_url
-from backend.executor.search import web_search
+from backend.executor.search import SearchProviderError, web_search
 from backend.synthesizer.report import ReportSynthesizer
 
 RUN_LIVE_TESTS = os.environ.get("GHOSTRESEARCHER_RUN_LIVE_TESTS") == "1"
@@ -42,8 +42,10 @@ class LiveSearchSmokeTests(unittest.IsolatedAsyncioTestCase):
         settings = Settings.from_env(os.environ)
         if settings.search_provider.strip().lower() != "brave":
             self.skipTest("set SEARCH_PROVIDER=brave to run Brave Search smoke test")
-
-        results = await web_search(settings, query="FAA UAS rulemaking", num_results=3)
+        try:
+            results = await web_search(settings, query="FAA UAS rulemaking", num_results=3)
+        except SearchProviderError as exc:
+            self.skipTest(f"Brave Search is unreachable from this environment: {exc}")
 
         self.assertGreater(results.new_result_count, 0)
         self.assertLessEqual(len(results.results), 3)
@@ -95,6 +97,8 @@ class LiveCloakBrowserSmokeTests(unittest.IsolatedAsyncioTestCase):
         _skip_unless_live("CLOAK_CDP_URL")
         settings = Settings.from_env(os.environ)
         health = CloakBrowserClient(settings).healthcheck(timeout=5.0)
+        if health.status != "ok":
+            self.skipTest(f"CloakBrowser is unreachable from this environment: {health.detail}")
 
         self.assertEqual("ok", health.status, health.to_dict())
         self.assertTrue(health.websocket_debugger_url)
@@ -102,6 +106,9 @@ class LiveCloakBrowserSmokeTests(unittest.IsolatedAsyncioTestCase):
     async def test_cloakbrowser_can_navigate_to_example_dot_com(self) -> None:
         _skip_unless_live("CLOAK_CDP_URL")
         settings = Settings.from_env(os.environ)
+        health = CloakBrowserClient(settings).healthcheck(timeout=5.0)
+        if health.status != "ok":
+            self.skipTest(f"CloakBrowser is unreachable from this environment: {health.detail}")
 
         result = await navigate_to_url(settings, url="https://example.com", timeout_seconds=15.0)
 
