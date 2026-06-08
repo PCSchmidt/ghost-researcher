@@ -539,7 +539,7 @@ Ships:
 - Navigation diagnostics for PDF, paywall, blocked, and thin-SPA pages
 - Metadata and hard-page limitation records from extraction
 - Evidence quality metrics in API/session/status payloads
-- Stronger credibility/corroboration signals across source-diverse and claim-overlapping assessed evidence
+- Stronger credibility/corroboration signals across source-diverse, claim-overlapping, and previously extracted evidence
 - Production-facing monitoring for model cost, CDP failures, and blocked-source rates
 
-Status: In progress. Local extraction, corroboration, and offline sequence validation are complete; configured live validation remains pending because this shell lacks live env vars.
+Status: In progress. Local extraction, corroboration, offline sequence validation, and live eval readiness probing are complete; configured live validation remains pending because this shell lacks live network access.

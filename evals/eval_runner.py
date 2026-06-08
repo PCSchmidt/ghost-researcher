@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from backend.config import Settings
+from backend.executor.browser import BrowserHealth, CloakBrowserClient
 from backend.executor.credibility import assess_credibility
 from backend.executor.extract import ExtractionResult
 from backend.executor.navigate import NavigationResult
@@ -67,12 +68,21 @@ async def run_eval_suite(
     settings: Settings | None = None,
     mode: str = "offline",
     orchestrator_factory: Callable[[Settings], Any] | None = None,
+    browser_healthcheck: Callable[[Settings], BrowserHealth] | None = None,
 ) -> dict[str, Any]:
     """Run benchmark prompts through the offline or live harness."""
     normalized_mode = mode.strip().lower()
     if normalized_mode not in {"offline", "live"}:
         raise ValueError("invalid_eval_mode")
     active_settings = settings or Settings.from_env({})
+    live_environment: dict[str, Any] | None = None
+    if normalized_mode == "live":
+        if active_settings.search_provider.strip().lower() in {"", "deterministic", "offline"}:
+            raise ValueError("live_search_provider_required")
+        live_environment = validate_live_environment(
+            active_settings,
+            browser_healthcheck=browser_healthcheck,
+        )
     cases: list[dict[str, Any]] = []
     for prompt in prompts:
         result = await _run_prompt(
@@ -91,6 +101,41 @@ async def run_eval_suite(
         "benchmark_count": len(cases),
         "average_score": average_score,
         "cases": cases,
+        "live_environment": live_environment,
+    }
+
+
+def validate_live_environment(
+    settings: Settings,
+    *,
+    browser_healthcheck: Callable[[Settings], BrowserHealth] | None = None,
+) -> dict[str, Any]:
+    """Validate the configured live services before running a live eval."""
+    missing: list[str] = []
+    if settings.search_provider.strip().lower() != "brave":
+        missing.append("SEARCH_PROVIDER=brave")
+    if not settings.search_api_key:
+        missing.append("SEARCH_API_KEY")
+    if not settings.openrouter_api_key:
+        missing.append("OPENROUTER_API_KEY")
+    if not settings.cloak_cdp_url:
+        missing.append("CLOAK_CDP_URL")
+    if not settings.scrape_enabled:
+        missing.append("SCRAPE_ENABLED=1")
+    if missing:
+        raise ValueError("live_environment_missing:" + ", ".join(missing))
+
+    healthcheck = browser_healthcheck or (lambda active_settings: CloakBrowserClient(active_settings).healthcheck(timeout=5.0))
+    health = healthcheck(settings)
+    if health.status != "ok":
+        detail = health.detail or health.status
+        raise ValueError(f"live_cloakbrowser_unreachable:{detail}")
+
+    return {
+        "search_provider": settings.search_provider,
+        "search_api_key": True,
+        "openrouter_api_key": True,
+        "cloakbrowser": health.to_dict(),
     }
 
 
@@ -159,8 +204,6 @@ async def _run_prompt(
     orchestrator_factory: Callable[[Settings], Any] | None = None,
 ) -> PlannerSequenceResult:
     if mode == "live":
-        if settings.search_provider.strip().lower() in {"", "deterministic", "offline"}:
-            raise ValueError("live_search_provider_required")
         orchestrator = orchestrator_factory(settings) if orchestrator_factory else ResearchOrchestrator(settings)
         return await orchestrator.run_sequence(
             prompt.prompt,

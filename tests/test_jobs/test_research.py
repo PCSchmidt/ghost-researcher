@@ -148,6 +148,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
             [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
         self.assertEqual(4, result.session.steps_taken)
+        self.assertEqual(1, len(result.session.evidence_records_by_type("extracted")))
         self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("finalized", result.session.termination_state)
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
@@ -229,6 +230,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
             ["navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
             [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
+        self.assertEqual(1, len(result.session.evidence_records_by_type("extracted")))
         self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
 
     async def test_orchestrator_runs_search_first_for_url_free_goal(self) -> None:
@@ -303,6 +305,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(["Find recent FAA BVLOS guidance"], result.session.search_queries)
         self.assertEqual(["https://faa.gov/bvlos-guidance"], result.session.source_candidates)
         self.assertIn("https://faa.gov/bvlos-guidance", result.session.sources_visited)
+        self.assertEqual(1, len(result.session.evidence_records_by_type("extracted")))
         self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
 
@@ -365,6 +368,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
 
         result = await orchestrator.run_sequence("Find FAA guidance", max_steps=8, min_sources=2)
 
+        self.assertEqual(2, len(result.session.evidence_records_by_type("extracted")))
         self.assertEqual(2, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
         self.assertEqual("finalize_report", result.decisions[-1].tool_call.name)

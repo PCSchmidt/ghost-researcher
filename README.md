@@ -36,7 +36,7 @@ evidence records, with legacy tool-result scores retained as a fallback.
 - Brave Search — real source URLs, `SEARCH_PROVIDER=brave` configured on Railway
 - OpenRouter planner adapter — DeepSeek V4 Flash, tool-use loop, retry on text response
 - Rich planner prompt — research methodology enforcing search → navigate → extract → finalize
-- Evidence pipeline — navigate_to_url captures title + content_excerpt for each source; extract supplements where page permits
+- Evidence pipeline — navigate_to_url captures title + content_excerpt for each source; extract records extracted evidence in session and supplements where page permits
 - Page diagnostics — navigation records `page_type` and `content_type` for HTML, PDF, paywall, blocked, and thin-SPA pages
 - Evidence observability — API/session/status payloads include evidence quality counters and average assessed credibility
 - LLM synthesis — structured `ResearchReport` with 4+ findings and cited sources per run
@@ -49,8 +49,8 @@ evidence records, with legacy tool-result scores retained as a fallback.
 ### Known limits
 
 - **Live validation pending** — local shell is not configured with live keys/CDP; run the live smoke/eval commands once `GHOSTRESEARCHER_RUN_LIVE_TESTS`, Brave/OpenRouter keys, and `CLOAK_CDP_URL` are set
-- **Evidence depth** — extraction now captures page metadata, content sections, and explicit PDF/paywall/thin-SPA limitation records; full PDF parsing remains a later dependency-backed task
-- **Confidence ceiling** — report confidence now benefits from source-diversity and claim-overlap corroboration; domain-specific scoring remains next
+- **Evidence depth** — extraction now captures page metadata, content sections, explicit PDF/paywall/thin-SPA limitation records, and persisted extracted evidence; full PDF parsing remains a later dependency-backed task
+- **Confidence ceiling** — report confidence now benefits from source-diversity, claim-overlap corroboration, and prior extracted evidence; domain-specific scoring remains next
 
 ### Not yet implemented
 
@@ -161,7 +161,8 @@ python -m evals.eval_runner --mode offline --limit 3
 
 Current result: 3 benchmark prompts completed in offline mode, average score 1.0,
 results persisted under `evals/results/`. Live mode is opt-in and requires
-`SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, and live browser/search dependencies.
+`SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, `OPENROUTER_API_KEY`, and live browser/search dependencies.
+When you run it inside Railway, point `CLOAK_CDP_URL` at `http://cloakbrowser.railway.internal:9222`.
 
 Run live smoke tests only when local services and keys are configured:
 
@@ -171,6 +172,10 @@ GHOSTRESEARCHER_RUN_LIVE_TESTS=1 SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENRO
 
 If any required variable is absent, the corresponding smoke test is skipped with
 a clear reason. The normal regression suite must remain dependency-free.
+
+The live eval runner also performs a CloakBrowser readiness probe before it
+starts a benchmark run, so a live environment failure shows up as a clear
+preflight error instead of a partial artifact.
 
 Run frontend checks:
 

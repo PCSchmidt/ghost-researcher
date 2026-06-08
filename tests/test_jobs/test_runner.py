@@ -121,6 +121,7 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         runner = ResearchRunner(Settings.from_env({}), extract=fake_extract)
         session = AgentSession(research_goal="Extract page content")
+        session.register_source("https://example.com/article")
 
         payload = await runner.execute_tool_call(
             name="extract_structured_data",
@@ -130,6 +131,8 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(1, payload["record_count"])
         self.assertEqual(1, session.steps_taken)
+        self.assertEqual(1, len(session.evidence_records_by_type("extracted")))
+        self.assertEqual("Example extracted text", session.evidence_records_by_type("extracted")[0].claims[0])
 
     async def test_runner_executes_credibility_assessment(self) -> None:
         seen_kwargs: dict[str, object] = {}
@@ -153,6 +156,7 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
             title="Other FAA source",
             claims=["Other claim"],
             credibility_score=0.9,
+            evidence_type="extracted",
         )
 
         payload = await runner.execute_tool_call(

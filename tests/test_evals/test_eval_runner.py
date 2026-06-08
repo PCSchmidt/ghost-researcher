@@ -8,9 +8,17 @@ from pathlib import Path
 
 from backend.agent.memory import AgentSession
 from backend.config import Settings
+from backend.executor.browser import BrowserHealth
 from backend.jobs.research import PlannerSequenceResult
 from backend.synthesizer.schema import ResearchReport, ReportClaim
-from evals.eval_runner import BenchmarkPrompt, load_benchmark_prompts, run_eval_suite, score_prompt, write_eval_results
+from evals.eval_runner import (
+    BenchmarkPrompt,
+    load_benchmark_prompts,
+    run_eval_suite,
+    score_prompt,
+    validate_live_environment,
+    write_eval_results,
+)
 
 
 class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
@@ -117,13 +125,51 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         payload = await run_eval_suite(
             prompts=[_prompt()],
             mode="live",
-            settings=Settings.from_env({"SEARCH_PROVIDER": "brave", "SEARCH_API_KEY": "test-key"}),
+            settings=Settings.from_env(
+                {
+                    "SEARCH_PROVIDER": "brave",
+                    "SEARCH_API_KEY": "test-key",
+                    "OPENROUTER_API_KEY": "test-openrouter",
+                    "CLOAK_CDP_URL": "http://cloakbrowser:9222",
+                }
+            ),
             orchestrator_factory=FakeLiveOrchestrator,
+            browser_healthcheck=lambda settings: BrowserHealth(
+                status="ok",
+                version_url="http://cloakbrowser:9222/json/version",
+                browser="CloakBrowser/1.0",
+                websocket_debugger_url="ws://cloakbrowser:9222/devtools/browser/abc",
+            ),
         )
 
         self.assertEqual("live", payload["mode"])
         self.assertEqual("brave", payload["search_provider"])
         self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
+        self.assertEqual("ok", payload["live_environment"]["cloakbrowser"]["status"])
+
+    def test_validate_live_environment_requires_live_settings(self) -> None:
+        with self.assertRaisesRegex(ValueError, "live_environment_missing"):
+            validate_live_environment(Settings.from_env({}))
+
+    def test_validate_live_environment_rejects_unhealthy_cloakbrowser(self) -> None:
+        def fake_healthcheck(settings: Settings) -> BrowserHealth:
+            return BrowserHealth(
+                status="unreachable",
+                version_url="http://cloakbrowser:9222/json/version",
+                detail="connection refused",
+            )
+
+        settings = Settings.from_env(
+            {
+                "SEARCH_PROVIDER": "brave",
+                "SEARCH_API_KEY": "test-key",
+                "OPENROUTER_API_KEY": "test-openrouter",
+                "CLOAK_CDP_URL": "http://cloakbrowser:9222",
+            }
+        )
+
+        with self.assertRaisesRegex(ValueError, "live_cloakbrowser_unreachable:connection refused"):
+            validate_live_environment(settings, browser_healthcheck=fake_healthcheck)
 
     def test_write_eval_results_creates_json_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
