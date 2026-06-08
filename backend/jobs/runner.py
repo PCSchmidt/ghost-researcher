@@ -35,6 +35,24 @@ class ResearchRunner:
         self._assess = assess or assess_credibility
         self._search = search or web_search
 
+    def _corroborating_evidence(self, session: AgentSession, *, current_url: str) -> tuple[list[str], list[str]]:
+        """Return prior evidence signals that can strengthen credibility scoring."""
+        sources: list[str] = []
+        claims: list[str] = []
+        seen_sources: set[str] = set()
+        seen_claims: set[str] = set()
+        for record in session.evidence_records:
+            if record.url == current_url or record.evidence_type not in {"assessed", "extracted"}:
+                continue
+            if record.url not in seen_sources:
+                seen_sources.add(record.url)
+                sources.append(record.url)
+            for claim in record.claims:
+                if claim not in seen_claims:
+                    seen_claims.add(claim)
+                    claims.append(claim)
+        return sources, claims
+
     async def execute_tool_call(
         self,
         *,
@@ -83,21 +101,30 @@ class ResearchRunner:
                 output_schema=arguments.get("output_schema"),
             )
             session.increment_step()
+            current_url = session.current_source_url or ""
+            if current_url and result.text_excerpt:
+                session.add_evidence(
+                    url=current_url,
+                    title=current_url,
+                    claims=[result.text_excerpt],
+                    credibility_score=0.5,
+                    evidence_type="extracted",
+                )
             return result.to_dict()
 
         if name == "assess_credibility":
+            current_url = str(arguments["url"])
             corroborating_sources = arguments.get("corroborating_sources")
-            assessed_records = [
-                record for record in session.evidence_records_by_type("assessed") if record.url != arguments["url"]
-            ]
-            if not isinstance(corroborating_sources, list):
-                corroborating_sources = [record.url for record in assessed_records]
             corroborating_claims = arguments.get("corroborating_claims")
-            if not isinstance(corroborating_claims, list):
-                corroborating_claims = [claim for record in assessed_records for claim in record.claims]
+            if not isinstance(corroborating_sources, list) or not isinstance(corroborating_claims, list):
+                derived_sources, derived_claims = self._corroborating_evidence(session, current_url=current_url)
+                if not isinstance(corroborating_sources, list):
+                    corroborating_sources = derived_sources
+                if not isinstance(corroborating_claims, list):
+                    corroborating_claims = derived_claims
             result = await self._assess(
                 self._settings,
-                url=arguments["url"],
+                url=current_url,
                 content_snippet=arguments["content_snippet"],
                 corroborating_sources=[str(url) for url in corroborating_sources],
                 corroborating_claims=[str(claim) for claim in corroborating_claims],

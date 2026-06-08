@@ -380,7 +380,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - Current checkpoint: v1.1.1 — Evidence Flow Stabilization
 - Pipeline: Brave Search → 8-15 sources navigated → evidence from navigate excerpts → LLM synthesis → structured report
 - Frontend: report renders with findings, sources, SSE replay — confirmed working June 2026
-- Evidence strategy: navigate_to_url captures title + content_excerpt for every non-blocked page; extraction (body.innerText) supplements but is not required
+- Evidence strategy: navigate_to_url captures title + content_excerpt for every non-blocked page; extraction persists extracted evidence and strengthens corroboration where page text is available
 - Known limits: configured live validation still needed; evidence depth and corroboration quality remain the next report-quality levers
 - Next stage: v1.2.0 evidence quality and live validation
 - Current regression baseline: 104 backend tests pass, 5 live smoke tests skipped

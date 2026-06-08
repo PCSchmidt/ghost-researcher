@@ -200,8 +200,8 @@ Start each coding session with `/start`, then read:
 
 The next build slice is v1.2.0: evidence quality and live validation. Confirm a
 configured live run follows `navigate_to_url -> extract_structured_data ->
-assess_credibility -> finalize_report`, then improve extraction depth and
-corroboration scoring.
+assess_credibility -> finalize_report`, then improve extraction depth,
+persisted extracted evidence, and corroboration scoring.
 
 ---
 

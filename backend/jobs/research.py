@@ -130,16 +130,6 @@ class ResearchOrchestrator:
                         )
             if decision.tool_call.name == "extract_structured_data":
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
-                # Create evidence inline from extraction results.
-                current_url = session.current_source_url or ""
-                if tool_result.get("text_excerpt") and current_url:
-                    session.add_evidence(
-                        url=current_url,
-                        title=current_url,
-                        claims=[str(tool_result["text_excerpt"])],
-                        credibility_score=0.5,
-                        evidence_type="extracted",
-                    )
             if decision.tool_call.name == "finalize_report":
                 break
             if decision.tool_call.name == "web_search" and tool_result.get("new_result_count", 0) == 0:
@@ -170,14 +160,6 @@ class ResearchOrchestrator:
                         )
                         tool_results.append(ext_result)
                         last_tool_result = ext_result
-                        if ext_result.get("text_excerpt"):
-                                session.add_evidence(
-                                    url=candidate_url,
-                                    title=candidate_url,
-                                    claims=[str(ext_result["text_excerpt"])],
-                                    credibility_score=0.5,
-                                    evidence_type="extracted",
-                                )
                     break  # one forced navigate+extract per fallback trigger
         else:
             # Exhausted max_steps without explicit finalize_report or stop signal.
