@@ -107,11 +107,13 @@ score 1.0, and a JSON artifact written under `evals/results/`.
 Live eval mode is opt-in:
 
 ```bash
-SEARCH_PROVIDER=brave SEARCH_API_KEY=... python -m evals.eval_runner --mode live --limit 3
+SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENROUTER_API_KEY=... CLOAK_CDP_URL=http://localhost:9222 python -m evals.eval_runner --mode live --limit 3
 ```
 
 Live mode uses configured provider/runtime services and is not part of the
-dependency-free regression suite.
+dependency-free regression suite. The eval runner now performs a CloakBrowser
+readiness probe before it starts a live benchmark run, so an unreachable
+service fails fast with a clear preflight error.
 
 Run skipped-by-default live smoke tests when all required services are available:
 

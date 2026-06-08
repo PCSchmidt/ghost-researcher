@@ -161,7 +161,7 @@ python -m evals.eval_runner --mode offline --limit 3
 
 Current result: 3 benchmark prompts completed in offline mode, average score 1.0,
 results persisted under `evals/results/`. Live mode is opt-in and requires
-`SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, and live browser/search dependencies.
+`SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, `OPENROUTER_API_KEY`, and live browser/search dependencies.
 
 Run live smoke tests only when local services and keys are configured:
 
@@ -171,6 +171,10 @@ GHOSTRESEARCHER_RUN_LIVE_TESTS=1 SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENRO
 
 If any required variable is absent, the corresponding smoke test is skipped with
 a clear reason. The normal regression suite must remain dependency-free.
+
+The live eval runner also performs a CloakBrowser readiness probe before it
+starts a benchmark run, so a live environment failure shows up as a clear
+preflight error instead of a partial artifact.
 
 Run frontend checks:
 

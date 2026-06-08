@@ -542,4 +542,4 @@ Ships:
 - Stronger credibility/corroboration signals across source-diverse, claim-overlapping, and previously extracted evidence
 - Production-facing monitoring for model cost, CDP failures, and blocked-source rates
 
-Status: In progress. Local extraction, corroboration, and offline sequence validation are complete; configured live validation remains pending because this shell lacks live env vars.
+Status: In progress. Local extraction, corroboration, offline sequence validation, and live eval readiness probing are complete; configured live validation remains pending because this shell lacks live network access.
