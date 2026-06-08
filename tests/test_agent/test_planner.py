@@ -108,6 +108,40 @@ class PlannerSkeletonTests(unittest.TestCase):
         self.assertEqual("sufficient_coverage", decision.tool_call.arguments["termination_reason"])
         self.assertEqual(["https://example.com/report"], decision.tool_call.arguments["sources_used"])
 
+    def test_planner_extracts_before_finalizing_navigation_fallback_evidence(self) -> None:
+        planner = PlannerSkeleton()
+        session = AgentSession(research_goal="Review https://example.com/report")
+        session.register_source("https://example.com/report")
+        session.add_evidence(
+            url="https://example.com/report",
+            title="Example Report",
+            claims=["Fallback page excerpt"],
+            credibility_score=0.5,
+            evidence_type="navigation_fallback",
+        )
+
+        decision = planner.plan_next(session)
+
+        self.assertEqual("extract_structured_data", decision.tool_call.name)
+
+    def test_planner_assesses_extracted_evidence_before_finalizing(self) -> None:
+        planner = PlannerSkeleton()
+        session = AgentSession(research_goal="Review https://example.com/report")
+        session.register_source("https://example.com/report")
+        session.session_summary = "Extracted report content"
+        session.add_evidence(
+            url="https://example.com/report",
+            title="Example Report",
+            claims=["Extracted report content"],
+            credibility_score=0.5,
+            evidence_type="extracted",
+        )
+
+        decision = planner.plan_next(session)
+
+        self.assertEqual("assess_credibility", decision.tool_call.name)
+        self.assertEqual("https://example.com/report", decision.tool_call.arguments["url"])
+
     def test_planner_continues_to_next_candidate_before_minimum_evidence(self) -> None:
         planner = PlannerSkeleton(min_sources=2)
         session = AgentSession(research_goal="Find FAA BVLOS guidance")

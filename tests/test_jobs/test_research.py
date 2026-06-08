@@ -144,13 +144,92 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         result = await orchestrator.run_sequence("Review https://example.com/report", min_sources=1)
 
         self.assertEqual(
-            ["navigate_to_url", "finalize_report"],
+            ["navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
             [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
-        self.assertEqual(2, result.session.steps_taken)
+        self.assertEqual(4, result.session.steps_taken)
+        self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("finalized", result.session.termination_state)
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
         self.assertIsNotNone(result.synthesis)
+
+    async def test_orchestrator_guards_premature_finalize_after_navigation_evidence(self) -> None:
+        from backend.agent.planner import PlannerDecision, ToolCall
+
+        class PrematurePlanner:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def plan_next(self, session, *, last_tool_result=None):
+                self.calls += 1
+                if self.calls == 1:
+                    return PlannerDecision(
+                        tool_call=ToolCall(
+                            name="navigate_to_url",
+                            arguments={"url": "https://example.com/report"},
+                        )
+                    )
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="finalize_report",
+                        arguments={
+                            "confidence": 0.5,
+                            "sources_used": ["https://example.com/report"],
+                            "termination_reason": "sufficient_coverage",
+                        },
+                    )
+                )
+
+        async def fake_navigate(settings: Settings, **kwargs: object) -> NavigationResult:
+            return NavigationResult(
+                url=str(kwargs["url"]),
+                final_url=str(kwargs["url"]),
+                title="Example Report",
+                status_code=200,
+                content_excerpt="Example report content",
+                links=[],
+                detection_blocked=False,
+                blocked_reason=None,
+                screenshot_path=None,
+                timing_ms=7,
+            )
+
+        async def fake_extract(settings: Settings, **kwargs: object) -> ExtractionResult:
+            return ExtractionResult(
+                selector=str(kwargs["selector"]),
+                extraction_goal=str(kwargs["extraction_goal"]),
+                records=[{"text": "Latest report content from 2026", "index": 0}],
+                text_excerpt="Latest report content from 2026",
+                record_count=1,
+                schema_valid=True,
+            )
+
+        async def fake_assess(settings: Settings, **kwargs: object) -> CredibilityResult:
+            return CredibilityResult(
+                url=str(kwargs["url"]),
+                score=0.81,
+                domain_authority=0.6,
+                freshness=0.85,
+                corroboration=0.5,
+                detection_penalty=0.0,
+                rationale="test rationale",
+            )
+
+        settings = Settings.from_env({})
+        orchestrator = ResearchOrchestrator(
+            settings,
+            planner=PrematurePlanner(),
+            runner=ResearchRunner(settings, navigate=fake_navigate, extract=fake_extract, assess=fake_assess),
+            synthesizer=FakeSynthesizer(),
+        )
+
+        result = await orchestrator.run_sequence("Review https://example.com/report", min_sources=1)
+
+        self.assertEqual(
+            ["navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
+            [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
+        )
+        self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
 
     async def test_orchestrator_runs_search_first_for_url_free_goal(self) -> None:
         async def fake_search(settings: Settings, **kwargs: object) -> SearchResults:
@@ -218,12 +297,13 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         result = await orchestrator.run_sequence("Find recent FAA BVLOS guidance", min_sources=1)
 
         self.assertEqual(
-            ["web_search", "navigate_to_url", "finalize_report"],
+            ["web_search", "navigate_to_url", "extract_structured_data", "assess_credibility", "finalize_report"],
             [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         )
         self.assertEqual(["Find recent FAA BVLOS guidance"], result.session.search_queries)
         self.assertEqual(["https://faa.gov/bvlos-guidance"], result.session.source_candidates)
         self.assertIn("https://faa.gov/bvlos-guidance", result.session.sources_visited)
+        self.assertEqual(1, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
 
     async def test_orchestrator_runs_multi_source_sequence_when_requested(self) -> None:
@@ -285,7 +365,7 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
 
         result = await orchestrator.run_sequence("Find FAA guidance", max_steps=8, min_sources=2)
 
-        self.assertEqual(2, len(result.session.evidence_records))
+        self.assertEqual(2, len(result.session.evidence_records_by_type("assessed")))
         self.assertEqual("sufficient_coverage", result.session.termination_reason)
         self.assertEqual("finalize_report", result.decisions[-1].tool_call.name)
         self.assertEqual(2, len(result.synthesis.sources_used))

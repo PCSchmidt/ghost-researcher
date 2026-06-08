@@ -56,6 +56,35 @@ def _freshness(content_snippet: str) -> float:
     return 0.5
 
 
+def _corroboration(content_snippet: str, corroborating_sources: list[str] | None) -> float:
+    source_count = len(set(corroborating_sources or []))
+    distinct_domains = {
+        hostname
+        for source in (corroborating_sources or [])
+        if (hostname := urlparse(source).hostname)
+    }
+    snippet = content_snippet.lower()
+    evidence_markers = len(
+        {
+            marker
+            for marker in (
+                "according to",
+                "cited",
+                "reported",
+                "data",
+                "study",
+                "regulation",
+                "rulemaking",
+                "federal register",
+                "guidance",
+            )
+            if marker in snippet
+        }
+    )
+    score = 0.4 + min(0.3, source_count * 0.1) + min(0.2, len(distinct_domains) * 0.075) + min(0.1, evidence_markers * 0.025)
+    return _clamp(score)
+
+
 def _clamp(value: float) -> float:
     return round(max(0.0, min(1.0, value)), 3)
 
@@ -65,6 +94,7 @@ async def assess_credibility(
     *,
     url: str,
     content_snippet: str,
+    corroborating_sources: list[str] | None = None,
 ) -> CredibilityResult:
     """Score source credibility with a transparent hand-tuned baseline."""
     del settings
@@ -73,7 +103,7 @@ async def assess_credibility(
 
     domain_authority = _domain_authority(url)
     freshness = _freshness(content_snippet)
-    corroboration = 0.5
+    corroboration = _corroboration(content_snippet, corroborating_sources)
     detection_penalty = 0.0
     score = _clamp((domain_authority * 0.45) + (freshness * 0.3) + (corroboration * 0.25) - detection_penalty)
     rationale = (

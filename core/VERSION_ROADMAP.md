@@ -26,7 +26,7 @@ gate details and [SPEC_GATES.md](./SPEC_GATES.md) for the compact gate checklist
 
 ## Current Status
 
-Current stage: v1.1.0 - Deep Research Operational
+Current stage: v1.1.1 - Evidence Flow Stabilization
 
 Recently completed:
 
@@ -34,6 +34,7 @@ Recently completed:
 - v1.0.0 deployment to Railway + Vercel
 - v1.0.1 CDP proxy fixes
 - v1.1.0 deep research quality (Brave Search, rich prompt, evidence pipeline, LLM synthesis)
+- v1.1.1 evidence flow stabilization (fallback evidence provenance, assessed coverage gating, source-card credibility)
 
 Foundation items resolved on 2026-05-29:
 
@@ -430,7 +431,7 @@ Exit criteria:
 - `POST /research` works against deployed backend
 - Frontend can run a demo research job
 
-Status: Prep Complete. Ready for manual deployment.
+Status: Historical prep complete. Superseded by the completed deployment entry below.
 
 ---
 
@@ -501,3 +502,41 @@ Exit criteria:
 - 89 backend tests pass, 5 skipped
 
 Status: Complete. Confirmed working June 5, 2026.
+
+---
+
+## v1.1.1 - Evidence Flow Stabilization
+
+Goal: Prevent navigation-created fallback evidence from satisfying coverage before extraction and credibility assessment.
+
+Ships:
+
+- Evidence provenance markers: `navigation_fallback`, `extracted`, and `assessed`
+- Planner coverage rules count only assessed evidence toward `sufficient_coverage`
+- Orchestrator guard reroutes premature `finalize_report` calls into extraction or credibility when possible
+- Synthesizer prefers assessed evidence and deduplicates to one best record per source
+- Frontend source cards read credibility from session evidence records
+- Extraction regression fix so normal `document.body.innerText` records are preserved
+
+Exit criteria:
+
+- Normal source path is `navigate_to_url -> extract_structured_data -> assess_credibility -> finalize_report`
+- Navigation fallback evidence remains available for synthesis resilience but does not complete coverage
+- Backend and frontend checks pass
+
+Status: Complete locally. Ready for live validation and deployment.
+
+---
+
+## v1.2.0 - Evidence Quality and Live Validation
+
+Goal: Improve evidence depth and validate the stabilized live planner path under configured production-like services.
+
+Ships:
+
+- Configured live run or live eval artifact confirming extract and credibility behavior
+- Richer extraction strategy for requested selectors plus article/main/content regions
+- Stronger credibility/corroboration signals across source-diverse assessed evidence
+- Production-facing monitoring for model cost, CDP failures, and blocked-source rates
+
+Status: In progress. Local extraction, corroboration, and offline sequence validation are complete; configured live validation remains pending because this shell lacks live env vars.

@@ -15,6 +15,7 @@ from backend.executor.browser import async_resolve_cdp_ws_endpoint
 
 class PageLike(Protocol):
     async def eval_on_selector_all(self, selector: str, expression: str) -> list[str]: ...
+    async def evaluate(self, expression: str, *args: Any) -> Any: ...
 
 
 PageContextFactory = Any
@@ -53,6 +54,18 @@ def _validate_record_against_schema(record: dict[str, Any], output_schema: dict[
     if not isinstance(required, list):
         return False
     return all(field in record for field in required)
+
+
+def _is_browser_noise(value: str) -> bool:
+    return any(marker in value for marker in ("won't see your activity", "Chrome", "third-party cookies"))
+
+
+def _strip_browser_noise(value: str) -> str:
+    clean = value
+    for prefix in ("You've gone Incognito", "You\u2019ve gone Incognito"):
+        if prefix in clean:
+            clean = clean.split(prefix, 1)[-1].strip()
+    return clean
 
 
 @asynccontextmanager
@@ -94,23 +107,56 @@ async def extract_structured_data(
     async with page_context(settings) as page:
         # Wait a moment for JS-rendered content to populate.
         await page.wait_for_timeout(1500)
-        # Use page.evaluate for full visible text — eval_on_selector_all
-        # often returns Chrome UI banners (Incognito) before page content.
-        raw_text = await page.evaluate("document.body ? document.body.innerText : ''")
-        if raw_text and isinstance(raw_text, str):
-            # Strip Chrome Incognito banner and other UI noise.
-            clean = raw_text
-            for prefix in ("You've gone Incognito", "You\u2019ve gone Incognito"):
-                if prefix in clean:
-                    clean = clean.split(prefix, 1)[-1].strip()
-            records = [{"text": _normalize_text(clean), "index": 0}] if clean.strip() else []
+
+        selector_candidates = []
+        for candidate in (_selector, "article", "main", "[role='main']", ".content", "#content", "body"):
+            if candidate not in selector_candidates:
+                selector_candidates.append(candidate)
+
+        raw_sections = await page.evaluate(
+            """
+            (selectors) => {
+              const sections = [];
+              for (const selector of selectors) {
+                const nodes = Array.from(document.querySelectorAll(selector));
+                for (const node of nodes) {
+                  const text = (node.innerText || node.textContent || '').trim();
+                  if (text) sections.push({ selector, text });
+                }
+              }
+              return sections;
+            }
+            """,
+            selector_candidates,
+        )
+        if isinstance(raw_sections, list):
+            records = []
+            seen_text: set[str] = set()
+            for index, section in enumerate(raw_sections):
+                if not isinstance(section, dict):
+                    continue
+                text = section.get("text")
+                if not isinstance(text, str):
+                    continue
+                clean = _normalize_text(_strip_browser_noise(text))
+                if not clean or _is_browser_noise(clean) or clean in seen_text:
+                    continue
+                seen_text.add(clean)
+                records.append(
+                    {
+                        "text": clean,
+                        "index": index,
+                        "selector": str(section.get("selector") or _selector),
+                    }
+                )
+        else:
+            # Older fakes and some browser shims return a plain body string.
+            clean = _normalize_text(_strip_browser_noise(str(raw_sections or "")))
+            records = [{"text": clean, "index": 0, "selector": _selector}] if clean else []
 
         # If innerText returned only Chrome UI noise (Incognito banner, privacy
         # interstitial), fall back to raw HTML text extraction.
-        if not records or any(
-            marker in (records[0].get("text", "") if records else "")
-            for marker in ("won't see your activity", "Chrome", "third-party cookies")
-        ):
+        if not records:
             html = await page.content()
             # Strip HTML tags, scripts, styles
             import re as _re
@@ -123,9 +169,7 @@ async def extract_structured_data(
                 if prefix in text:
                     text = text.split(prefix, 1)[-1].strip()
             if text and len(text) > 100:
-                records = [{"text": _normalize_text(text), "index": 0}]
-        else:
-            records = []
+                records = [{"text": _normalize_text(text), "index": 0, "selector": "html"}]
     text_excerpt = " ".join(record["text"] for record in records)[:2000]
     schema_valid = all(_validate_record_against_schema(record, output_schema) for record in records)
     return ExtractionResult(

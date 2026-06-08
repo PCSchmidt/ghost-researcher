@@ -33,12 +33,13 @@ npm test
 npm run build
 ```
 
-Current validated baseline: lint clean, 8 Vitest tests passing, production build passing.
+Current validated baseline: lint clean, Vitest component/API tests passing, production build passing.
 
 ## Deployment Target
 
-The frontend deployment target is Vercel. Deployment is the next planned stage
-after the v0.17 live smoke harness.
+The frontend deployment target is Vercel, and the production deployment is
+already complete. The current frontend slice renders source credibility from
+session evidence records, falling back to legacy tool result scores when needed.
 
 See [../README.md](../README.md) and [../SETUP.md](../SETUP.md) for the current
 project checkpoint and full validation baseline.

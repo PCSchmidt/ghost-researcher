@@ -13,7 +13,7 @@ must not be the default path.
 
 Hard ceilings:
 
-- Per research job hard ceiling: `$0.05` model spend
+- Per research job hard ceiling: `$0.15` model spend
 - Per research job warning threshold: `$0.02` model spend
 - Development monthly API ceiling: `$25`
 - Launch monthly API warning threshold: `$75`
@@ -61,7 +61,7 @@ logic.
 
 Assumption for early estimates: 5 research jobs per active user per month.
 Average model cost target: `$0.01` per completed job. Hard max model cost:
-`$0.05` per completed job.
+`$0.15` per completed job.
 
 | Service | Free Tier | At 100 users | At 1000 users | At 10000 users |
 | --- | --- | --- | --- | --- |

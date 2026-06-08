@@ -14,6 +14,7 @@ class EvidenceRecord:
     title: str
     claims: list[str]
     credibility_score: float
+    evidence_type: str = "assessed"
     extracted_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -87,7 +88,15 @@ class AgentSession:
                 return url
         return None
 
-    def add_evidence(self, *, url: str, title: str, claims: list[str], credibility_score: float) -> None:
+    def add_evidence(
+        self,
+        *,
+        url: str,
+        title: str,
+        claims: list[str],
+        credibility_score: float,
+        evidence_type: str = "assessed",
+    ) -> None:
         """Append extracted evidence to the session record."""
         self.evidence_records.append(
             EvidenceRecord(
@@ -95,8 +104,17 @@ class AgentSession:
                 title=title,
                 claims=claims,
                 credibility_score=credibility_score,
+                evidence_type=evidence_type,
             )
         )
+
+    def evidence_records_by_type(self, evidence_type: str) -> list[EvidenceRecord]:
+        """Return evidence records with the requested provenance marker."""
+        return [record for record in self.evidence_records if record.evidence_type == evidence_type]
+
+    def evidence_urls_by_type(self, evidence_type: str) -> set[str]:
+        """Return source URLs for evidence records with the requested provenance marker."""
+        return {record.url for record in self.evidence_records if record.evidence_type == evidence_type}
 
     def add_detection_event(self, *, url: str, reason: str) -> None:
         """Record that a source blocked or challenged automation."""

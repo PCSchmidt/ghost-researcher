@@ -86,10 +86,18 @@ class ResearchRunner:
             return result.to_dict()
 
         if name == "assess_credibility":
+            corroborating_sources = arguments.get("corroborating_sources")
+            if not isinstance(corroborating_sources, list):
+                corroborating_sources = [
+                    record.url
+                    for record in session.evidence_records_by_type("assessed")
+                    if record.url != arguments["url"]
+                ]
             result = await self._assess(
                 self._settings,
                 url=arguments["url"],
                 content_snippet=arguments["content_snippet"],
+                corroborating_sources=[str(url) for url in corroborating_sources],
             )
             session.increment_step()
             session.add_evidence(
@@ -111,9 +119,14 @@ class ResearchRunner:
             if not isinstance(sources_used, list):
                 raise ValueError("invalid_sources_used")
             evidence_urls = {record.url for record in session.evidence_records}
+            assessed_urls = session.evidence_urls_by_type("assessed")
             unsupported_sources = [str(url) for url in sources_used if str(url) not in evidence_urls]
             if unsupported_sources:
                 raise ValueError("unsupported_finalize_source")
+            if termination_reason == "sufficient_coverage":
+                unassessed_sources = [str(url) for url in sources_used if str(url) not in assessed_urls]
+                if unassessed_sources:
+                    raise ValueError("unassessed_finalize_source")
             if termination_reason == "sufficient_coverage" and not sources_used:
                 raise ValueError("no_sources_selected")
             session.increment_step()

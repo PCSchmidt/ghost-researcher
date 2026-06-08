@@ -18,6 +18,14 @@ export type StatusEvent = {
   payload: Record<string, unknown>;
 };
 
+export type EvidenceRecord = {
+  url: string;
+  title: string;
+  claims_count: number;
+  credibility_score: number;
+  evidence_type?: string;
+};
+
 export type SessionState = {
   research_goal: string;
   steps_taken: number;
@@ -30,6 +38,7 @@ export type SessionState = {
   source_candidates: string[];
   termination_state: string;
   termination_reason: string | null;
+  evidence_records: EvidenceRecord[];
 };
 
 export type ReportClaim = {

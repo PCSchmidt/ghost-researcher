@@ -66,6 +66,7 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
                 "title": ev.title,
                 "claims_count": len(ev.claims),
                 "credibility_score": ev.credibility_score,
+                "evidence_type": ev.evidence_type,
             }
             for ev in session.evidence_records
         ],

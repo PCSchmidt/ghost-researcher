@@ -132,7 +132,10 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, session.steps_taken)
 
     async def test_runner_executes_credibility_assessment(self) -> None:
+        seen_kwargs: dict[str, object] = {}
+
         async def fake_assess(settings: Settings, **kwargs: object) -> CredibilityResult:
+            seen_kwargs.update(kwargs)
             return CredibilityResult(
                 url=str(kwargs["url"]),
                 score=0.82,
@@ -145,6 +148,12 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         runner = ResearchRunner(Settings.from_env({}), assess=fake_assess)
         session = AgentSession(research_goal="Assess source credibility")
+        session.add_evidence(
+            url="https://faa.gov/other",
+            title="Other FAA source",
+            claims=["Other claim"],
+            credibility_score=0.9,
+        )
 
         payload = await runner.execute_tool_call(
             name="assess_credibility",
@@ -153,8 +162,9 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(0.82, payload["score"])
+        self.assertEqual(["https://faa.gov/other"], seen_kwargs["corroborating_sources"])
         self.assertEqual(1, session.steps_taken)
-        self.assertEqual(1, len(session.evidence_records))
+        self.assertEqual(2, len(session.evidence_records))
 
     async def test_runner_executes_finalize_report(self) -> None:
         runner = ResearchRunner(Settings.from_env({}))

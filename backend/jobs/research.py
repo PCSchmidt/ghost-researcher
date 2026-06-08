@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from backend.agent.memory import AgentSession
 from backend.agent.openrouter import OpenRouterPlanner
-from backend.agent.planner import PlannerDecision, PlannerSkeleton
+from backend.agent.planner import PlannerDecision, PlannerSkeleton, ToolCall
 from backend.config import Settings
 from backend.jobs.runner import ResearchRunner
 from backend.synthesizer.report import ReportSynthesizer, SynthesisError
@@ -99,6 +99,7 @@ class ResearchOrchestrator:
 
         for step in range(max_steps):
             decision = await self._plan_next(session, last_tool_result=last_tool_result)
+            decision = self._guard_premature_finalize(session, decision, min_sources=min_sources)
             decisions.append(decision)
             if decision.should_stop or decision.tool_call is None:
                 session.finalize(decision.termination_reason or "no_new_sources")
@@ -125,6 +126,7 @@ class ResearchOrchestrator:
                             title=title,
                             claims=[excerpt] if excerpt else [title],
                             credibility_score=0.5,
+                            evidence_type="navigation_fallback",
                         )
             if decision.tool_call.name == "extract_structured_data":
                 session.session_summary = str(tool_result.get("text_excerpt", ""))
@@ -136,6 +138,7 @@ class ResearchOrchestrator:
                         title=current_url,
                         claims=[str(tool_result["text_excerpt"])],
                         credibility_score=0.5,
+                        evidence_type="extracted",
                     )
             if decision.tool_call.name == "finalize_report":
                 break
@@ -168,12 +171,13 @@ class ResearchOrchestrator:
                         tool_results.append(ext_result)
                         last_tool_result = ext_result
                         if ext_result.get("text_excerpt"):
-                            session.add_evidence(
-                                url=candidate_url,
-                                title=candidate_url,
-                                claims=[str(ext_result["text_excerpt"])],
-                                credibility_score=0.5,
-                            )
+                                session.add_evidence(
+                                    url=candidate_url,
+                                    title=candidate_url,
+                                    claims=[str(ext_result["text_excerpt"])],
+                                    credibility_score=0.5,
+                                    evidence_type="extracted",
+                                )
                     break  # one forced navigate+extract per fallback trigger
         else:
             # Exhausted max_steps without explicit finalize_report or stop signal.
@@ -182,6 +186,44 @@ class ResearchOrchestrator:
 
         synthesis = await self._synthesize_if_ready(session)
         return PlannerSequenceResult(session=session, decisions=decisions, tool_results=tool_results, synthesis=synthesis)
+
+    def _guard_premature_finalize(
+        self,
+        session: AgentSession,
+        decision: PlannerDecision,
+        *,
+        min_sources: int,
+    ) -> PlannerDecision:
+        if decision.tool_call is None or decision.tool_call.name != "finalize_report":
+            return decision
+        if decision.tool_call.arguments.get("termination_reason") != "sufficient_coverage":
+            return decision
+        if len(session.evidence_records_by_type("assessed")) >= min_sources:
+            return decision
+
+        current_url = session.current_source_url
+        if current_url and current_url in session.sources_visited:
+            assessed_urls = session.evidence_urls_by_type("assessed")
+            extracted_urls = session.evidence_urls_by_type("extracted").union(assessed_urls)
+            if current_url not in extracted_urls:
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="extract_structured_data",
+                        arguments={"selector": "body", "extraction_goal": "extract main page text"},
+                    )
+                )
+            if session.session_summary is not None and current_url not in assessed_urls:
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="assess_credibility",
+                        arguments={"url": current_url, "content_snippet": session.session_summary},
+                    )
+                )
+
+        candidate = session.next_source_candidate()
+        if candidate is not None:
+            return PlannerDecision(tool_call=ToolCall(name="navigate_to_url", arguments={"url": candidate}))
+        return decision
 
     async def _synthesize_if_ready(self, session: AgentSession) -> ResearchReport | None:
         if not session.evidence_records:

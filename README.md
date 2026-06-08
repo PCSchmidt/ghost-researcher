@@ -8,20 +8,25 @@ and credibility-scores sources, and synthesizes a structured intelligence report
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
 CloakBrowser CDP server on Railway. The full research pipeline is operational — the
 planner navigates 8–15 real sources per run, creates evidence from page content,
-and the synthesizer produces structured reports with cited findings. 89 backend
-tests pass, 8 frontend tests pass.
+and the synthesizer produces structured reports with cited findings. 98 backend
+tests pass, 11 frontend tests pass.
 
 ---
 
 ## Current Status
 
-**Current checkpoint**: v1.1.0 — Deep Research Operational.
+**Current checkpoint**: v1.1.1 — Evidence Flow Stabilization.
 
 The research pipeline runs end-to-end with real results. Brave Search supplies live
 URLs, the planner navigates each source using CloakBrowser, evidence is captured
 from page titles and content excerpts, and LLM synthesis produces a structured
 report with 4+ cited findings. The frontend renders the report, source cards, and
 SSE replay — confirmed working June 2026.
+
+The current stabilization slice keeps navigation-created fallback evidence as a
+resilience path, but only extraction plus `assess_credibility` can satisfy
+coverage for normal completion. Source cards now read credibility from session
+evidence records, with legacy tool-result scores retained as a fallback.
 
 ### What's working (deployed)
 
@@ -41,14 +46,14 @@ SSE replay — confirmed working June 2026.
 
 ### Known limits
 
-- **Credibility scoring** — `assess_credibility` is defined but not called by the live planner; all sources show "Credibility pending" in the UI
-- **Evidence depth** — navigate evidence is limited to 280-char excerpts from raw HTML; paywalled/SPA sites yield thin text
-- **Confidence ceiling** — reports typically score 0.3–0.6 confidence; richer extraction would raise this
+- **Live validation pending** — local shell is not configured with live keys/CDP; run the live smoke/eval commands once `GHOSTRESEARCHER_RUN_LIVE_TESTS`, Brave/OpenRouter keys, and `CLOAK_CDP_URL` are set
+- **Evidence depth** — extraction now prioritizes requested selectors plus article/main/content regions, but JS-heavy/paywalled pages still need deeper handling
+- **Confidence ceiling** — report confidence now benefits from source-diversity corroboration; stronger claim overlap and domain-specific scoring remain next
 
 ### Not yet implemented
 
 - Postgres/Redis production persistence (in-memory + JSON-file currently)
-- Live credibility scoring via `assess_credibility` tool
+- Background job queue with true live event publication
 - Production monitoring and alerting
 
 ---
@@ -144,7 +149,7 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 89 backend tests pass, 5 live smoke tests skipped.
+Current validated result: 98 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -174,7 +179,7 @@ npm test
 npm run build
 ```
 
-Current frontend result: 8 tests passing, lint clean, production build passing.
+Current frontend result: 11 tests passing, lint clean, production build passing.
 
 ---
 
@@ -228,7 +233,7 @@ PROXY_USER=
 PROXY_PASS=
 MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
-MAX_MODEL_COST_PER_JOB_USD=0.05
+MAX_MODEL_COST_PER_JOB_USD=0.15
 WARN_MODEL_COST_PER_JOB_USD=0.02
 GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 SCRAPE_ENABLED=true
@@ -261,6 +266,10 @@ The build is intentionally staged:
 - v0.16.0 - Real Search and Live Evals
 - v0.17.0 - Live Integration Smoke Tests
 - v1.0.0 - Deployment
+- v1.0.1 - CDP Stability Fixes
+- v1.1.0 - Deep Research Operational
+- v1.1.1 - Evidence Flow Stabilization
+- v1.2.0 - Evidence Quality and Live Validation
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).
 
