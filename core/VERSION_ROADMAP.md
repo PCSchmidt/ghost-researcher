@@ -536,6 +536,8 @@ Ships:
 
 - Configured live run or live eval artifact confirming extract and credibility behavior
 - Richer extraction strategy for requested selectors plus article/main/content regions
+- Navigation diagnostics for PDF, paywall, blocked, and thin-SPA pages
+- Evidence quality metrics in API/session/status payloads
 - Stronger credibility/corroboration signals across source-diverse assessed evidence
 - Production-facing monitoring for model cost, CDP failures, and blocked-source rates
 

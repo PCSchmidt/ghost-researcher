@@ -383,7 +383,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - Evidence strategy: navigate_to_url captures title + content_excerpt for every non-blocked page; extraction (body.innerText) supplements but is not required
 - Known limits: configured live validation still needed; evidence depth and corroboration quality remain the next report-quality levers
 - Next stage: v1.2.0 evidence quality and live validation
-- Current regression baseline: 98 backend tests pass, 5 live smoke tests skipped
+- Current regression baseline: 101 backend tests pass, 5 live smoke tests skipped
 - Current frontend baseline: 11 tests passing, lint clean, production build passing
 - Backend deployed on Railway (ghostresearcher-api + cloakserve), frontend on Vercel
 - Full plan: /memories/session/plan.md

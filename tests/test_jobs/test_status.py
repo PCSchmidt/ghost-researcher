@@ -14,6 +14,14 @@ from backend.jobs.status import build_status_events, encode_sse_event
 class JobStatusEventTests(unittest.TestCase):
     def test_build_status_events_records_tool_order(self) -> None:
         session = AgentSession(research_goal="Review https://example.com/report")
+        session.register_source("https://example.com/report")
+        session.add_evidence(
+            url="https://example.com/report",
+            title="Example",
+            claims=["Example claim"],
+            credibility_score=0.8,
+            evidence_type="assessed",
+        )
         session.finalize("sufficient_coverage")
         result = PlannerSequenceResult(
             session=session,
@@ -37,6 +45,7 @@ class JobStatusEventTests(unittest.TestCase):
         self.assertEqual([0, 1, 2, 3], [event["sequence"] for event in events])
         self.assertEqual("navigate_to_url", events[1]["tool_name"])
         self.assertEqual("sufficient_coverage", events[-1]["payload"]["termination_reason"])
+        self.assertEqual(1, events[-1]["payload"]["evidence_quality"]["assessed_evidence_count"])
 
     def test_build_status_events_records_planner_stop(self) -> None:
         session = AgentSession(research_goal="Find FAA guidance")

@@ -60,6 +60,7 @@ def _serialize_session(session: AgentSession) -> dict[str, Any]:
         ],
         "termination_state": session.termination_state,
         "termination_reason": session.termination_reason,
+        "evidence_quality": session.evidence_quality_metrics(),
         "evidence_records": [
             {
                 "url": ev.url,

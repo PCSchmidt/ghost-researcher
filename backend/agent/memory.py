@@ -116,6 +116,23 @@ class AgentSession:
         """Return source URLs for evidence records with the requested provenance marker."""
         return {record.url for record in self.evidence_records if record.evidence_type == evidence_type}
 
+    def evidence_quality_metrics(self) -> dict[str, float | int]:
+        """Return compact evidence-quality counters for API responses and status events."""
+        assessed = self.evidence_records_by_type("assessed")
+        extracted = self.evidence_records_by_type("extracted")
+        fallback = self.evidence_records_by_type("navigation_fallback")
+        average_assessed_credibility = (
+            round(sum(record.credibility_score for record in assessed) / len(assessed), 3) if assessed else 0.0
+        )
+        return {
+            "sources_visited_count": len(self.sources_visited),
+            "assessed_evidence_count": len(assessed),
+            "extracted_evidence_count": len(extracted),
+            "navigation_fallback_evidence_count": len(fallback),
+            "average_assessed_credibility": average_assessed_credibility,
+            "detection_event_count": len(self.detection_events),
+        }
+
     def add_detection_event(self, *, url: str, reason: str) -> None:
         """Record that a source blocked or challenged automation."""
         self.detection_events.append(DetectionEvent(url=url, reason=reason))
