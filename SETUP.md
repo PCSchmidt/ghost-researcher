@@ -8,7 +8,7 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v1.1.0 - Deep Research Operational.
+Current checkpoint: v1.1.1 - Evidence Flow Stabilization.
 Deployed: Railway backend + CloakBrowser, Vercel frontend.
 
 Gate 1 is confirmed:
@@ -93,7 +93,7 @@ Run the full backend regression suite:
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Expected current result: 89 backend tests pass, 5 live smoke tests skipped.
+Expected current result: 98 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 
@@ -133,7 +133,7 @@ npm test
 npm run build
 ```
 
-Expected current frontend result: lint clean, 8 tests passing, production build passing.
+Expected current frontend result: lint clean, component/API tests passing, production build passing.
 
 ---
 
@@ -198,8 +198,10 @@ Start each coding session with `/start`, then read:
 3. [core/SPEC.md](core/SPEC.md)
 4. [core/AGENT_SPEC.md](core/AGENT_SPEC.md)
 
-The next build slice is v1.0.0: deployment prep for Railway backend/CloakBrowser
-services and Vercel frontend hosting.
+The next build slice is v1.2.0: evidence quality and live validation. Confirm a
+configured live run follows `navigate_to_url -> extract_structured_data ->
+assess_credibility -> finalize_report`, then improve extraction depth and
+corroboration scoring.
 
 ---
 
@@ -224,4 +226,8 @@ services and Vercel frontend hosting.
 | v0.15.0 | Live capability alignment | Complete |
 | v0.16.0 | Real search and live evals | Complete |
 | v0.17.0 | Live integration smoke tests | Complete |
-| v1.0.0 | Railway and Vercel deployment | Planned |
+| v1.0.0 | Railway and Vercel deployment | Complete |
+| v1.0.1 | CDP stability fixes | Complete |
+| v1.1.0 | Deep research operational | Complete |
+| v1.1.1 | Evidence flow stabilization | Complete |
+| v1.2.0 | Evidence quality and live validation | Planned |

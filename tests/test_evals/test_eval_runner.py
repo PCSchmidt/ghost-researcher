@@ -64,6 +64,10 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("deterministic", payload["search_provider"])
         self.assertEqual("test", payload["cases"][0]["id"])
         self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
+        tool_sequence = payload["cases"][0]["metrics"]["tool_sequence"]
+        self.assertIn("extract_structured_data", tool_sequence)
+        self.assertIn("assess_credibility", tool_sequence)
+        self.assertEqual("finalize_report", tool_sequence[-1])
         self.assertNotIn("source_count_below_benchmark_minimum", payload["cases"][0]["limitations"])
 
     async def test_live_eval_requires_non_deterministic_search_provider(self) -> None:

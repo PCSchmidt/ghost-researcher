@@ -46,23 +46,31 @@ class PlannerSkeleton:
     ) -> PlannerDecision:
         """Choose the next tool call from the current session state."""
         del last_tool_result
-        evidence_urls = {record.url for record in session.evidence_records}
+        assessed_records = session.evidence_records_by_type("assessed")
+        assessed_urls = {record.url for record in assessed_records}
+        extracted_urls = session.evidence_urls_by_type("extracted").union(assessed_urls)
         current_source_needs_extraction = (
             session.current_source_url is not None
             and session.current_source_url in session.sources_visited
-            and session.current_source_url not in evidence_urls
+            and session.current_source_url not in extracted_urls
         )
-        if len(session.evidence_records) >= self._min_sources:
+        current_source_needs_credibility = (
+            session.current_source_url is not None
+            and session.current_source_url in session.sources_visited
+            and session.session_summary is not None
+            and session.current_source_url not in assessed_urls
+        )
+        if current_source_needs_credibility:
+            return self._plan_credibility(session)
+        if current_source_needs_extraction and self._first_unvisited_url(session) is None:
+            return self._plan_extraction()
+        if len(assessed_records) >= self._min_sources:
             return self._plan_finalize(session, termination_reason="sufficient_coverage")
         if not session.evidence_records and session.sources_visited:
             next_url = self._first_unvisited_url(session)
             if next_url is not None:
                 return self._plan_navigation(session)
-        if session.session_summary is not None and current_source_needs_extraction:
-            return self._plan_credibility(session)
-        if current_source_needs_extraction:
-            return self._plan_extraction()
-        if session.evidence_records:
+        if assessed_records:
             candidate = session.next_source_candidate()
             if candidate is not None:
                 return self._plan_navigation(session)
@@ -82,12 +90,13 @@ class PlannerSkeleton:
         return self._plan_navigation(session)
 
     def _plan_finalize(self, session: AgentSession, *, termination_reason: str) -> PlannerDecision:
-        if not session.evidence_records and termination_reason == "sufficient_coverage":
+        assessed_records = session.evidence_records_by_type("assessed")
+        if not assessed_records and termination_reason == "sufficient_coverage":
             return PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")
         confidence = 0.0
-        if session.evidence_records:
+        if assessed_records:
             confidence = round(
-                sum(record.credibility_score for record in session.evidence_records) / len(session.evidence_records),
+                sum(record.credibility_score for record in assessed_records) / len(assessed_records),
                 3,
             )
         tool = get_tool("finalize_report")
@@ -96,7 +105,7 @@ class PlannerSkeleton:
                 name=tool["name"],
                 arguments={
                     "confidence": confidence,
-                    "sources_used": [record.url for record in session.evidence_records],
+                    "sources_used": [record.url for record in assessed_records],
                     "termination_reason": termination_reason,
                 },
             )

@@ -52,6 +52,9 @@ def _session_snapshot(session: AgentSession) -> dict[str, Any]:
         "search_queries": session.search_queries,
         "source_candidates": session.source_candidates,
         "evidence_count": len(session.evidence_records),
+        "assessed_evidence_count": len(session.evidence_records_by_type("assessed")),
+        "extracted_evidence_count": len(session.evidence_records_by_type("extracted")),
+        "navigation_fallback_evidence_count": len(session.evidence_records_by_type("navigation_fallback")),
         "detection_events": [
             {"url": event.url, "reason": event.reason, "timestamp": event.timestamp.isoformat()}
             for event in session.detection_events
@@ -72,6 +75,8 @@ def build_planner_messages(session: AgentSession, *, last_tool_result: dict[str,
             "Return exactly one tool call using the chat-completions tool calling interface.",
             "Prefer unvisited sources and queued source candidates over repeated URLs.",
             "Use web_search when no usable URL or candidate source exists.",
+            "Navigation fallback evidence preserves a source for synthesis but does not count as assessed coverage.",
+            "After navigate_to_url, call extract_structured_data, then assess_credibility before counting the source toward sufficient coverage.",
             "Use finalize_report for sufficient_coverage, no_new_sources, max_steps, cost_limit, or detection_blocked.",
         ],
     }

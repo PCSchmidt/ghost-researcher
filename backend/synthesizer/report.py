@@ -57,7 +57,7 @@ class ReportSynthesizer:
 
 
 def _deterministic_report(session: AgentSession) -> ResearchReport:
-    evidence = session.evidence_records
+    evidence = _evidence_for_synthesis(session)
     sources_used = [record.url for record in evidence]
     claims = [
         ReportClaim(text=claim, source_urls=[record.url])
@@ -79,6 +79,7 @@ def _deterministic_report(session: AgentSession) -> ResearchReport:
 
 
 def _request_payload(model: str, session: AgentSession) -> dict[str, Any]:
+    evidence = _evidence_for_synthesis(session)
     return {
         "model": model,
         "messages": [
@@ -94,7 +95,7 @@ def _request_payload(model: str, session: AgentSession) -> dict[str, Any]:
                 "content": json.dumps(
                     {
                         "research_goal": session.research_goal,
-                        "evidence_records": [_evidence_to_dict(record) for record in session.evidence_records],
+                        "evidence_records": [_evidence_to_dict(record) for record in evidence],
                         "schema": {
                             "title": "string",
                             "summary": "string",
@@ -119,8 +120,19 @@ def _evidence_to_dict(record: EvidenceRecord) -> dict[str, Any]:
         "title": record.title,
         "claims": record.claims,
         "credibility_score": record.credibility_score,
+        "evidence_type": record.evidence_type,
         "extracted_at": record.extracted_at.isoformat(),
     }
+
+
+def _evidence_for_synthesis(session: AgentSession) -> list[EvidenceRecord]:
+    """Prefer assessed evidence and keep only one synthesis record per source."""
+    preferred_types = ("assessed", "extracted", "navigation_fallback")
+    selected: dict[str, EvidenceRecord] = {}
+    for evidence_type in preferred_types:
+        for record in session.evidence_records_by_type(evidence_type):
+            selected.setdefault(record.url, record)
+    return list(selected.values())
 
 
 def _record_usage(session: AgentSession, response: dict[str, Any]) -> None:

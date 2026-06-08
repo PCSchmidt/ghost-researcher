@@ -366,7 +366,7 @@ PROXY_PASS=
 GHOSTRESEARCHER_RUN_LIVE_TESTS=0
 MAX_STEPS_PER_JOB=20
 MAX_TOKENS_PER_JOB=50000
-MAX_MODEL_COST_PER_JOB_USD=0.05
+MAX_MODEL_COST_PER_JOB_USD=0.15
 WARN_MODEL_COST_PER_JOB_USD=0.02
 SCRAPE_ENABLED=true
 LOG_LEVEL=INFO
@@ -377,14 +377,14 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v1.1.0 — Deep Research Operational
+- Current checkpoint: v1.1.1 — Evidence Flow Stabilization
 - Pipeline: Brave Search → 8-15 sources navigated → evidence from navigate excerpts → LLM synthesis → structured report
 - Frontend: report renders with findings, sources, SSE replay — confirmed working June 2026
 - Evidence strategy: navigate_to_url captures title + content_excerpt for every non-blocked page; extraction (body.innerText) supplements but is not required
-- Known limits: credibility scoring always "pending" (assess_credibility not called by planner), content_excerpt capped at 280 chars
-- Next stage: Phase 1-4 deep research fix (Brave Search, rich planner prompt, max_steps=25, evidence creation, LLM synthesis)
-- Current regression baseline: 89 backend tests pass, 5 live smoke tests skipped
-- Current frontend baseline: 8 tests passing, lint clean, production build passing
+- Known limits: configured live validation still needed; evidence depth and corroboration quality remain the next report-quality levers
+- Next stage: v1.2.0 evidence quality and live validation
+- Current regression baseline: 98 backend tests pass, 5 live smoke tests skipped
+- Current frontend baseline: 11 tests passing, lint clean, production build passing
 - Backend deployed on Railway (ghostresearcher-api + cloakserve), frontend on Vercel
 - Full plan: /memories/session/plan.md
 - `web_search` defaults to deterministic offline results; Brave Search provider tested, needs env var config
@@ -421,6 +421,7 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - [x] v1.0.1 CDP proxy fixes (Host header rewrite, DNS-rebinding bypass, HTTP readiness, wait_for guard)
 - [x] v1.0.1 synthesis gate removal + max_steps finalization + post-loop evidence auto-creation
 - [x] v1.1.0 deep research quality (Brave Search, rich planner prompt, max_steps=25, evidence on navigation, LLM synthesis)
+- [x] v1.1.1 evidence flow stabilization (assessed coverage gating, premature finalize guard, source-card credibility)
 
 ## Session Start Command
 

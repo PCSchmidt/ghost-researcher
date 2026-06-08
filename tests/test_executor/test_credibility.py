@@ -33,6 +33,22 @@ class AssessCredibilityTests(unittest.IsolatedAsyncioTestCase):
                 content_snippet="   ",
             )
 
+    async def test_corroborating_sources_raise_corroboration_score(self) -> None:
+        base_result = await assess_credibility(
+            Settings.from_env({}),
+            url="https://example.com/report",
+            content_snippet="The report discusses rulemaking guidance.",
+        )
+        corroborated_result = await assess_credibility(
+            Settings.from_env({}),
+            url="https://example.com/report",
+            content_snippet="According to data cited in Federal Register rulemaking guidance.",
+            corroborating_sources=["https://faa.gov/guidance", "https://federalregister.gov/document"],
+        )
+
+        self.assertGreater(corroborated_result.corroboration, base_result.corroboration)
+        self.assertGreater(corroborated_result.score, base_result.score)
+
 
 if __name__ == "__main__":
     unittest.main()

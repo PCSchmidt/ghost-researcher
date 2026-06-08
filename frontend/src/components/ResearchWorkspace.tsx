@@ -77,7 +77,14 @@ export function ResearchWorkspace() {
             <section aria-label="Sources" className="space-y-3">
               <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-600">Sources</h3>
               {sourceUrls.length ? (
-                sourceUrls.map((url) => <SourceCard key={url} url={url} toolResults={job?.tool_results ?? []} />)
+                sourceUrls.map((url) => (
+                  <SourceCard
+                    key={url}
+                    url={url}
+                    evidenceRecords={job?.session.evidence_records ?? []}
+                    toolResults={job?.tool_results ?? []}
+                  />
+                ))
               ) : (
                 <div className="rounded-md border border-dashed border-zinc-300 bg-white px-4 py-6 text-sm text-zinc-600">
                   Sources will appear after navigation and credibility assessment.

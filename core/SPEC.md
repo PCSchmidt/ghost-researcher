@@ -7,33 +7,30 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v1.1.0
-**Gate Name:** Deep Research Operational
+**Version:** v1.1.1
+**Gate Name:** Evidence Flow Stabilization
 **Status:** COMPLETE
 
 ---
 
 ## GOAL
 
-Deliver a working end-to-end research pipeline with Brave Search, real page
-navigation, evidence creation from navigate results, and LLM synthesis producing
-structured reports with cited findings rendered in the frontend.
+Prevent navigation-created fallback evidence from satisfying coverage before
+extraction and credibility assessment, while preserving it as a resilience path
+for synthesis when richer extraction is unavailable.
 
 ---
 
 ## TASKS
 
-- [x] Enable Brave Search on Railway (`SEARCH_PROVIDER=brave`, `GHOST_RESEARCHER_API_KEY`)
-- [x] Raise token and cost budgets (`MAX_TOKENS_PER_JOB=125000`, `MAX_MODEL_COST_PER_JOB_USD=0.15`)
-- [x] Enrich planner system prompt with full research methodology
-- [x] Add retry logic to OpenRouter adapter when model returns text instead of tool call
-- [x] Fix page sharing between navigate and extract (don't close page in navigate finalizer)
-- [x] Fix extract to use `context.pages[-1]` and strip Chrome Incognito banner
-- [x] Create evidence directly from navigate_to_url results (title + content_excerpt)
-- [x] Synthesize on any termination reason when evidence exists
-- [x] Set `RAILWAY_REQUEST_TIMEOUT=300` for long research runs
-- [x] Confirm frontend renders full report, source cards, and SSE replay
-- [x] Update backend tests to match new orchestrator behavior (89 pass, 5 skipped)
+- [x] Add evidence provenance markers for navigation fallback, extracted, and assessed records
+- [x] Count only assessed evidence toward `sufficient_coverage`
+- [x] Guard premature live-planner `finalize_report` calls in the orchestrator
+- [x] Preserve fallback evidence for synthesis without letting it complete coverage
+- [x] Prefer assessed evidence when building synthesizer payloads
+- [x] Render source credibility from session evidence records in the frontend
+- [x] Fix extraction regression so normal `innerText` records are preserved
+- [x] Update regression tests for extract, planner, orchestration, and source cards
 
 ---
 
@@ -211,21 +208,23 @@ CloakBrowser paths while keeping the default regression suite dependency-free.
 - No always-on live OpenRouter integration test; planner/synthesizer smoke tests are opt-in and skipped by default
 - No Postgres/Redis production persistence yet; v0.11 ships the repository boundary and JSON-file skeleton
 - No background job queue yet; v0.12 streams persisted/replayable status events rather than live concurrent worker events
-- No deployed frontend yet; v0.13 is local/dev frontend only
+- Historical note: v0.13 was local/dev frontend only; deployment completed in v1.0.0
 - No committed live eval artifact yet; v0.16 adds the mode and provider boundary, but the checked artifact remains offline/deterministic
 - No live smoke test result artifact is committed; live smoke execution depends on local secrets/services
-- No deployed frontend/backend yet; deployment is the next planned stage
+- Historical note: frontend/backend deployment completed in v1.0.0
 
 ---
 
 ## NEXT GATE
 
-### v1.0.0 - Deployment
+### v1.2.0 - Evidence Quality and Live Validation
 
-Prepare Railway backend/CloakBrowser services and Vercel frontend deployment. [DONE]
-Includes Dockerfiles, docker-compose, and `docs/DEPLOYMENT.md` detailing env maps, health checks, and rollback plans.
+Run a configured live validation pass, then continue improving extraction depth
+and cross-source credibility/corroboration signals. Local extraction and
+corroboration improvements are complete; live validation still requires
+`GHOSTRESEARCHER_RUN_LIVE_TESTS=1`, Brave/OpenRouter keys, and `CLOAK_CDP_URL`.
 
 ---
 
-**Last updated:** 2026-06-02
-**Updated by:** GitHub Copilot
+**Last updated:** 2026-06-08
+**Updated by:** Codex
