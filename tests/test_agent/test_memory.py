@@ -53,6 +53,42 @@ class AgentSessionTests(unittest.TestCase):
         self.assertEqual("finalized", session.termination_state)
         self.assertEqual("sufficient_coverage", session.termination_reason)
 
+    def test_evidence_quality_metrics_counts_provenance(self) -> None:
+        session = AgentSession(research_goal="Assess evidence quality")
+        session.register_source("https://faa.gov/one")
+        session.register_source("https://example.com/two")
+        session.add_evidence(
+            url="https://faa.gov/one",
+            title="FAA",
+            claims=["Assessed claim"],
+            credibility_score=0.9,
+            evidence_type="assessed",
+        )
+        session.add_evidence(
+            url="https://example.com/two",
+            title="Example",
+            claims=["Extracted claim"],
+            credibility_score=0.5,
+            evidence_type="extracted",
+        )
+        session.add_evidence(
+            url="https://example.com/two",
+            title="Example",
+            claims=["Fallback claim"],
+            credibility_score=0.5,
+            evidence_type="navigation_fallback",
+        )
+        session.add_detection_event(url="https://blocked.example", reason="bot_challenge")
+
+        metrics = session.evidence_quality_metrics()
+
+        self.assertEqual(2, metrics["sources_visited_count"])
+        self.assertEqual(1, metrics["assessed_evidence_count"])
+        self.assertEqual(1, metrics["extracted_evidence_count"])
+        self.assertEqual(1, metrics["navigation_fallback_evidence_count"])
+        self.assertEqual(0.9, metrics["average_assessed_credibility"])
+        self.assertEqual(1, metrics["detection_event_count"])
+
 
 if __name__ == "__main__":
     unittest.main()

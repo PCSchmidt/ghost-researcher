@@ -8,7 +8,7 @@ and credibility-scores sources, and synthesizes a structured intelligence report
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
 CloakBrowser CDP server on Railway. The full research pipeline is operational — the
 planner navigates 8–15 real sources per run, creates evidence from page content,
-and the synthesizer produces structured reports with cited findings. 98 backend
+and the synthesizer produces structured reports with cited findings. 101 backend
 tests pass, 11 frontend tests pass.
 
 ---
@@ -37,6 +37,8 @@ evidence records, with legacy tool-result scores retained as a fallback.
 - OpenRouter planner adapter — DeepSeek V4 Flash, tool-use loop, retry on text response
 - Rich planner prompt — research methodology enforcing search → navigate → extract → finalize
 - Evidence pipeline — navigate_to_url captures title + content_excerpt for each source; extract supplements where page permits
+- Page diagnostics — navigation records `page_type` and `content_type` for HTML, PDF, paywall, blocked, and thin-SPA pages
+- Evidence observability — API/session/status payloads include evidence quality counters and average assessed credibility
 - LLM synthesis — structured `ResearchReport` with 4+ findings and cited sources per run
 - CDP connectivity — Host header rewriting, DNS-rebinding bypass, HTTP readiness polling, wait_for guard
 - Agent session state — sources visited, evidence records, cost tracking, dedup loop detection
@@ -47,7 +49,7 @@ evidence records, with legacy tool-result scores retained as a fallback.
 ### Known limits
 
 - **Live validation pending** — local shell is not configured with live keys/CDP; run the live smoke/eval commands once `GHOSTRESEARCHER_RUN_LIVE_TESTS`, Brave/OpenRouter keys, and `CLOAK_CDP_URL` are set
-- **Evidence depth** — extraction now prioritizes requested selectors plus article/main/content regions, but JS-heavy/paywalled pages still need deeper handling
+- **Evidence depth** — extraction now prioritizes requested selectors plus article/main/content regions, and navigation flags hard-page types; PDF/paywall-specific extraction remains a later deepening task
 - **Confidence ceiling** — report confidence now benefits from source-diversity corroboration; stronger claim overlap and domain-specific scoring remain next
 
 ### Not yet implemented
@@ -149,7 +151,7 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 98 backend tests pass, 5 live smoke tests skipped.
+Current validated result: 101 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 

@@ -26,6 +26,15 @@ export type EvidenceRecord = {
   evidence_type?: string;
 };
 
+export type EvidenceQuality = {
+  sources_visited_count: number;
+  assessed_evidence_count: number;
+  extracted_evidence_count: number;
+  navigation_fallback_evidence_count: number;
+  average_assessed_credibility: number;
+  detection_event_count: number;
+};
+
 export type SessionState = {
   research_goal: string;
   steps_taken: number;
@@ -38,6 +47,7 @@ export type SessionState = {
   source_candidates: string[];
   termination_state: string;
   termination_reason: string | null;
+  evidence_quality: EvidenceQuality;
   evidence_records: EvidenceRecord[];
 };
 

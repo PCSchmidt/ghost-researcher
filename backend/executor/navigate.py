@@ -17,6 +17,7 @@ from backend.executor.browser import async_resolve_cdp_ws_endpoint
 
 class ResponseLike(Protocol):
     status: int
+    headers: dict[str, str]
 
 
 class PageLike(Protocol):
@@ -41,6 +42,8 @@ DETECTION_PATTERNS = {
     "bot_challenge": re.compile(r"verify you are human|bot detection|security check", re.IGNORECASE),
 }
 
+PAYWALL_PATTERN = re.compile(r"subscribe|sign in to continue|create an account|paywall|members only", re.IGNORECASE)
+
 
 @dataclass(frozen=True, slots=True)
 class NavigationResult:
@@ -56,6 +59,8 @@ class NavigationResult:
     blocked_reason: str | None
     screenshot_path: str | None
     timing_ms: int
+    content_type: str | None = None
+    page_type: str = "html"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -69,6 +74,8 @@ class NavigationResult:
             "blocked_reason": self.blocked_reason,
             "screenshot_path": self.screenshot_path,
             "timing_ms": self.timing_ms,
+            "content_type": self.content_type,
+            "page_type": self.page_type,
         }
 
 
@@ -90,6 +97,27 @@ def _detect_block(title: str, content: str) -> tuple[bool, str | None]:
         if pattern.search(haystack):
             return True, reason
     return False, None
+
+
+def _classify_page_type(
+    *,
+    final_url: str,
+    content_type: str | None,
+    title: str,
+    content: str,
+    excerpt: str,
+    detection_blocked: bool,
+) -> str:
+    if detection_blocked:
+        return "blocked"
+    normalized_content_type = (content_type or "").lower()
+    if "application/pdf" in normalized_content_type or urlparse(final_url).path.lower().endswith(".pdf"):
+        return "pdf"
+    if PAYWALL_PATTERN.search(f"{title}\n{content}"):
+        return "paywall"
+    if len(excerpt) < 120 and re.search(r"<script|__next|id=[\"']root[\"']|id=[\"']app[\"']", content, re.IGNORECASE):
+        return "spa_thin"
+    return "html"
 
 
 @asynccontextmanager
@@ -153,15 +181,29 @@ async def navigate_to_url(
 
     detection_blocked, blocked_reason = _detect_block(title, content)
     timing_ms = int((perf_counter() - started_at) * 1000)
+    content_type = None
+    if response is not None:
+        headers = getattr(response, "headers", {}) or {}
+        content_type = headers.get("content-type") or headers.get("Content-Type")
+    excerpt = _extract_excerpt(content)
     return NavigationResult(
         url=url,
         final_url=page.url,
         title=title,
         status_code=response.status if response is not None else 200,
-        content_excerpt=_extract_excerpt(content),
+        content_excerpt=excerpt,
         links=links,
         detection_blocked=detection_blocked,
         blocked_reason=blocked_reason,
         screenshot_path=None,
         timing_ms=timing_ms,
+        content_type=content_type,
+        page_type=_classify_page_type(
+            final_url=page.url,
+            content_type=content_type,
+            title=title,
+            content=content,
+            excerpt=excerpt,
+            detection_blocked=detection_blocked,
+        ),
     )

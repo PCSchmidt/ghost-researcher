@@ -97,7 +97,10 @@ def build_status_events(result: PlannerSequenceResult) -> list[dict[str, Any]]:
             event_type="job_completed",
             status=result.session.termination_state,
             message="Research job finished",
-            payload={"termination_reason": result.session.termination_reason},
+            payload={
+                "termination_reason": result.session.termination_reason,
+                "evidence_quality": result.session.evidence_quality_metrics(),
+            },
         )
     )
     return [event.to_dict() for event in events]
