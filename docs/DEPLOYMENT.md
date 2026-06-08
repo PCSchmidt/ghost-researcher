@@ -112,3 +112,21 @@ Initiate a rollback if:
 1. **Frontend (Vercel):** Navigate to the Deployments tab of the Vercel dashboard and click **Promote to Production** on the latest stable `v0.17` commit.
 2. **Backend (Railway):** Navigate to the project dashboard. Locate the previous successful deployment and click the **Rollback** / **Redeploy** button.
 3. If memory leaks occur on `cloakserve`, set a manual restart policy via crontab or Railway instance refresh limit before downgrading entirely.
+
+---
+
+## 6. Live Validation Run On Railway
+
+Run the live eval from a Railway shell or one-off job attached to `ghostresearcher-api`, not from a local workstation.
+
+Use the internal CloakBrowser hostname that only resolves inside Railway:
+
+```bash
+SEARCH_PROVIDER=brave SEARCH_API_KEY=... OPENROUTER_API_KEY=... CLOAK_CDP_URL=http://cloakbrowser.railway.internal:9222 python -m evals.eval_runner --mode live --limit 3
+```
+
+Expected behavior:
+- the eval runner performs a CloakBrowser readiness probe first
+- a healthy Railway run writes a JSON artifact under `evals/results/`
+- `live_environment.cloakbrowser.status` should report `ok`
+- if Railway networking is wrong, the run should fail fast with a clear preflight error instead of a partial benchmark artifact

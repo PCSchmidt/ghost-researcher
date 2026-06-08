@@ -162,6 +162,7 @@ python -m evals.eval_runner --mode offline --limit 3
 Current result: 3 benchmark prompts completed in offline mode, average score 1.0,
 results persisted under `evals/results/`. Live mode is opt-in and requires
 `SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, `OPENROUTER_API_KEY`, and live browser/search dependencies.
+When you run it inside Railway, point `CLOAK_CDP_URL` at `http://cloakbrowser.railway.internal:9222`.
 
 Run live smoke tests only when local services and keys are configured:
 
