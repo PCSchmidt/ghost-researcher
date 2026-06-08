@@ -87,17 +87,20 @@ class ResearchRunner:
 
         if name == "assess_credibility":
             corroborating_sources = arguments.get("corroborating_sources")
+            assessed_records = [
+                record for record in session.evidence_records_by_type("assessed") if record.url != arguments["url"]
+            ]
             if not isinstance(corroborating_sources, list):
-                corroborating_sources = [
-                    record.url
-                    for record in session.evidence_records_by_type("assessed")
-                    if record.url != arguments["url"]
-                ]
+                corroborating_sources = [record.url for record in assessed_records]
+            corroborating_claims = arguments.get("corroborating_claims")
+            if not isinstance(corroborating_claims, list):
+                corroborating_claims = [claim for record in assessed_records for claim in record.claims]
             result = await self._assess(
                 self._settings,
                 url=arguments["url"],
                 content_snippet=arguments["content_snippet"],
                 corroborating_sources=[str(url) for url in corroborating_sources],
+                corroborating_claims=[str(claim) for claim in corroborating_claims],
             )
             session.increment_step()
             session.add_evidence(

@@ -8,7 +8,7 @@ and credibility-scores sources, and synthesizes a structured intelligence report
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
 CloakBrowser CDP server on Railway. The full research pipeline is operational — the
 planner navigates 8–15 real sources per run, creates evidence from page content,
-and the synthesizer produces structured reports with cited findings. 101 backend
+and the synthesizer produces structured reports with cited findings. 104 backend
 tests pass, 11 frontend tests pass.
 
 ---
@@ -49,8 +49,8 @@ evidence records, with legacy tool-result scores retained as a fallback.
 ### Known limits
 
 - **Live validation pending** — local shell is not configured with live keys/CDP; run the live smoke/eval commands once `GHOSTRESEARCHER_RUN_LIVE_TESTS`, Brave/OpenRouter keys, and `CLOAK_CDP_URL` are set
-- **Evidence depth** — extraction now prioritizes requested selectors plus article/main/content regions, and navigation flags hard-page types; PDF/paywall-specific extraction remains a later deepening task
-- **Confidence ceiling** — report confidence now benefits from source-diversity corroboration; stronger claim overlap and domain-specific scoring remain next
+- **Evidence depth** — extraction now captures page metadata, content sections, and explicit PDF/paywall/thin-SPA limitation records; full PDF parsing remains a later dependency-backed task
+- **Confidence ceiling** — report confidence now benefits from source-diversity and claim-overlap corroboration; domain-specific scoring remains next
 
 ### Not yet implemented
 
@@ -151,7 +151,7 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 101 backend tests pass, 5 live smoke tests skipped.
+Current validated result: 104 backend tests pass, 5 live smoke tests skipped.
 
 Run the offline eval harness:
 

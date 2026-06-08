@@ -9,6 +9,33 @@ from urllib.parse import urlparse
 
 from backend.config import Settings
 
+STOPWORDS = {
+    "about",
+    "according",
+    "after",
+    "also",
+    "and",
+    "are",
+    "for",
+    "from",
+    "has",
+    "have",
+    "into",
+    "its",
+    "latest",
+    "new",
+    "not",
+    "of",
+    "on",
+    "or",
+    "source",
+    "that",
+    "the",
+    "this",
+    "to",
+    "with",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class CredibilityResult:
@@ -56,7 +83,33 @@ def _freshness(content_snippet: str) -> float:
     return 0.5
 
 
-def _corroboration(content_snippet: str, corroborating_sources: list[str] | None) -> float:
+def _meaningful_tokens(value: str) -> set[str]:
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]{4,}", value.lower())
+        if token not in STOPWORDS
+    }
+
+
+def _claim_overlap(content_snippet: str, corroborating_claims: list[str] | None) -> float:
+    snippet_tokens = _meaningful_tokens(content_snippet)
+    if not snippet_tokens:
+        return 0.0
+    best_overlap = 0.0
+    for claim in corroborating_claims or []:
+        claim_tokens = _meaningful_tokens(claim)
+        if not claim_tokens:
+            continue
+        overlap = len(snippet_tokens.intersection(claim_tokens)) / max(1, min(len(snippet_tokens), len(claim_tokens)))
+        best_overlap = max(best_overlap, overlap)
+    return _clamp(best_overlap)
+
+
+def _corroboration(
+    content_snippet: str,
+    corroborating_sources: list[str] | None,
+    corroborating_claims: list[str] | None,
+) -> float:
     source_count = len(set(corroborating_sources or []))
     distinct_domains = {
         hostname
@@ -81,7 +134,14 @@ def _corroboration(content_snippet: str, corroborating_sources: list[str] | None
             if marker in snippet
         }
     )
-    score = 0.4 + min(0.3, source_count * 0.1) + min(0.2, len(distinct_domains) * 0.075) + min(0.1, evidence_markers * 0.025)
+    claim_overlap = _claim_overlap(content_snippet, corroborating_claims)
+    score = (
+        0.35
+        + min(0.25, source_count * 0.08)
+        + min(0.15, len(distinct_domains) * 0.06)
+        + min(0.1, evidence_markers * 0.025)
+        + min(0.15, claim_overlap * 0.15)
+    )
     return _clamp(score)
 
 
@@ -95,6 +155,7 @@ async def assess_credibility(
     url: str,
     content_snippet: str,
     corroborating_sources: list[str] | None = None,
+    corroborating_claims: list[str] | None = None,
 ) -> CredibilityResult:
     """Score source credibility with a transparent hand-tuned baseline."""
     del settings
@@ -103,7 +164,7 @@ async def assess_credibility(
 
     domain_authority = _domain_authority(url)
     freshness = _freshness(content_snippet)
-    corroboration = _corroboration(content_snippet, corroborating_sources)
+    corroboration = _corroboration(content_snippet, corroborating_sources, corroborating_claims)
     detection_penalty = 0.0
     score = _clamp((domain_authority * 0.45) + (freshness * 0.3) + (corroboration * 0.25) - detection_penalty)
     rationale = (

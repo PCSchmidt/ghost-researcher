@@ -68,6 +68,67 @@ def _strip_browser_noise(value: str) -> str:
     return clean
 
 
+def _record_text(record: dict[str, Any]) -> str:
+    value = record.get("text")
+    return value if isinstance(value, str) else ""
+
+
+def _metadata_record(metadata: dict[str, Any]) -> dict[str, Any] | None:
+    parts = [
+        str(metadata.get("title") or "").strip(),
+        str(metadata.get("description") or "").strip(),
+        str(metadata.get("published_time") or "").strip(),
+        str(metadata.get("canonical_url") or "").strip(),
+    ]
+    text = _normalize_text(". ".join(part for part in parts if part))
+    if not text:
+        return None
+    return {
+        "text": text,
+        "index": -1,
+        "selector": "metadata",
+        "record_type": "metadata",
+        "title": str(metadata.get("title") or ""),
+        "description": str(metadata.get("description") or ""),
+        "published_time": str(metadata.get("published_time") or ""),
+        "canonical_url": str(metadata.get("canonical_url") or ""),
+    }
+
+
+def _limitation_record(metadata: dict[str, Any], page_text: str) -> dict[str, Any] | None:
+    page_type = str(metadata.get("page_type") or "html")
+    if page_type not in {"pdf", "paywall", "spa_thin"}:
+        return None
+    title = str(metadata.get("title") or "Untitled source")
+    url = str(metadata.get("document_url") or metadata.get("canonical_url") or "")
+    if page_type == "pdf":
+        detail = "PDF source detected; browser text extraction is limited without a PDF text parser."
+    elif page_type == "paywall":
+        detail = "Paywall or sign-in gate detected; extracted text may reflect access limitations."
+    else:
+        detail = "Thin JavaScript application shell detected; page may need longer rendering or API-backed extraction."
+    text = _normalize_text(f"{detail} Title: {title}. URL: {url}. Visible text: {page_text[:500]}")
+    return {
+        "text": text,
+        "index": -2,
+        "selector": page_type,
+        "record_type": "limitation",
+        "page_type": page_type,
+    }
+
+
+def _page_type_from_metadata(metadata: dict[str, Any], page_text: str) -> str:
+    content_type = str(metadata.get("content_type") or "").lower()
+    document_url = str(metadata.get("document_url") or "").lower()
+    if "application/pdf" in content_type or document_url.endswith(".pdf"):
+        return "pdf"
+    if re.search(r"subscribe|sign in to continue|create an account|paywall|members only", page_text, re.IGNORECASE):
+        return "paywall"
+    if len(page_text) < 120 and bool(metadata.get("has_app_shell")):
+        return "spa_thin"
+    return "html"
+
+
 @asynccontextmanager
 async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
     playwright: Playwright | None = None
@@ -113,7 +174,7 @@ async def extract_structured_data(
             if candidate not in selector_candidates:
                 selector_candidates.append(candidate)
 
-        raw_sections = await page.evaluate(
+        extraction_payload = await page.evaluate(
             """
             (selectors) => {
               const sections = [];
@@ -124,14 +185,41 @@ async def extract_structured_data(
                   if (text) sections.push({ selector, text });
                 }
               }
-              return sections;
+              const byName = (name) => document.querySelector(`meta[name="${name}"]`)?.content || '';
+              const byProp = (name) => document.querySelector(`meta[property="${name}"]`)?.content || '';
+              const bodyText = (document.body?.innerText || document.body?.textContent || '').trim();
+              return {
+                sections,
+                metadata: {
+                  title: document.title || byProp('og:title'),
+                  description: byName('description') || byProp('og:description'),
+                  published_time: byProp('article:published_time') || byName('date') || byName('pubdate'),
+                  canonical_url: document.querySelector('link[rel="canonical"]')?.href || '',
+                  document_url: document.location?.href || '',
+                  content_type: document.contentType || '',
+                  has_app_shell: Boolean(document.querySelector('#root, #app, [data-reactroot], [id="__next"]')),
+                  body_text: bodyText,
+                },
+              };
             }
             """,
             selector_candidates,
         )
+        metadata: dict[str, Any] = {}
+        raw_sections = extraction_payload
+        if isinstance(extraction_payload, dict):
+            raw_sections = extraction_payload.get("sections", [])
+            raw_metadata = extraction_payload.get("metadata", {})
+            if isinstance(raw_metadata, dict):
+                metadata = raw_metadata
+                page_text = _normalize_text(str(metadata.get("body_text") or ""))
+                metadata["page_type"] = _page_type_from_metadata(metadata, page_text)
         if isinstance(raw_sections, list):
             records = []
             seen_text: set[str] = set()
+            metadata_record = _metadata_record(metadata)
+            if metadata_record is not None:
+                records.append(metadata_record)
             for index, section in enumerate(raw_sections):
                 if not isinstance(section, dict):
                     continue
@@ -147,12 +235,17 @@ async def extract_structured_data(
                         "text": clean,
                         "index": index,
                         "selector": str(section.get("selector") or _selector),
+                        "record_type": "content",
                     }
                 )
+            page_text = _normalize_text(str(metadata.get("body_text") or " ".join(_record_text(record) for record in records)))
+            limitation_record = _limitation_record(metadata, page_text)
+            if limitation_record is not None:
+                records.append(limitation_record)
         else:
             # Older fakes and some browser shims return a plain body string.
             clean = _normalize_text(_strip_browser_noise(str(raw_sections or "")))
-            records = [{"text": clean, "index": 0, "selector": _selector}] if clean else []
+            records = [{"text": clean, "index": 0, "selector": _selector, "record_type": "content"}] if clean else []
 
         # If innerText returned only Chrome UI noise (Incognito banner, privacy
         # interstitial), fall back to raw HTML text extraction.
@@ -169,8 +262,8 @@ async def extract_structured_data(
                 if prefix in text:
                     text = text.split(prefix, 1)[-1].strip()
             if text and len(text) > 100:
-                records = [{"text": _normalize_text(text), "index": 0, "selector": "html"}]
-    text_excerpt = " ".join(record["text"] for record in records)[:2000]
+                records = [{"text": _normalize_text(text), "index": 0, "selector": "html", "record_type": "html_fallback"}]
+    text_excerpt = " ".join(_record_text(record) for record in records)[:2000]
     schema_valid = all(_validate_record_against_schema(record, output_schema) for record in records)
     return ExtractionResult(
         selector=selector,
