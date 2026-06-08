@@ -537,8 +537,9 @@ Ships:
 - Configured live run or live eval artifact confirming extract and credibility behavior
 - Richer extraction strategy for requested selectors plus article/main/content regions
 - Navigation diagnostics for PDF, paywall, blocked, and thin-SPA pages
+- Metadata and hard-page limitation records from extraction
 - Evidence quality metrics in API/session/status payloads
-- Stronger credibility/corroboration signals across source-diverse assessed evidence
+- Stronger credibility/corroboration signals across source-diverse and claim-overlapping assessed evidence
 - Production-facing monitoring for model cost, CDP failures, and blocked-source rates
 
 Status: In progress. Local extraction, corroboration, and offline sequence validation are complete; configured live validation remains pending because this shell lacks live env vars.

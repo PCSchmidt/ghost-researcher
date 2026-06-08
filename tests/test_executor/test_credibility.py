@@ -49,6 +49,24 @@ class AssessCredibilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(corroborated_result.corroboration, base_result.corroboration)
         self.assertGreater(corroborated_result.score, base_result.score)
 
+    async def test_overlapping_claims_raise_corroboration_score(self) -> None:
+        weak_result = await assess_credibility(
+            Settings.from_env({}),
+            url="https://example.com/report",
+            content_snippet="The procurement notice covers unmanned aircraft payload integration.",
+            corroborating_sources=["https://source.example/one"],
+            corroborating_claims=["A weather forecast mentions airport delays."],
+        )
+        overlap_result = await assess_credibility(
+            Settings.from_env({}),
+            url="https://example.com/report",
+            content_snippet="The procurement notice covers unmanned aircraft payload integration.",
+            corroborating_sources=["https://source.example/one"],
+            corroborating_claims=["Unmanned aircraft procurement includes payload integration requirements."],
+        )
+
+        self.assertGreater(overlap_result.corroboration, weak_result.corroboration)
+
 
 if __name__ == "__main__":
     unittest.main()

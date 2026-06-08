@@ -16,6 +16,7 @@ test-results/
 screenshots/
 .next/
 node_modules/
+nul
 
 # Local prototype/archive artifacts from initial exploration
 READMEmd

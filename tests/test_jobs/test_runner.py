@@ -163,6 +163,7 @@ class ResearchRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(0.82, payload["score"])
         self.assertEqual(["https://faa.gov/other"], seen_kwargs["corroborating_sources"])
+        self.assertEqual(["Other claim"], seen_kwargs["corroborating_claims"])
         self.assertEqual(1, session.steps_taken)
         self.assertEqual(2, len(session.evidence_records))
 
