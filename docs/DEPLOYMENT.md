@@ -7,7 +7,7 @@ This document details the configuration, deployment, health verification, and ro
 The GhostResearcher v1.0.0 stack runs on three primary nodes:
 
 -   **Backend API (`ghostresearcher-api`)**: Python 3.11+ FastAPI service handling LLM orchestration, openrouter integration, and job queues. (Deployed to Railway)
--   **CloakBrowser Server (`cloakserve`)**: Playwright Chromium CDP server running stealth routines. (Deployed to Railway)
+-   **CloakBrowser Server (`cloakserve`)**: CDP server fronting CloakBrowser's patched stealth Chromium (v1.2.1; `CLOAKSERVE_STEALTH=0` falls back to vanilla Chromium for baselines). (Deployed to Railway)
 -   **Frontend App**: Next.js 16 App Router UI. (Deployed to Vercel)
 
 ---
@@ -49,6 +49,7 @@ Ensure the following is configured in your Vercel Project Settings:
 *   **Dockerfile Path:** `docker/Dockerfile.cloak`
 *   **Start Command:** Uses native CMD from Dockerfile.
 *   **Networking:** Expose port `9222`. Ensure this is exposed to the private Railway network.
+*   **Stealth (v1.2.1):** the image installs `cloakbrowser` and pre-downloads its patched stealth Chromium; `start_cloakserve.py` launches it by default (`CLOAKSERVE_STEALTH=1`). Set `CLOAKSERVE_STEALTH=0` to launch vanilla Chromium for a detection baseline. The image is ~5 GB, so the first build/deploy is slow.
 
 **Service 2: `ghostresearcher-api`**
 *   **Build/Root Directory:** `/`
@@ -154,3 +155,25 @@ python -m evals.eval_runner --mode live --limit 3
 The discriminating quality score lives in `average_quality_score` /
 `quality_score` (live artifacts are labeled `harness_kind: quality`); offline
 artifacts are a regression harness (`harness_kind: regression`).
+
+## 7. CloakBrowser Stealth Block-Rate Measurement (v1.2.1)
+
+The decisive proof that the stealth swap defeats Cloudflare is a datacenter-IP
+before/after, because the production block is IP/ASN-driven (it does not reproduce
+from a residential IP). Run [evals/blocked_rate.py](../evals/blocked_rate.py) from a
+shell on `ghostresearcher-api` (it navigates the real targets that returned
+Cloudflare walls in the first production run):
+
+```bash
+# after: stealth (the new default)
+python -m evals.blocked_rate --label stealth-railway
+
+# before: baseline — set CLOAKSERVE_STEALTH=0 on the cloakserve service, redeploy,
+# run, then revert
+python -m evals.blocked_rate --label vanilla-railway
+```
+
+A successful unblock shows `block_rate` dropping (and `usable_rate` rising) from the
+vanilla baseline to the stealth run. If blocking persists despite stealth, the cause
+is the datacenter IP, and a residential/mobile proxy is the next lever (DEC-010): set
+`PROXY_URL` on `cloakserve`.
