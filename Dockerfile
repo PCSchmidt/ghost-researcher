@@ -22,6 +22,7 @@ RUN pip install uvicorn
 
 # Copy codebase
 COPY backend/ ./backend/
+COPY evals/ ./evals/
 
 # Validate healthcheck can run
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

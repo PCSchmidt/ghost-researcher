@@ -52,7 +52,7 @@ Ensure the following is configured in your Vercel Project Settings:
 
 **Service 2: `ghostresearcher-api`**
 *   **Build/Root Directory:** `/`
-*   **Dockerfile Path:** `docker/Dockerfile.backend`
+*   **Dockerfile Path:** `Dockerfile`
 *   **Start Command:** Uses native CMD from Dockerfile.
 *   **Networking:** Generate a Public Domain (e.g. `https://api.ghostresearcher.app`). Use this in your Vercel frontend.
 *   **Healthcheck Route:** set to `/health`.
