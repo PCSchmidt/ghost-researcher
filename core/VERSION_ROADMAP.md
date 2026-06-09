@@ -557,3 +557,96 @@ prompts `bp_004` and `bp_007` specify `min_sources=4` but list only 3
 `expected_sources`, so they can never reach `sufficient_coverage` offline
 (integrity 0.5). Decide whether to raise their expected source lists or lower
 `min_sources` before treating offline as an all-green regression baseline.
+
+---
+
+## v1.3.0 - Shareable Report Output (Deferred)
+
+Goal: Turn a completed research report from an ephemeral in-app web view into a
+durable, shareable artifact — linkable, embeddable on social platforms, and
+exportable to a clean PDF for email, saving, and printing.
+
+Status: Planned / Deferred. Sequenced after v1.2.0 live validation. Not started.
+See [DEC-008](./DECISIONS.md) for the architecture decision.
+
+### Two sharing modes (deliberately distinct)
+
+These are different mechanisms and must not be conflated:
+
+- Link sharing (social media, chat apps, "send someone the report"): a stable
+  public permalink plus OpenGraph/Twitter Card metadata so the link unfurls into a
+  preview card. Social platforms render the *link*, not a PDF file — you cannot
+  "post a PDF" to X/LinkedIn and have it preview.
+- File sharing (email attachment, local save, print): a downloadable, self-contained
+  PDF plus a print-optimized stylesheet so the browser "Save as PDF" path also
+  produces a clean document.
+
+### Prerequisite
+
+Report content is currently a schema skeleton (`title`, `summary`,
+`key_findings[]`, `sources_used[]`, `confidence`, `limitations[]`) with no length
+or structure contract. A PDF will expose that thinness. Either upgrade the
+synthesis prompt for length/section structure as part of this stage, or accept a
+deliberately terse one-page brief. Resolve before build.
+
+### Ships
+
+- Report permalink page `/reports/[id]` backed by existing persistence
+- Report list page `/reports` (history browsing — also closes the long-standing
+  gap that the target structure specified these routes but they were never built)
+- Public read API for a single report by id, suitable for unauthenticated link access
+- OpenGraph + Twitter Card meta on the permalink (title, summary, confidence,
+  source count) and an OG preview image (static template or dynamically generated)
+- Print-optimized CSS (`@media print`) for clean browser "Save as PDF"
+- Server-rendered PDF export (e.g. `GET /reports/{id}/pdf`) producing a consistent,
+  attachable file — engine decided at stage start (Chromium print-to-PDF reusing
+  the existing CloakBrowser/Playwright stack, vs WeasyPrint/HTML, vs client-only)
+- UI affordances: Download PDF, Copy share link, and share intents
+  (`mailto:`, X/LinkedIn share URLs)
+
+### PDF look and format (design intent)
+
+- Letter/A4, single column, ~11pt body, clear typographic hierarchy, GhostResearcher
+  branding in header/footer
+- Cover/header block: report title, the original research goal, generated timestamp,
+  and a confidence badge
+- Executive summary section
+- Key findings as a numbered list, each finding carrying inline citation markers that
+  resolve to the sources appendix
+- Sources appendix: each source with its credibility score
+- Limitations + a short methodology note (agentic browse → extract → assess →
+  synthesize), page numbers in the footer
+
+### PDF layout is an iteration loop, not a one-shot
+
+The PDF layout and typography are expected to take several visual passes to get
+right — this is explicitly planned, not a sign of going off-track. Approach:
+
+- Pin a fixed sample report (a known-good live artifact) as the rendering fixture so
+  every layout pass renders the same content and only the design changes
+- Produce the PDF from an HTML/CSS template (whatever engine is chosen) so iteration
+  is CSS edits, not code rewrites
+- Each pass: generate the sample PDF, eyeball it against the design intent, refine.
+  Budget multiple rounds; treat layout sign-off as its own checkpoint
+- Hold the data contract stable while iterating on presentation, so layout churn does
+  not destabilize synthesis or the schema
+- Capture the approved reference render (a committed sample PDF/screenshot) as the
+  visual baseline so later changes are diffable
+
+### Exit criteria
+
+- A completed report is reachable at a stable, shareable URL
+- That URL renders a social preview card (OG/Twitter validated)
+- A user can download a PDF and print cleanly from the browser
+- The PDF includes title, research goal, summary, findings with citations, sources
+  with credibility scores, and limitations
+- The report list shows prior persisted reports
+
+### Decisions to resolve at stage start (log in DECISIONS.md)
+
+- PDF engine: reuse Chromium via Playwright print-to-PDF, WeasyPrint, or client-only
+  print-to-PDF
+- Whether PDFs are generated server-side (attachable, automatable) or client-side only
+- OG preview image: static template vs dynamic generation (e.g. `@vercel/og`)
+- Public/unauthenticated report access model (the app is currently single-user with
+  no auth; link sharing implies public-by-id reports)

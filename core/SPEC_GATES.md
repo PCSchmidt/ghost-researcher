@@ -129,3 +129,21 @@ stage.
 - Exit artifacts: Brave Search live, evidence from navigate results, LLM synthesis with cited findings, frontend report render confirmed
 - Exit token: `DEEP RESEARCH CONFIRMED`
 - Status: Complete
+
+### v1.1.1 - Evidence Flow Stabilization
+
+- Exit artifacts: evidence provenance markers, assessed-coverage gating, premature-finalize guard, source-card credibility
+- Exit token: `EVIDENCE FLOW CONFIRMED`
+- Status: Complete
+
+### v1.2.0 - Evidence Quality and Live Validation
+
+- Exit artifacts: deeper extraction + hard-page diagnostics, claim-overlap corroboration, live eval readiness probe, discriminative eval scoring (integrity/quality split), configured live validation run
+- Exit token: `LIVE VALIDATION CONFIRMED`
+- Status: In progress (configured live run pending)
+
+### v1.3.0 - Shareable Report Output (Deferred)
+
+- Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances
+- Exit token: `SHAREABLE OUTPUT CONFIRMED`
+- Status: Planned / Deferred (after v1.2.0). PDF layout expected to need visual iteration.
