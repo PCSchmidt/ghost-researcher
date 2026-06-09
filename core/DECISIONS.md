@@ -52,3 +52,11 @@ Decision: GhostResearcher will use OpenRouter as the default gateway for planner
 Alternatives considered: Direct Anthropic-only integration; direct provider-specific integrations for each low-cost model; OpenRouter plus optional fallback routing.
 Critical review: The approach is cost-efficient and reversible because the planner contract remains provider-neutral. The main risk is inconsistent tool-call and structured-output behavior across models. Mitigation is strict schema validation, cost tracking from provider usage metadata, and fallback escalation only after validation failure.
 Reason: The project scope needs reliable tool selection and synthesis, not the highest-cost frontier model for every call. OpenRouter gives model choice, usage metadata, and fallback routing while preserving one API surface.
+
+## DEC-008: Shareable report output splits link sharing from file export
+
+Status: ACCEPTED (planned, deferred to v1.3.0)
+Date: 2026-06-08
+Decision: Shareable report output is a planned, deferred stage ([v1.3.0](./VERSION_ROADMAP.md)) with two distinct mechanisms: (1) link sharing via a stable `/reports/[id]` permalink plus OpenGraph/Twitter Card metadata for social/chat previews, and (2) file sharing via a downloadable PDF plus print-optimized CSS for email, save, and print. The PDF engine, server-vs-client generation, OG image strategy, and public-access model are deferred sub-decisions to be resolved at stage start.
+Alternatives considered: A single "export to PDF" feature treated as the whole of sharing; client-only print-to-PDF with no permalink; building it now versus deferring after live validation.
+Reason: Social platforms render a shared link's preview card, not an attached PDF, so "share to social media" and "share a PDF" are different features and were scoped separately to avoid a half-built experience. The work is sequenced after v1.2.0 live validation because a shareable artifact is only worth publishing once live report quality is validated. The report content is currently a schema skeleton, so a synthesis-formatting upgrade is a noted prerequisite.

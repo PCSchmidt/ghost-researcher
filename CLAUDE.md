@@ -384,7 +384,9 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 - Live eval readiness: eval runner now preflights CloakBrowser reachability before live benchmark runs so live failures surface early and clearly
 - Known limits: configured live validation still needed; evidence depth and corroboration quality remain the next report-quality levers
 - Next stage: v1.2.0 evidence quality and live validation
-- Current regression baseline: 104 backend tests pass, 5 live smoke tests skipped
+- Planned/deferred: v1.3.0 Shareable Report Output (`/reports/[id]` permalink + `/reports` list, OG/Twitter preview, server-rendered PDF export, print CSS, share/download). Splits link sharing (social) from file export (email/save/print) per DEC-008. PDF layout expected to need visual iteration. Report is currently a schema skeleton (title/summary/key_findings/sources/confidence/limitations) with no format/length/PDF spec — formatting was a deliberate deferral
+- Current regression baseline: 105 backend tests pass, 5 live smoke tests skipped
+- Eval harness now discriminates: offline split into `integrity_score` (regression gate, ~1.0 when pipeline intact) and `quality_score` (sub-1.0, rewards source breadth + real assessed credibility); offline=`harness_kind:regression`, live=`harness_kind:quality`. Latest offline artifact: `evals/results/eval_results_20260609T004059Z.json` (avg 0.889, integrity 0.90, quality 0.879). Finding: `bp_004`/`bp_007` are under-specified (min_sources=4 vs 3 expected_sources)
 - Current frontend baseline: 11 tests passing, lint clean, production build passing
 - Backend deployed on Railway (ghostresearcher-api + cloakserve), frontend on Vercel
 - Full plan: /memories/session/plan.md

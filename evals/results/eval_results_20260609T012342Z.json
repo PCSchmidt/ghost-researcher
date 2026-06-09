@@ -1,0 +1,292 @@
+{
+  "average_integrity_score": 0.75,
+  "average_quality_score": 0.398,
+  "average_score": 0.574,
+  "benchmark_count": 3,
+  "cases": [
+    {
+      "domain": "defense_aerospace",
+      "evidence_urls": [
+        "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/",
+        "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/",
+        "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/",
+        "https://www.everycrsreport.com/reports/IF12668.html",
+        "https://dronelife.com/2025/07/15/department-defense-accelerates-drone-procurement-military-operations/",
+        "https://dronelife.com/2025/07/15/department-defense-accelerates-drone-procurement-military-operations/",
+        "https://www.everycrsreport.com/reports/IF12668.html",
+        "https://256today.com/huntsville-based-performance-drone-works-secures-15-2-million-army-contract-for-drone-systems/"
+      ],
+      "id": "bp_001",
+      "integrity_score": 0.75,
+      "limitations": [
+        "expected_source_coverage_incomplete",
+        "criteria_terms_missing_from_report"
+      ],
+      "metrics": {
+        "breadth_score": 0.85,
+        "completed": false,
+        "criteria_coverage_score": 0.0,
+        "expected_source_matches": [
+          "defensenews.com"
+        ],
+        "expected_source_score": 0.333,
+        "freshness_score": 1.0,
+        "integrity_score": 0.75,
+        "mean_credibility_score": 0.606,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.508,
+        "report_generated": true,
+        "source_count": 4,
+        "source_trace_score": 1.0,
+        "termination_reason": null,
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "web_search",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "web_search",
+          "navigate_to_url"
+        ]
+      },
+      "prompt": "Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.",
+      "quality_score": 0.508,
+      "report": {
+        "confidence": 0.7,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/"
+            ],
+            "text": "The Pentagon announced a prize challenge seeking 'ready-now' uncrewed systems with potential award amounts, indicating a new solicitation for mature drone solutions."
+          },
+          {
+            "source_urls": [
+              "https://www.everycrsreport.com/reports/IF12668.html"
+            ],
+            "text": "Congress provided $512.8 million in procurement and RDT&E for Army Future of Small Uncrewed Aircraft Systems (FoSUAS) initiatives, with $300 million allocated via the 2025 reconciliation law (P.L. 119-21). Additionally, $141.1 million was provided for the LASSO program. The Army requested $349.6M for FoSUAS and $168.8M for LASSO in FY2027."
+          },
+          {
+            "source_urls": [
+              "https://www.everycrsreport.com/reports/IF12668.html",
+              "https://dronelife.com/2025/07/15/department-defense-accelerates-drone-procurement-military-operations/"
+            ],
+            "text": "Secretary Hegseth directed the fielding of uncrewed systems in every Division by the end of 2026, and on July 16, 2025, DOD stated that Hegseth rescinded restrictive policies hindering drone production."
+          },
+          {
+            "source_urls": [
+              "https://256today.com/huntsville-based-performance-drone-works-secures-15-2-million-army-contract-for-drone-systems/"
+            ],
+            "text": "Performance Drone Works (Huntsville-based) secured a $5.2 million Army contract for drone systems (contract value cited as $5.2M; sources also mention $15.2M, possibly a different award)."
+          }
+        ],
+        "limitations": [
+          "Some evidence records include duplicate titles or truncated metadata, potentially reducing clarity on exact dates. The contract amount for Performance Drone Works varies between $5.2M and $15.2M across sources. The Defense News article is from June 3, 2025, which may be slightly outside the strict 30-day window depending on the current date. Several records have moderate credibility scores (0.5-0.7), indicating possible bias or incomplete verification.",
+          "Navigation fallback evidence (e.g., dronelife.com and 256today.com) may have incomplete text extraction, limiting full context."
+        ],
+        "sources_used": [
+          "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/",
+          "https://www.everycrsreport.com/reports/IF12668.html",
+          "https://dronelife.com/2025/07/15/department-defense-accelerates-drone-procurement-military-operations/",
+          "https://256today.com/huntsville-based-performance-drone-works-secures-15-2-million-army-contract-for-drone-systems/"
+        ],
+        "summary": "In the past 30 days, the Department of Defense has accelerated uncrewed systems procurement through a new prize challenge, increased funding allocations, rescinded restrictive policies, and issued a directive to field uncrewed systems in every division by end of 2026. Specific contract awards and updated program funding details were identified.",
+        "title": "DoD Uncrewed Systems Procurement Activity in Past 30 Days"
+      },
+      "score": 0.629,
+      "sources": [
+        "https://www.defensenews.com/pentagon/2025/06/03/pentagon-prize-challenge-seeks-ready-now-uncrewed-systems/",
+        "https://www.everycrsreport.com/reports/IF12668.html",
+        "https://dronelife.com/2025/07/15/department-defense-accelerates-drone-procurement-military-operations/",
+        "https://256today.com/huntsville-based-performance-drone-works-secures-15-2-million-army-contract-for-drone-systems/"
+      ]
+    },
+    {
+      "domain": "aviation_regulatory",
+      "evidence_urls": [
+        "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments",
+        "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments",
+        "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments",
+        "https://www.regulations.gov/document/FAA-2025-1908-0023",
+        "https://ucdrones.github.io/regulatory-updates.html",
+        "https://files.gao.gov/reports/GAO-26-107648/index.html",
+        "https://files.gao.gov/reports/GAO-26-107648/index.html"
+      ],
+      "id": "bp_002",
+      "integrity_score": 0.75,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources",
+        "expected_source_coverage_incomplete",
+        "criteria_terms_missing_from_report",
+        "low_mean_source_credibility"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": false,
+        "criteria_coverage_score": 0.0,
+        "expected_source_matches": [],
+        "expected_source_score": 0.0,
+        "freshness_score": 1.0,
+        "integrity_score": 0.75,
+        "mean_credibility_score": 0.514,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.393,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": null,
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "extract_structured_data"
+        ]
+      },
+      "prompt": "What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?",
+      "quality_score": 0.393,
+      "report": {
+        "confidence": 0.35,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments"
+            ],
+            "text": "On December 19, 2024, the FAA published a Notice of Proposed Rulemaking (NPRM) titled 'Modernization of Special Airworthiness Certification; Operation of Certain Aircraft Over People, Over Moving Vehicles, and at Night; and Expanded Beyond Visual Line of Sight (BVLOS) Operations.' This Proposed Rule would authorize routine BVLOS operations for commercial drones, requiring specific airworthiness criteria, remote identification, and new security requirements. It marks a significant shift in US drone policy."
+          }
+        ],
+        "limitations": [
+          "No final rule or compliance deadlines have been published; only an NPRM has been identified.",
+          "One key source at regulations.gov returned a 403 error and could not be accessed.",
+          "The GAO report link appears to contain a CRS report on Army sUAS programs, not directly about FAA rulemaking.",
+          "The UC Drones Knowledge Portal page yielded only navigation fallback content, not specific regulatory updates or deadlines.",
+          "The credibility scores of evidence records (0.514, 0.5, 0.5) indicate moderate reliability; the NPRM summary is from a law firm alert, which is secondary commentary."
+        ],
+        "sources_used": [
+          "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments",
+          "https://files.gao.gov/reports/GAO-26-107648/index.html",
+          "https://ucdrones.github.io/regulatory-updates.html"
+        ],
+        "summary": "The most significant recent FAA rulemaking action is the December 19, 2024 Notice of Proposed Rulemaking (NPRM) that would authorize routine beyond visual line of sight (BVLOS) operations for commercial drones, with new airworthiness criteria, remote identification, and security requirements. No final rule or compliance deadlines have yet been published, though the NPRM indicates a shift in policy. Additional evidence links to a Congressional Research Service report on Army sUAS programs, reflecting broader government interest in UAS capabilities, and regulatory update pages that appear incomplete or block access. Compliance deadlines remain unknown until a final rule is issued.",
+        "title": "FAA Rulemaking Actions on Commercial UAS Operations (2024\u20132026)"
+      },
+      "score": 0.572,
+      "sources": [
+        "https://www.crowell.com/en/insights/client-alerts/landmark-proposed-rule-may-open-american-skies-to-expanded-commercial-drone-deployments",
+        "https://files.gao.gov/reports/GAO-26-107648/index.html",
+        "https://ucdrones.github.io/regulatory-updates.html"
+      ]
+    },
+    {
+      "domain": "aviation_operational",
+      "evidence_urls": [
+        "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+        "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+        "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+        "https://tfr.faa.gov/tfr3/?page=list",
+        "https://tfr.faa.gov/tfr3/?page=list",
+        "https://tfr.faa.gov/tfr3/?page=list",
+        "https://tfr.faa.gov/tfr3/?page=list"
+      ],
+      "id": "bp_003",
+      "integrity_score": 0.75,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources",
+        "expected_source_coverage_incomplete",
+        "criteria_terms_missing_from_report"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": false,
+        "criteria_coverage_score": 0.0,
+        "expected_source_matches": [],
+        "expected_source_score": 0.0,
+        "freshness_score": 0.0,
+        "integrity_score": 0.75,
+        "mean_credibility_score": 0.77,
+        "min_sources": 2,
+        "min_sources_met": true,
+        "quality_score": 0.294,
+        "report_generated": true,
+        "source_count": 2,
+        "source_trace_score": 1.0,
+        "termination_reason": null,
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "navigate_to_url",
+          "navigate_to_url",
+          "navigate_to_url",
+          "web_search"
+        ]
+      },
+      "prompt": "What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?",
+      "quality_score": 0.294,
+      "report": {
+        "confidence": 0.0,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+              "https://tfr.faa.gov/tfr3/?page=list"
+            ],
+            "text": "No TFR or NOTAM issuance for the southeastern US within the specified time window is reported in the evidence."
+          }
+        ],
+        "limitations": [
+          "The evidence records do not contain any NOTAM or TFR data with dates or locations matching the request.",
+          "The provided URLs point to pages that do not include the needed temporal or geographic information.",
+          "The evidence is limited to two documents, both about Army UAS programs rather than FAA airspace restrictions."
+        ],
+        "sources_used": [
+          "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+          "https://tfr.faa.gov/tfr3/?page=list"
+        ],
+        "summary": "The provided evidence does not contain any records of NOTAM or TFR activity for the southeastern United States in the last 48 hours. The two sources cited are Congressional Research Service reports on Army sUAS programs and an FAA TFR list page, neither of which include temporal or geographic data relevant to the query.",
+        "title": "TFR/NOTAM Activity in Southeastern US - Last 48 Hours"
+      },
+      "score": 0.522,
+      "sources": [
+        "https://tfr.faa.gov/tfr3/?page=detail_5_9765",
+        "https://tfr.faa.gov/tfr3/?page=list"
+      ]
+    }
+  ],
+  "generated_at": "2026-06-09T01:23:42.391102+00:00",
+  "harness_kind": "quality",
+  "live_environment": {
+    "cloakbrowser": {
+      "browser": "Chrome/130.0.6723.31",
+      "detail": null,
+      "status": "ok",
+      "version_url": "http://localhost:9222/json/version",
+      "websocket_debugger_url": "ws://localhost/devtools/browser/de7943bf-a96e-4668-b9d4-a4bb1b583117"
+    },
+    "openrouter_api_key": true,
+    "search_api_key": true,
+    "search_provider": "brave"
+  },
+  "mode": "live",
+  "search_provider": "brave"
+}

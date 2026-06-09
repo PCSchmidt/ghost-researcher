@@ -24,6 +24,7 @@ Updated at gate close with gate outcome rows.
 | 2026-06-03 | GhostResearcher | v1.0.0 | COMPLETE | 89 backend, 8 frontend | Deployed backend to Railway (ghostresearcher-api + cloakserve) and frontend to Vercel; RAILWAY_REQUEST_TIMEOUT=300 set |
 | 2026-06-04 | GhostResearcher | v1.0.1 | COMPLETE | 89 backend, 8 frontend | Fixed CDP Host header rewriting, DNS-rebinding bypass, HTTP readiness polling, wait_for guard, synthesis gate removal, evidence auto-creation |
 | 2026-06-05 | GhostResearcher | v1.1.0 | COMPLETE | 89 backend, 8 frontend | Deep research operational: Brave Search, rich planner prompt, evidence from navigate results, LLM synthesis — full report rendered in frontend |
+| 2026-06-08 | GhostResearcher | v1.2.0 | IN PROGRESS | 105 backend, 11 frontend | Reviewed 3 Codex branches (sound, on-plan); fixed compose/deploy Dockerfile refs; made offline eval discriminate via integrity/quality split (was tautological flat 1.0); surfaced bp_004/bp_007 as under-specified |
 
 ## STOP EVENTS
 
