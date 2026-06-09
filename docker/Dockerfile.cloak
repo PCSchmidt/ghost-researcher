@@ -5,11 +5,16 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Ensure we have what we need
+# Ensure we have what we need. cloakbrowser supplies the patched stealth
+# Chromium that actually defeats Cloudflare/Turnstile; playwright is kept for the
+# CLOAKSERVE_STEALTH=0 vanilla baseline used in before/after measurement.
 COPY requirements.txt .
-RUN pip install -r requirements.txt playwright
-# Ensure playwright browsers are installed
+RUN pip install -r requirements.txt playwright cloakbrowser
+# Ensure playwright browsers are installed (vanilla baseline only)
 RUN playwright install chromium
+# Pre-download CloakBrowser's patched stealth Chromium at build time, not on the
+# first request. Caches into /root/.cloakbrowser for the runtime process.
+RUN python -c "from cloakbrowser import ensure_binary; ensure_binary()"
 
 COPY backend/scripts/start_cloakserve.py ./backend/scripts/start_cloakserve.py
 

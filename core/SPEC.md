@@ -7,9 +7,15 @@ Updated at the start of each gate
 
 ## CURRENT GATE
 
-**Version:** v1.1.1
-**Gate Name:** Evidence Flow Stabilization
-**Status:** COMPLETE
+**Version:** v1.2.0 (in progress); v1.2.1 Phase 1 implemented
+**Gate Name:** Evidence Quality and Live Validation → Ghost: CloakBrowser Stealth (Phase 1)
+**Status:** Live validation COMPLETE (first live eval artifact committed; discriminative
+scoring landed). v1.2.1 Phase 1 — cloakserve runs CloakBrowser's stealth binary —
+implemented and validated locally + in a Linux container; pending Railway deploy and the
+datacenter-IP block-rate measurement. See [VERSION_ROADMAP.md](./VERSION_ROADMAP.md)
+v1.2.0 / v1.2.1 for the active task detail.
+
+_The v1.1.1 specification below is retained as historical gate detail._
 
 ---
 

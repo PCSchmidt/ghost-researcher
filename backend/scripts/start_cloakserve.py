@@ -74,30 +74,70 @@ async def _handle_proxy_client(
             await task
 
 
+def _stealth_enabled() -> bool:
+    """CloakBrowser stealth is on by default. Set CLOAKSERVE_STEALTH=0 to launch
+    vanilla Chromium instead — used to capture the detection_blocked baseline for
+    before/after measurement (see evals/blocked_rate.py)."""
+    return os.getenv("CLOAKSERVE_STEALTH", "1").strip().lower() not in {"0", "false", "no"}
+
+
+def _resolve_chromium(playwright, *, browser_port: int) -> tuple[str, list[str], str]:
+    """Return (executable, chromium_args, mode_label) for the configured browser.
+
+    Stealth mode launches CloakBrowser's patched Chromium binary, whose
+    source-level fingerprint patches are activated by the --fingerprint* flags.
+    Vanilla mode launches Playwright's stock Chromium (the previous behavior),
+    kept only as a measurement baseline.
+    """
+    common_args = [
+        "--headless=new",
+        f"--remote-debugging-port={browser_port}",
+        "--remote-allow-origins=*",
+        "--disable-dev-shm-usage",
+    ]
+    proxy_server = os.getenv("PROXY_URL")
+    if proxy_server:
+        # Phase 1 wires the proxy path (DEC-010). Authenticated HTTP proxies are
+        # handled in Phase 2's in-process CloakBrowser launch; a bare
+        # --proxy-server here covers no-auth and inline-credential SOCKS5.
+        common_args.append(f"--proxy-server={proxy_server}")
+
+    if _stealth_enabled():
+        from cloakbrowser.config import get_default_stealth_args
+        from cloakbrowser.download import ensure_binary
+
+        executable = ensure_binary()
+        # get_default_stealth_args() already includes --no-sandbox and the
+        # --fingerprint / --fingerprint-platform flags. Do NOT add --disable-gpu
+        # here: the patched binary synthesizes a coherent GPU profile from the
+        # seed, and disabling the GPU would break that fingerprint.
+        args = [executable, *common_args, *get_default_stealth_args()]
+        return executable, args, "CloakBrowser stealth"
+
+    executable = playwright.chromium.executable_path
+    args = [
+        executable,
+        *common_args,
+        "--disable-blink-features=AutomationControlled",
+        "--disable-features=IsolateOrigins,site-per-process",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+    ]
+    return executable, args, "vanilla"
+
+
 async def main():
     print("Starting CloakBrowser CDP server...", flush=True)
-    
+
     port = int(os.getenv("PORT", "9222"))
     browser_port = port + 1
-    
+
     async with async_playwright() as p:
-        executable = p.chromium.executable_path
-        
-        args = [
-            executable,
-            "--headless=new",
-            f"--remote-debugging-port={browser_port}",
-            "--remote-allow-origins=*",
-            "--disable-blink-features=AutomationControlled",
-            "--disable-features=IsolateOrigins,site-per-process",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu"
-        ]
-        
-        print(f"Launching Chromium on 127.0.0.1:{browser_port}...", flush=True)
-        
+        executable, args, mode = _resolve_chromium(p, browser_port=browser_port)
+
+        print(f"Launching {mode} Chromium on 127.0.0.1:{browser_port}...", flush=True)
+
         # Launch Chromium locally and expose it through a TCP proxy for Railway.
         process = await asyncio.create_subprocess_exec(*args)
 
@@ -132,13 +172,13 @@ async def main():
         )
         sockets = ", ".join(str(sock.getsockname()) for sock in proxy_server.sockets or [])
         print(f"Proxying CDP on {sockets} -> 127.0.0.1:{browser_port}", flush=True)
-        
+
         stop_event = asyncio.Event()
-        
+
         def handle_sigint():
             print("Received stop signal", flush=True)
             stop_event.set()
-        
+
         # Handle graceful shutdown
         loop = asyncio.get_running_loop()
         try:
@@ -146,9 +186,9 @@ async def main():
             loop.add_signal_handler(signal.SIGTERM, handle_sigint)
         except NotImplementedError:
             pass  # Windows does not support add_signal_handler fully
-            
+
         await stop_event.wait()
-        
+
         print(f"Shutting down CDP server...", flush=True)
         proxy_server.close()
         await proxy_server.wait_closed()

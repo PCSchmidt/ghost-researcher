@@ -8,30 +8,33 @@ and credibility-scores sources, and synthesizes a structured intelligence report
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
 CloakBrowser CDP server on Railway. The full research pipeline is operational — the
 planner navigates 8–15 real sources per run, creates evidence from page content,
-and the synthesizer produces structured reports with cited findings. 104 backend
+and the synthesizer produces structured reports with cited findings. 110 backend
 tests pass, 11 frontend tests pass.
 
 ---
 
 ## Current Status
 
-**Current checkpoint**: v1.1.1 — Evidence Flow Stabilization.
+**Current checkpoint**: v1.2.0 — Evidence Quality and Live Validation (in progress),
+with v1.2.1 Ghost (CloakBrowser stealth integration) Phase 1 implemented locally.
 
-The research pipeline runs end-to-end with real results. Brave Search supplies live
-URLs, the planner navigates each source using CloakBrowser, evidence is captured
-from page titles and content excerpts, and LLM synthesis produces a structured
-report with 4+ cited findings. The frontend renders the report, source cards, and
-SSE replay — confirmed working June 2026.
+Live validation is done: the first configured live eval ran against Brave +
+CloakBrowser + OpenRouter and produced a committed artifact under `evals/results/`,
+scored by a discriminative eval harness (an `integrity_score` regression gate and a
+sub-1.0 `quality_score`) that replaced the old tautological flat-1.0 scorer.
 
-The current stabilization slice keeps navigation-created fallback evidence as a
-resilience path, but only extraction plus `assess_credibility` can satisfy
-coverage for normal completion. Source cards now read credibility from session
-evidence records, with legacy tool-result scores retained as a fallback.
+Live validation also surfaced the central gap behind the project's name: the
+deployed `cloakserve` had been launching **vanilla headless Chromium**, so Cloudflare
+blocked the Railway datacenter IP and reports came back empty. v1.2.1 Phase 1 swaps
+`cloakserve` to launch **CloakBrowser's patched stealth binary** (`CLOAKSERVE_STEALTH=1`,
+the default), restoring the real anti-detection layer. Validated locally (CDP user
+agent went `HeadlessChrome` → `Chrome`); the decisive datacenter-IP before/after
+measurement runs on Railway via `evals/blocked_rate.py`.
 
 ### What's working (deployed)
 
-- FastAPI backend on Railway (`ghostresearcher-api`) — 89 tests passing, 5 skipped
-- CloakBrowser CDP server on Railway (`cloakserve`) — Chromium 148 headless
+- FastAPI backend on Railway (`ghostresearcher-api`) — 110 tests passing, 5 skipped
+- CloakBrowser CDP server on Railway (`cloakserve`) — stealth binary integrated (v1.2.1 Phase 1, validated in a local Linux container); production deploy pending merge
 - Next.js 16 frontend on Vercel — research form, SSE replay, report viewer, source cards
 - Brave Search — real source URLs, `SEARCH_PROVIDER=brave` configured on Railway
 - OpenRouter planner adapter — DeepSeek V4 Flash, tool-use loop, retry on text response
@@ -48,9 +51,9 @@ evidence records, with legacy tool-result scores retained as a fallback.
 
 ### Known limits
 
-- **Live validation pending** — local shell is not configured with live keys/CDP; run the live smoke/eval commands once `GHOSTRESEARCHER_RUN_LIVE_TESTS`, Brave/OpenRouter keys, and `CLOAK_CDP_URL` are set
-- **Evidence depth** — extraction now captures page metadata, content sections, explicit PDF/paywall/thin-SPA limitation records, and persisted extracted evidence; full PDF parsing remains a later dependency-backed task
-- **Confidence ceiling** — report confidence now benefits from source-diversity, claim-overlap corroboration, and prior extracted evidence; domain-specific scoring remains next
+- **Stealth not yet deployed** — v1.2.1 Phase 1 swaps `cloakserve` to CloakBrowser's stealth binary and is validated locally + in a Linux container, but production still runs vanilla Chromium until the merge + Railway deploy. The decisive datacenter-IP before/after (`evals/blocked_rate.py`) runs on Railway.
+- **Residential proxy is measurement-gated** — the stealth binary fixes the browser fingerprint, but Cloudflare also weighs IP/ASN. A residential/mobile proxy is wired but only provisioned if Railway measurement shows blocking persists (DEC-010).
+- **Evidence depth** — extraction captures page metadata, content sections, PDF/paywall/thin-SPA limitation records, and persisted extracted evidence; full PDF parsing remains a later dependency-backed task
 
 ### Not yet implemented
 
@@ -151,7 +154,8 @@ npm install
 python -m unittest tests.test_config tests.test_agent.test_tools tests.test_agent.test_memory tests.test_agent.test_planner tests.test_agent.test_openrouter tests.test_api.test_health tests.test_api.test_research tests.test_executor.test_browser tests.test_executor.test_navigate tests.test_executor.test_extract tests.test_executor.test_credibility tests.test_executor.test_search tests.test_synthesizer.test_schema tests.test_synthesizer.test_report tests.test_persistence.test_repository tests.test_jobs.test_runner tests.test_jobs.test_research tests.test_jobs.test_status tests.test_evals.test_eval_runner tests.test_live.test_smoke
 ```
 
-Current validated result: 104 backend tests pass, 5 live smoke tests skipped.
+Current validated result: 110 backend tests pass, 5 live smoke tests skipped.
+(Run the whole suite with `python -m pytest -q`.)
 
 Run the offline eval harness:
 
@@ -159,10 +163,14 @@ Run the offline eval harness:
 python -m evals.eval_runner --mode offline --limit 3
 ```
 
-Current result: 3 benchmark prompts completed in offline mode, average score 1.0,
-results persisted under `evals/results/`. Live mode is opt-in and requires
+The harness reports an `integrity_score` (regression gate, ~1.0 when the pipeline
+is intact) and a discriminative `quality_score` (sub-1.0; rewards source breadth and
+real assessed credibility), labeling offline runs `harness_kind: regression` and live
+runs `harness_kind: quality`. The first committed live artifact scored avg quality
+0.398 — a real, non-saturated number. Live mode is opt-in and requires
 `SEARCH_PROVIDER=brave`, `SEARCH_API_KEY`, `OPENROUTER_API_KEY`, and live browser/search dependencies.
-When you run it inside Railway, point `CLOAK_CDP_URL` at `http://cloakbrowser.railway.internal:9222`.
+When you run it inside Railway, point `CLOAK_CDP_URL` at `http://cloakbrowser.railway.internal:9222`;
+locally, run `cloakserve` and override `CLOAK_CDP_URL=http://localhost:9222`.
 
 Run live smoke tests only when local services and keys are configured:
 
@@ -276,7 +284,9 @@ The build is intentionally staged:
 - v1.0.1 - CDP Stability Fixes
 - v1.1.0 - Deep Research Operational
 - v1.1.1 - Evidence Flow Stabilization
-- v1.2.0 - Evidence Quality and Live Validation
+- v1.2.0 - Evidence Quality and Live Validation (in progress; live validation done)
+- v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration (Phase 1 done locally)
+- v1.3.0 - Shareable Report Output (deferred)
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).
 

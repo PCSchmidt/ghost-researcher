@@ -8,8 +8,16 @@ the staged roadmap.
 
 ## Current Baseline
 
-Current checkpoint: v1.1.1 - Evidence Flow Stabilization.
+Current checkpoint: v1.2.0 - Evidence Quality and Live Validation (in progress),
+with v1.2.1 Ghost (CloakBrowser stealth) Phase 1 implemented locally.
 Deployed: Railway backend + CloakBrowser, Vercel frontend.
+
+Backend regression baseline: 110 tests pass, 5 live smoke tests skipped
+(`python -m pytest -q`). Live validation is done — the first configured live eval
+artifact is committed under `evals/results/`, scored by the discriminative
+`integrity_score` / `quality_score` harness. v1.2.1 Phase 1 swaps `cloakserve` to
+CloakBrowser's stealth binary (`CLOAKSERVE_STEALTH=1`, default); the Railway
+datacenter-IP before/after is measured with `evals/blocked_rate.py`.
 
 Gate 1 is confirmed:
 
