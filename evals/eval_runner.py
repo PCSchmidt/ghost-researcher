@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -470,11 +471,41 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_env_file(path: Path | None = None) -> dict[str, str]:
+    """Merge a project-root ``.env`` file with the process environment.
+
+    Process environment wins, so an exported override (for example a local
+    ``CLOAK_CDP_URL=http://localhost:9222`` instead of the Railway-internal
+    address baked into ``.env``) takes precedence over the file.
+    """
+    env_path = path or Path(__file__).resolve().parent.parent / ".env"
+    values: dict[str, str] = {}
+    if env_path.exists():
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export ") :]
+            key, separator, value = line.partition("=")
+            if not separator:
+                continue
+            key = key.strip()
+            if key:
+                values[key] = value.strip().strip('"').strip("'")
+    values.update(os.environ)
+    return values
+
+
 async def _main() -> None:
     args = _parse_args()
+    # Live runs need real configuration (search provider, keys, CDP url). The CLI
+    # reads it from .env + the process environment. Offline runs stay deterministic
+    # and configuration-free so their artifacts remain reproducible.
+    settings = Settings.from_env(load_env_file()) if args.mode == "live" else None
     prompts = load_benchmark_prompts(args.benchmark)
     selected_prompts = prompts if args.limit == 0 else prompts[: args.limit]
-    payload = await run_eval_suite(prompts=selected_prompts, mode=args.mode)
+    payload = await run_eval_suite(prompts=selected_prompts, mode=args.mode, settings=settings)
     if not args.no_write:
         path = write_eval_results(payload, results_dir=args.results_dir)
         payload["artifact_path"] = str(path)

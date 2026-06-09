@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from backend.agent.memory import AgentSession
 from backend.config import Settings
@@ -15,6 +17,7 @@ from evals.eval_runner import (
     BenchmarkPrompt,
     _breadth_score,
     load_benchmark_prompts,
+    load_env_file,
     run_eval_suite,
     score_prompt,
     validate_live_environment,
@@ -219,6 +222,26 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaisesRegex(ValueError, "live_cloakbrowser_unreachable:connection refused"):
             validate_live_environment(settings, browser_healthcheck=fake_healthcheck)
+
+    def test_load_env_file_reads_file_with_process_env_override(self) -> None:
+        # The live eval CLI relies on this so configured runs actually pick up
+        # .env, and so an exported CLOAK_CDP_URL can override the Railway-internal
+        # address baked into the file.
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            env_path = Path(tmp_dir) / ".env"
+            env_path.write_text(
+                "# comment\n"
+                "export SEARCH_PROVIDER=brave\n"
+                'SEARCH_API_KEY="file-key"\n'
+                "CLOAK_CDP_URL=http://cloakbrowser.railway.internal:9222\n",
+                encoding="utf-8",
+            )
+            with mock.patch.dict(os.environ, {"CLOAK_CDP_URL": "http://localhost:9222"}, clear=False):
+                values = load_env_file(env_path)
+
+            self.assertEqual("brave", values["SEARCH_PROVIDER"])
+            self.assertEqual("file-key", values["SEARCH_API_KEY"])
+            self.assertEqual("http://localhost:9222", values["CLOAK_CDP_URL"])
 
     def test_write_eval_results_creates_json_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
