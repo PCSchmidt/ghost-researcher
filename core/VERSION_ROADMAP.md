@@ -621,9 +621,17 @@ pre-downloads the binary at build. The CDP `/json/version` UA changed from
 `HeadlessChrome/130` to `Chrome/146` (no "Headless" tell). The executor drives the
 stealth browser over CDP end to end, and the new
 [evals/blocked_rate.py](../evals/blocked_rate.py) harness scored block_rate 0.0 on
-the exact production-failing targets from a residential IP. Remaining: deploy to
-Railway and capture the datacenter-IP before/after (the decisive measurement,
-since the production block was IP/ASN-driven).
+the exact production-failing targets from a residential IP.
+
+Deployed and measured on Railway (2026-06-09, merge 47ac653): the CloakBrowser
+service now serves `Chrome/146` (was `HeadlessChrome`). The decisive datacenter-IP
+`blocked_rate` run (via `railway ssh` on `ghost-researcher`) went from ~100% blocked
+(the documented empty 0%-confidence reports) to **block_rate 0.375 / usable_rate
+0.625** — 5 of 8 previously-blocked targets now return usable content
+(energy.gov, pewresearch, belfercenter, goldmansachs, coresite). Phase 1 exit
+criteria met. The 3 still blocked (iea.org, bloomenergy, datacenterknowledge) are
+IP/ASN-driven (good fingerprint, datacenter IP), which is the residential-proxy
+decision point under DEC-010.
 
 ### Phase 2 - In-process launch (per-source stealth depth)
 
