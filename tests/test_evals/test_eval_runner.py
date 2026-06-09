@@ -13,6 +13,7 @@ from backend.jobs.research import PlannerSequenceResult
 from backend.synthesizer.schema import ResearchReport, ReportClaim
 from evals.eval_runner import (
     BenchmarkPrompt,
+    _breadth_score,
     load_benchmark_prompts,
     run_eval_suite,
     score_prompt,
@@ -77,6 +78,53 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("assess_credibility", tool_sequence)
         self.assertEqual("finalize_report", tool_sequence[-1])
         self.assertNotIn("source_count_below_benchmark_minimum", payload["cases"][0]["limitations"])
+
+    async def test_offline_suite_is_a_regression_harness_not_a_quality_score(self) -> None:
+        # Offline is labeled a regression harness: a healthy deterministic run keeps
+        # integrity at 1.0 (the pipeline works), but the quality score must stay
+        # below 1.0 — meeting the benchmark floor is adequate, not excellent. This is
+        # the property that the old flat-1.0 scorer lacked.
+        payload = await run_eval_suite(prompts=[_prompt()])
+
+        self.assertEqual("regression", payload["harness_kind"])
+        self.assertEqual(1.0, payload["average_integrity_score"])
+        self.assertLess(payload["average_quality_score"], 1.0)
+        self.assertGreater(payload["average_quality_score"], 0.5)
+
+    def test_score_drops_when_evidence_pipeline_regresses(self) -> None:
+        # A run that navigated sources but never produced extracted/assessed evidence
+        # or a report (the exact failure the evidence-flow refactor risked) must score
+        # far below a healthy run. The eval has to be able to fail.
+        prompt = _prompt()
+        degraded_session = AgentSession(research_goal=prompt.prompt)
+        for source_url in [
+            "https://faa.gov/ghostresearcher-eval/test",
+            "https://federalregister.gov/ghostresearcher-eval/test",
+        ]:
+            degraded_session.register_source(source_url)
+            degraded_session.add_evidence(
+                url=source_url,
+                title=source_url,
+                claims=["shallow navigation teaser without the required facts"],
+                credibility_score=0.5,
+                evidence_type="navigation_fallback",
+            )
+        degraded_session.finalize("max_steps")
+        degraded = score_prompt(
+            prompt,
+            PlannerSequenceResult(session=degraded_session, decisions=[], tool_results=[], synthesis=None),
+        )
+
+        self.assertLess(degraded["integrity_score"], 1.0)
+        self.assertEqual(0.0, degraded["metrics"]["source_trace_score"])
+        self.assertEqual(0.0, degraded["metrics"]["mean_credibility_score"])
+        self.assertLess(degraded["score"], 0.5)
+
+    def test_breadth_score_rewards_corroboration_beyond_the_minimum(self) -> None:
+        self.assertEqual(0.7, _breadth_score(2, 2))
+        self.assertEqual(0.85, _breadth_score(3, 2))
+        self.assertEqual(1.0, _breadth_score(4, 2))
+        self.assertLess(_breadth_score(1, 2), 0.7)
 
     async def test_live_eval_requires_non_deterministic_search_provider(self) -> None:
         with self.assertRaisesRegex(ValueError, "live_search_provider_required"):
@@ -143,6 +191,7 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual("live", payload["mode"])
+        self.assertEqual("quality", payload["harness_kind"])
         self.assertEqual("brave", payload["search_provider"])
         self.assertEqual(2, payload["cases"][0]["metrics"]["source_count"])
         self.assertEqual("ok", payload["live_environment"]["cloakbrowser"]["status"])

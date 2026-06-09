@@ -1,0 +1,956 @@
+{
+  "average_integrity_score": 0.9,
+  "average_quality_score": 0.879,
+  "average_score": 0.889,
+  "benchmark_count": 10,
+  "cases": [
+    {
+      "domain": "defense_aerospace",
+      "evidence_urls": [
+        "https://sam.gov/ghostresearcher-eval/bp_001",
+        "https://sam.gov/ghostresearcher-eval/bp_001",
+        "https://sam.gov/ghostresearcher-eval/bp_001",
+        "https://usaspending.gov/ghostresearcher-eval/bp_001",
+        "https://usaspending.gov/ghostresearcher-eval/bp_001",
+        "https://usaspending.gov/ghostresearcher-eval/bp_001",
+        "https://defensenews.com/ghostresearcher-eval/bp_001",
+        "https://defensenews.com/ghostresearcher-eval/bp_001",
+        "https://defensenews.com/ghostresearcher-eval/bp_001"
+      ],
+      "id": "bp_001",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "sam.gov",
+          "usaspending.gov",
+          "defensenews.com"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.784,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.897,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.",
+      "quality_score": 0.897,
+      "report": {
+        "confidence": 0.784,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://sam.gov/ghostresearcher-eval/bp_001"
+            ],
+            "text": "Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://usaspending.gov/ghostresearcher-eval/bp_001"
+            ],
+            "text": "Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://defensenews.com/ghostresearcher-eval/bp_001"
+            ],
+            "text": "Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://sam.gov/ghostresearcher-eval/bp_001",
+          "https://usaspending.gov/ghostresearcher-eval/bp_001",
+          "https://defensenews.com/ghostresearcher-eval/bp_001"
+        ],
+        "summary": "Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. Reported with the latest 2026 figures. Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contracting agency; system type. Reported with the latest 2026 figures. Detailed findings for Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications.. Source sam.gov. Includes contract value or range; contract",
+        "title": "Research Report: Summarize DoD uncrewed systems procurement activity from the past 30 days, including any new solicitations, awards, or contract modifications."
+      },
+      "score": 0.949,
+      "sources": [
+        "https://sam.gov/ghostresearcher-eval/bp_001",
+        "https://usaspending.gov/ghostresearcher-eval/bp_001",
+        "https://defensenews.com/ghostresearcher-eval/bp_001"
+      ]
+    },
+    {
+      "domain": "aviation_regulatory",
+      "evidence_urls": [
+        "https://faa.gov/ghostresearcher-eval/bp_002",
+        "https://faa.gov/ghostresearcher-eval/bp_002",
+        "https://faa.gov/ghostresearcher-eval/bp_002",
+        "https://federalregister.gov/ghostresearcher-eval/bp_002",
+        "https://federalregister.gov/ghostresearcher-eval/bp_002",
+        "https://federalregister.gov/ghostresearcher-eval/bp_002",
+        "https://auvsi.org/ghostresearcher-eval/bp_002",
+        "https://auvsi.org/ghostresearcher-eval/bp_002",
+        "https://auvsi.org/ghostresearcher-eval/bp_002"
+      ],
+      "id": "bp_002",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "faa.gov",
+          "federalregister.gov",
+          "auvsi.org"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.812,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.902,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?",
+      "quality_score": 0.902,
+      "report": {
+        "confidence": 0.812,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://faa.gov/ghostresearcher-eval/bp_002"
+            ],
+            "text": "Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://federalregister.gov/ghostresearcher-eval/bp_002"
+            ],
+            "text": "Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://auvsi.org/ghostresearcher-eval/bp_002"
+            ],
+            "text": "Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://faa.gov/ghostresearcher-eval/bp_002",
+          "https://federalregister.gov/ghostresearcher-eval/bp_002",
+          "https://auvsi.org/ghostresearcher-eval/bp_002"
+        ],
+        "summary": "Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. Reported with the latest 2026 figures. Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadline; affected operations. Reported with the latest 2026 figures. Detailed findings for What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?. Source faa.gov. Includes rule name or docket number; effective date or deadli",
+        "title": "Research Report: What are the most recent FAA rulemaking actions affecting commercial UAS operations, and what are the compliance deadlines?"
+      },
+      "score": 0.951,
+      "sources": [
+        "https://faa.gov/ghostresearcher-eval/bp_002",
+        "https://federalregister.gov/ghostresearcher-eval/bp_002",
+        "https://auvsi.org/ghostresearcher-eval/bp_002"
+      ]
+    },
+    {
+      "domain": "aviation_operational",
+      "evidence_urls": [
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003",
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003",
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003",
+        "https://aviationweather.gov/ghostresearcher-eval/bp_003",
+        "https://aviationweather.gov/ghostresearcher-eval/bp_003",
+        "https://aviationweather.gov/ghostresearcher-eval/bp_003"
+      ],
+      "id": "bp_003",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "notams.aim.faa.gov",
+          "aviationweather.gov"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.812,
+        "min_sources": 2,
+        "min_sources_met": true,
+        "quality_score": 0.902,
+        "report_generated": true,
+        "source_count": 2,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?",
+      "quality_score": 0.902,
+      "report": {
+        "confidence": 0.812,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003"
+            ],
+            "text": "Detailed findings for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://aviationweather.gov/ghostresearcher-eval/bp_003"
+            ],
+            "text": "Detailed findings for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003",
+          "https://aviationweather.gov/ghostresearcher-eval/bp_003"
+        ],
+        "summary": "Detailed findings for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. Reported with the latest 2026 figures. Detailed findings for What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?. Source notams.aim.faa.gov. Includes NOTAM identifier; affected airspace or airport; effective time. Reported with the latest 2026 figures.",
+        "title": "Research Report: What NOTAM or TFR activity has been issued in the last 48 hours affecting airspace in the southeastern United States?"
+      },
+      "score": 0.951,
+      "sources": [
+        "https://notams.aim.faa.gov/ghostresearcher-eval/bp_003",
+        "https://aviationweather.gov/ghostresearcher-eval/bp_003"
+      ]
+    },
+    {
+      "domain": "ml_research",
+      "evidence_urls": [
+        "https://arxiv.org/ghostresearcher-eval/bp_004",
+        "https://arxiv.org/ghostresearcher-eval/bp_004",
+        "https://arxiv.org/ghostresearcher-eval/bp_004",
+        "https://scholar.google.com/ghostresearcher-eval/bp_004",
+        "https://scholar.google.com/ghostresearcher-eval/bp_004",
+        "https://scholar.google.com/ghostresearcher-eval/bp_004",
+        "https://semanticscholar.org/ghostresearcher-eval/bp_004",
+        "https://semanticscholar.org/ghostresearcher-eval/bp_004",
+        "https://semanticscholar.org/ghostresearcher-eval/bp_004"
+      ],
+      "id": "bp_004",
+      "integrity_score": 0.5,
+      "limitations": [
+        "source_count_below_benchmark_minimum",
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.525,
+        "completed": false,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "arxiv.org",
+          "scholar.google.com",
+          "semanticscholar.org"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 0.5,
+        "mean_credibility_score": 0.724,
+        "min_sources": 4,
+        "min_sources_met": false,
+        "quality_score": 0.85,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "no_new_sources",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.",
+      "quality_score": 0.85,
+      "report": {
+        "confidence": 0.724,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://arxiv.org/ghostresearcher-eval/bp_004"
+            ],
+            "text": "Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.. Source arxiv.org. Includes author or institution; specific technique or variant; performance metric. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://scholar.google.com/ghostresearcher-eval/bp_004"
+            ],
+            "text": "Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.. Source arxiv.org. Includes author or institution; specific technique or variant; performance metric. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://semanticscholar.org/ghostresearcher-eval/bp_004"
+            ],
+            "text": "Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.. Source arxiv.org. Includes author or institution; specific technique or variant; performance metric. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://arxiv.org/ghostresearcher-eval/bp_004",
+          "https://scholar.google.com/ghostresearcher-eval/bp_004",
+          "https://semanticscholar.org/ghostresearcher-eval/bp_004"
+        ],
+        "summary": "Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.. Source arxiv.org. Includes author or institution; specific technique or variant; performance metric. Reported with the latest 2026 figures. Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months.. Source arxiv.org. Includes author or institution; specific technique or variant; performance metric. Reported with the latest 2026 figures. Detailed findings for Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 m",
+        "title": "Research Report: Summarize the current state of Kalman filter applications in autonomous aerial vehicle navigation, focusing on research published in the last 12 months."
+      },
+      "score": 0.675,
+      "sources": [
+        "https://arxiv.org/ghostresearcher-eval/bp_004",
+        "https://scholar.google.com/ghostresearcher-eval/bp_004",
+        "https://semanticscholar.org/ghostresearcher-eval/bp_004"
+      ]
+    },
+    {
+      "domain": "defense_aerospace",
+      "evidence_urls": [
+        "https://sbir.gov/ghostresearcher-eval/bp_005",
+        "https://sbir.gov/ghostresearcher-eval/bp_005",
+        "https://sbir.gov/ghostresearcher-eval/bp_005",
+        "https://usaspending.gov/ghostresearcher-eval/bp_005",
+        "https://usaspending.gov/ghostresearcher-eval/bp_005",
+        "https://usaspending.gov/ghostresearcher-eval/bp_005",
+        "https://sam.gov/ghostresearcher-eval/bp_005",
+        "https://sam.gov/ghostresearcher-eval/bp_005",
+        "https://sam.gov/ghostresearcher-eval/bp_005"
+      ],
+      "id": "bp_005",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "sbir.gov",
+          "usaspending.gov",
+          "sam.gov"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.836,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.907,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?",
+      "quality_score": 0.907,
+      "report": {
+        "confidence": 0.836,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://sbir.gov/ghostresearcher-eval/bp_005"
+            ],
+            "text": "Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes company name; award amount or range; research topic or abstract summary. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://usaspending.gov/ghostresearcher-eval/bp_005"
+            ],
+            "text": "Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes company name; award amount or range; research topic or abstract summary. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://sam.gov/ghostresearcher-eval/bp_005"
+            ],
+            "text": "Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes company name; award amount or range; research topic or abstract summary. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://sbir.gov/ghostresearcher-eval/bp_005",
+          "https://usaspending.gov/ghostresearcher-eval/bp_005",
+          "https://sam.gov/ghostresearcher-eval/bp_005"
+        ],
+        "summary": "Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes company name; award amount or range; research topic or abstract summary. Reported with the latest 2026 figures. Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes company name; award amount or range; research topic or abstract summary. Reported with the latest 2026 figures. Detailed findings for What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?. Source sbir.gov. Includes compan",
+        "title": "Research Report: What defense contractors have received SBIR or STTR awards related to autonomy or AI in the past 6 months, and what are the research topics?"
+      },
+      "score": 0.954,
+      "sources": [
+        "https://sbir.gov/ghostresearcher-eval/bp_005",
+        "https://usaspending.gov/ghostresearcher-eval/bp_005",
+        "https://sam.gov/ghostresearcher-eval/bp_005"
+      ]
+    },
+    {
+      "domain": "career_intelligence",
+      "evidence_urls": [
+        "https://linkedin.com/ghostresearcher-eval/bp_006",
+        "https://linkedin.com/ghostresearcher-eval/bp_006",
+        "https://linkedin.com/ghostresearcher-eval/bp_006",
+        "https://indeed.com/ghostresearcher-eval/bp_006",
+        "https://indeed.com/ghostresearcher-eval/bp_006",
+        "https://indeed.com/ghostresearcher-eval/bp_006",
+        "https://clearancejobs.com/ghostresearcher-eval/bp_006",
+        "https://clearancejobs.com/ghostresearcher-eval/bp_006",
+        "https://clearancejobs.com/ghostresearcher-eval/bp_006"
+      ],
+      "id": "bp_006",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "linkedin.com",
+          "indeed.com",
+          "clearancejobs.com"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.679,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.876,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?",
+      "quality_score": 0.876,
+      "report": {
+        "confidence": 0.679,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://linkedin.com/ghostresearcher-eval/bp_006"
+            ],
+            "text": "Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes company names; role types or titles; required skills or clearance. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://indeed.com/ghostresearcher-eval/bp_006"
+            ],
+            "text": "Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes company names; role types or titles; required skills or clearance. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://clearancejobs.com/ghostresearcher-eval/bp_006"
+            ],
+            "text": "Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes company names; role types or titles; required skills or clearance. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://linkedin.com/ghostresearcher-eval/bp_006",
+          "https://indeed.com/ghostresearcher-eval/bp_006",
+          "https://clearancejobs.com/ghostresearcher-eval/bp_006"
+        ],
+        "summary": "Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes company names; role types or titles; required skills or clearance. Reported with the latest 2026 figures. Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes company names; role types or titles; required skills or clearance. Reported with the latest 2026 figures. Detailed findings for What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?. Source linkedin.com. Includes com",
+        "title": "Research Report: What are the current hiring trends for AI and ML engineers in the defense aerospace sector, and which companies are most actively recruiting?"
+      },
+      "score": 0.938,
+      "sources": [
+        "https://linkedin.com/ghostresearcher-eval/bp_006",
+        "https://indeed.com/ghostresearcher-eval/bp_006",
+        "https://clearancejobs.com/ghostresearcher-eval/bp_006"
+      ]
+    },
+    {
+      "domain": "ml_research",
+      "evidence_urls": [
+        "https://arxiv.org/ghostresearcher-eval/bp_007",
+        "https://arxiv.org/ghostresearcher-eval/bp_007",
+        "https://arxiv.org/ghostresearcher-eval/bp_007",
+        "https://openreview.net/ghostresearcher-eval/bp_007",
+        "https://openreview.net/ghostresearcher-eval/bp_007",
+        "https://openreview.net/ghostresearcher-eval/bp_007",
+        "https://proceedings.mlr.press/ghostresearcher-eval/bp_007",
+        "https://proceedings.mlr.press/ghostresearcher-eval/bp_007",
+        "https://proceedings.mlr.press/ghostresearcher-eval/bp_007"
+      ],
+      "id": "bp_007",
+      "integrity_score": 0.5,
+      "limitations": [
+        "source_count_below_benchmark_minimum",
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.525,
+        "completed": false,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "arxiv.org",
+          "openreview.net",
+          "proceedings.mlr.press"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 0.5,
+        "mean_credibility_score": 0.656,
+        "min_sources": 4,
+        "min_sources_met": false,
+        "quality_score": 0.836,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "no_new_sources",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.",
+      "quality_score": 0.836,
+      "report": {
+        "confidence": 0.656,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://arxiv.org/ghostresearcher-eval/bp_007"
+            ],
+            "text": "Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. Source arxiv.org. Includes specific algorithm or approach; application domain; performance comparison. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://openreview.net/ghostresearcher-eval/bp_007"
+            ],
+            "text": "Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. Source arxiv.org. Includes specific algorithm or approach; application domain; performance comparison. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://proceedings.mlr.press/ghostresearcher-eval/bp_007"
+            ],
+            "text": "Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. Source arxiv.org. Includes specific algorithm or approach; application domain; performance comparison. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://arxiv.org/ghostresearcher-eval/bp_007",
+          "https://openreview.net/ghostresearcher-eval/bp_007",
+          "https://proceedings.mlr.press/ghostresearcher-eval/bp_007"
+        ],
+        "summary": "Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. Source arxiv.org. Includes specific algorithm or approach; application domain; performance comparison. Reported with the latest 2026 figures. Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. Source arxiv.org. Includes specific algorithm or approach; application domain; performance comparison. Reported with the latest 2026 figures. Detailed findings for Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications.. ",
+        "title": "Research Report: Summarize recent developments in reinforcement learning for multi-agent coordination, with a focus on real-world robotics or UAV swarm applications."
+      },
+      "score": 0.668,
+      "sources": [
+        "https://arxiv.org/ghostresearcher-eval/bp_007",
+        "https://openreview.net/ghostresearcher-eval/bp_007",
+        "https://proceedings.mlr.press/ghostresearcher-eval/bp_007"
+      ]
+    },
+    {
+      "domain": "aviation_regulatory",
+      "evidence_urls": [
+        "https://faa.gov/ghostresearcher-eval/bp_008",
+        "https://faa.gov/ghostresearcher-eval/bp_008",
+        "https://faa.gov/ghostresearcher-eval/bp_008",
+        "https://federalregister.gov/ghostresearcher-eval/bp_008",
+        "https://federalregister.gov/ghostresearcher-eval/bp_008",
+        "https://federalregister.gov/ghostresearcher-eval/bp_008",
+        "https://auvsi.org/ghostresearcher-eval/bp_008",
+        "https://auvsi.org/ghostresearcher-eval/bp_008",
+        "https://auvsi.org/ghostresearcher-eval/bp_008"
+      ],
+      "id": "bp_008",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "faa.gov",
+          "federalregister.gov",
+          "auvsi.org"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.695,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.879,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?",
+      "quality_score": 0.879,
+      "report": {
+        "confidence": 0.695,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://faa.gov/ghostresearcher-eval/bp_008"
+            ],
+            "text": "Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.gov. Includes waiver or certification type; operational requirements; application process. Stable reference material."
+          },
+          {
+            "source_urls": [
+              "https://federalregister.gov/ghostresearcher-eval/bp_008"
+            ],
+            "text": "Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.gov. Includes waiver or certification type; operational requirements; application process. Stable reference material."
+          },
+          {
+            "source_urls": [
+              "https://auvsi.org/ghostresearcher-eval/bp_008"
+            ],
+            "text": "Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.gov. Includes waiver or certification type; operational requirements; application process. Stable reference material."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://faa.gov/ghostresearcher-eval/bp_008",
+          "https://federalregister.gov/ghostresearcher-eval/bp_008",
+          "https://auvsi.org/ghostresearcher-eval/bp_008"
+        ],
+        "summary": "Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.gov. Includes waiver or certification type; operational requirements; application process. Stable reference material. Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.gov. Includes waiver or certification type; operational requirements; application process. Stable reference material. Detailed findings for What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?. Source faa.",
+        "title": "Research Report: What are the current FAA requirements and certification pathways for operating Beyond Visual Line of Sight (BVLOS) UAS commercially in the United States?"
+      },
+      "score": 0.94,
+      "sources": [
+        "https://faa.gov/ghostresearcher-eval/bp_008",
+        "https://federalregister.gov/ghostresearcher-eval/bp_008",
+        "https://auvsi.org/ghostresearcher-eval/bp_008"
+      ]
+    },
+    {
+      "domain": "ml_research",
+      "evidence_urls": [
+        "https://arxiv.org/ghostresearcher-eval/bp_009",
+        "https://arxiv.org/ghostresearcher-eval/bp_009",
+        "https://arxiv.org/ghostresearcher-eval/bp_009",
+        "https://huggingface.co/ghostresearcher-eval/bp_009",
+        "https://huggingface.co/ghostresearcher-eval/bp_009",
+        "https://huggingface.co/ghostresearcher-eval/bp_009",
+        "https://ai.googleblog.com/ghostresearcher-eval/bp_009",
+        "https://ai.googleblog.com/ghostresearcher-eval/bp_009",
+        "https://ai.googleblog.com/ghostresearcher-eval/bp_009",
+        "https://openai.com/research/ghostresearcher-eval/bp_009",
+        "https://openai.com/research/ghostresearcher-eval/bp_009",
+        "https://openai.com/research/ghostresearcher-eval/bp_009"
+      ],
+      "id": "bp_009",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "arxiv.org",
+          "huggingface.co",
+          "ai.googleblog.com",
+          "openai.com/research"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.698,
+        "min_sources": 4,
+        "min_sources_met": true,
+        "quality_score": 0.88,
+        "report_generated": true,
+        "source_count": 4,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?",
+      "quality_score": 0.88,
+      "report": {
+        "confidence": 0.698,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://arxiv.org/ghostresearcher-eval/bp_009"
+            ],
+            "text": "Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://huggingface.co/ghostresearcher-eval/bp_009"
+            ],
+            "text": "Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://ai.googleblog.com/ghostresearcher-eval/bp_009"
+            ],
+            "text": "Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures."
+          },
+          {
+            "source_urls": [
+              "https://openai.com/research/ghostresearcher-eval/bp_009"
+            ],
+            "text": "Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://arxiv.org/ghostresearcher-eval/bp_009",
+          "https://huggingface.co/ghostresearcher-eval/bp_009",
+          "https://ai.googleblog.com/ghostresearcher-eval/bp_009",
+          "https://openai.com/research/ghostresearcher-eval/bp_009"
+        ],
+        "summary": "Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures. Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Source arxiv.org. Includes specific technique name; speedup or efficiency metric; model or hardware context. Reported with the latest 2026 figures. Detailed findings for What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?. Sou",
+        "title": "Research Report: What are the latest developments in large language model inference optimization, specifically quantization and speculative decoding techniques?"
+      },
+      "score": 0.94,
+      "sources": [
+        "https://arxiv.org/ghostresearcher-eval/bp_009",
+        "https://huggingface.co/ghostresearcher-eval/bp_009",
+        "https://ai.googleblog.com/ghostresearcher-eval/bp_009",
+        "https://openai.com/research/ghostresearcher-eval/bp_009"
+      ]
+    },
+    {
+      "domain": "defense_aerospace",
+      "evidence_urls": [
+        "https://github.com/ghostresearcher-eval/bp_010",
+        "https://github.com/ghostresearcher-eval/bp_010",
+        "https://github.com/ghostresearcher-eval/bp_010",
+        "https://pypi.org/ghostresearcher-eval/bp_010",
+        "https://pypi.org/ghostresearcher-eval/bp_010",
+        "https://pypi.org/ghostresearcher-eval/bp_010",
+        "https://medium.com/ghostresearcher-eval/bp_010",
+        "https://medium.com/ghostresearcher-eval/bp_010",
+        "https://medium.com/ghostresearcher-eval/bp_010"
+      ],
+      "id": "bp_010",
+      "integrity_score": 1.0,
+      "limitations": [
+        "no_corroboration_beyond_minimum_sources",
+        "low_mean_source_credibility"
+      ],
+      "metrics": {
+        "breadth_score": 0.7,
+        "completed": true,
+        "criteria_coverage_score": 1.0,
+        "expected_source_matches": [
+          "github.com",
+          "pypi.org",
+          "medium.com"
+        ],
+        "expected_source_score": 1.0,
+        "freshness_score": 1.0,
+        "integrity_score": 1.0,
+        "mean_credibility_score": 0.59,
+        "min_sources": 3,
+        "min_sources_met": true,
+        "quality_score": 0.858,
+        "report_generated": true,
+        "source_count": 3,
+        "source_trace_score": 1.0,
+        "termination_reason": "sufficient_coverage",
+        "tool_sequence": [
+          "web_search",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "navigate_to_url",
+          "extract_structured_data",
+          "assess_credibility",
+          "finalize_report"
+        ]
+      },
+      "prompt": "Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.",
+      "quality_score": 0.858,
+      "report": {
+        "confidence": 0.59,
+        "key_findings": [
+          {
+            "source_urls": [
+              "https://github.com/ghostresearcher-eval/bp_010"
+            ],
+            "text": "Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.. Source github.com. Includes library name and GitHub link; specific use case or deployment context; performance characteristic. Stable reference material."
+          },
+          {
+            "source_urls": [
+              "https://pypi.org/ghostresearcher-eval/bp_010"
+            ],
+            "text": "Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.. Source github.com. Includes library name and GitHub link; specific use case or deployment context; performance characteristic. Stable reference material."
+          },
+          {
+            "source_urls": [
+              "https://medium.com/ghostresearcher-eval/bp_010"
+            ],
+            "text": "Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.. Source github.com. Includes library name and GitHub link; specific use case or deployment context; performance characteristic. Stable reference material."
+          }
+        ],
+        "limitations": [
+          "Deterministic synthesis skeleton; no live model synthesis was used."
+        ],
+        "sources_used": [
+          "https://github.com/ghostresearcher-eval/bp_010",
+          "https://pypi.org/ghostresearcher-eval/bp_010",
+          "https://medium.com/ghostresearcher-eval/bp_010"
+        ],
+        "summary": "Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.. Source github.com. Includes library name and GitHub link; specific use case or deployment context; performance characteristic. Stable reference material. Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems.. Source github.com. Includes library name and GitHub link; specific use case or deployment context; performance characteristic. Stable reference material. Detailed findings for Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring s",
+        "title": "Research Report: Identify and summarize the top 3 open-source anomaly detection libraries currently used in production aviation or aerospace monitoring systems."
+      },
+      "score": 0.929,
+      "sources": [
+        "https://github.com/ghostresearcher-eval/bp_010",
+        "https://pypi.org/ghostresearcher-eval/bp_010",
+        "https://medium.com/ghostresearcher-eval/bp_010"
+      ]
+    }
+  ],
+  "generated_at": "2026-06-09T00:40:59.280180+00:00",
+  "harness_kind": "regression",
+  "live_environment": null,
+  "mode": "offline",
+  "search_provider": "deterministic"
+}
