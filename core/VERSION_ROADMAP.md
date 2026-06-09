@@ -621,9 +621,20 @@ pre-downloads the binary at build. The CDP `/json/version` UA changed from
 `HeadlessChrome/130` to `Chrome/146` (no "Headless" tell). The executor drives the
 stealth browser over CDP end to end, and the new
 [evals/blocked_rate.py](../evals/blocked_rate.py) harness scored block_rate 0.0 on
-the exact production-failing targets from a residential IP. Remaining: deploy to
-Railway and capture the datacenter-IP before/after (the decisive measurement,
-since the production block was IP/ASN-driven).
+the exact production-failing targets from a residential IP.
+
+Deployed and measured on Railway (2026-06-09, merge 47ac653): the CloakBrowser
+service now serves `Chrome/146` (was `HeadlessChrome`). The decisive datacenter-IP
+`blocked_rate` run (via `railway ssh` on `ghost-researcher`) went from ~100% blocked
+(the documented empty 0%-confidence reports) to **block_rate 0.375 / usable_rate
+0.625** — 5 of 8 previously-blocked targets now return usable content
+(energy.gov, pewresearch, belfercenter, goldmansachs, coresite). Loop closed: a
+production research run (via the deployed API) on the topic that previously returned
+an empty 0%-confidence report now returns a **0.68-confidence report with 5 cited
+findings from 7 sources**. **Phase 1 DONE.** The 3 still blocked (iea.org,
+bloomenergy, datacenterknowledge) are IP/ASN-driven (good fingerprint, datacenter
+IP), which is the residential-proxy decision point under DEC-010 — deferred (option 1,
+no proxy) because 62.5% coverage already yields usable reports.
 
 ### Phase 2 - In-process launch (per-source stealth depth)
 
@@ -638,6 +649,12 @@ Ships:
 - Decide cloakserve's fate (retire the separate service, or keep for parallelism)
 - Optional persistent context for cookie/session reuse across steps to reduce
   repeat challenges
+- Optional (cost-capping) **proxy-on-retry**: navigate normally on the datacenter IP;
+  only when a page returns `detection_blocked`, retry that single page through a
+  residential/mobile proxy (`launch(proxy=...)` / `--proxy-server`). This targets the
+  ~37.5% IP/ASN-blocked sites without paying residential-proxy bandwidth for every
+  page. `detection_blocked` is already surfaced by the executor, so the retry hook is
+  small. Gated by DEC-010 (only build if 62.5% coverage proves insufficient).
 
 Exit criteria:
 
