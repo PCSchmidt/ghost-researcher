@@ -130,3 +130,27 @@ Expected behavior:
 - a healthy Railway run writes a JSON artifact under `evals/results/`
 - `live_environment.cloakbrowser.status` should report `ok`
 - if Railway networking is wrong, the run should fail fast with a clear preflight error instead of a partial benchmark artifact
+
+The CLI loads configuration from the project-root `.env` merged with the process
+environment (process environment wins). `SEARCH_PROVIDER`, `SEARCH_API_KEY`,
+`OPENROUTER_API_KEY`, `CLOAK_CDP_URL`, and `SCRAPE_ENABLED` must be set.
+
+### Local live run (alternative)
+
+The Railway-internal CDP hostname does not resolve off-network, so to run the
+live eval locally, start CloakBrowser locally and override `CLOAK_CDP_URL` to point
+at it (the process-environment override beats the `.env` value):
+
+```bash
+docker compose -f docker/docker-compose.yml up -d cloakserve
+```
+
+```powershell
+# PowerShell
+$env:CLOAK_CDP_URL = "http://localhost:9222"
+python -m evals.eval_runner --mode live --limit 3
+```
+
+The discriminating quality score lives in `average_quality_score` /
+`quality_score` (live artifacts are labeled `harness_kind: quality`); offline
+artifacts are a regression harness (`harness_kind: regression`).
