@@ -60,3 +60,19 @@ Date: 2026-06-08
 Decision: Shareable report output is a planned, deferred stage ([v1.3.0](./VERSION_ROADMAP.md)) with two distinct mechanisms: (1) link sharing via a stable `/reports/[id]` permalink plus OpenGraph/Twitter Card metadata for social/chat previews, and (2) file sharing via a downloadable PDF plus print-optimized CSS for email, save, and print. The PDF engine, server-vs-client generation, OG image strategy, and public-access model are deferred sub-decisions to be resolved at stage start.
 Alternatives considered: A single "export to PDF" feature treated as the whole of sharing; client-only print-to-PDF with no permalink; building it now versus deferring after live validation.
 Reason: Social platforms render a shared link's preview card, not an attached PDF, so "share to social media" and "share a PDF" are different features and were scoped separately to avoid a half-built experience. The work is sequenced after v1.2.0 live validation because a shareable artifact is only worth publishing once live report quality is validated. The report content is currently a schema skeleton, so a synthesis-formatting upgrade is a noted prerequisite.
+
+## DEC-009: CloakBrowser is the stealth browser layer; integrate it in phases
+
+Status: ACCEPTED (planned, v1.2.1)
+Date: 2026-06-08
+Decision: GhostResearcher will use the CloakBrowser library (pip `cloakbrowser`; the namesake of the project) as its real anti-detection browser layer, replacing the vanilla headless Chromium that `cloakserve` currently launches. Integration is phased: Phase 1 swaps `cloakserve` to launch CloakBrowser's patched stealth binary over CDP (minimal executor change, keeps the two-service topology, fast production unblock); Phase 2 migrates the executor to in-process `launch_context_async` for per-source fingerprint variation (honoring the currently-stubbed `fingerprint_seed`), per-source proxy rotation, geoip, and human input emulation.
+Alternatives considered: going straight to in-process launch (bigger refactor, heavier API image, drops the separate service); server swap only (no per-source stealth depth); keeping the hand-rolled vanilla launcher (status quo — production reports come back empty due to Cloudflare blocking).
+Reason: The "ghost" premise depends on defeating bot detection, and the deployed browser does not — `fingerprint_seed` is discarded, `PROXY_*` is unused, and headless Chromium from a Railway datacenter IP is trivially blocked. CloakBrowser already provides the stealth (patched binary, fingerprint flags, proxy/geoip/WebRTC, humanize) and ships its own CDP `serve` mode, so the server swap is small and reversible. Phasing unblocks production fast, then deepens. CloakBrowser stays an upstream pinned dependency, not vendored.
+
+## DEC-010: Residential proxy is measurement-gated, not assumed
+
+Status: ACCEPTED (planned, v1.2.1)
+Date: 2026-06-08
+Decision: Wire the proxy path (`--proxy-server` / `launch(proxy=...)`) during CloakBrowser integration but do not provision a paid residential/mobile proxy until measurement shows it is needed. Integrate the stealth binary, run live evals from Railway, measure the blocked-source rate, and only sign up for a residential proxy if Cloudflare still blocks at a material rate.
+Alternatives considered: provisioning a residential proxy upfront (guaranteed cost before evidence it is needed); never using a proxy (accepts blocking on aggressive IP/ASN-based sites).
+Reason: The stealth binary fixes the browser fingerprint, which defeats much detection, but Cloudflare also weighs IP/ASN reputation, so a datacenter IP may still be challenged. The discriminative eval (blocked-source rate, live `quality_score`) is the instrument to decide with data instead of paying for proxy egress speculatively.

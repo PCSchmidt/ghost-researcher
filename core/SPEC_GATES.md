@@ -142,6 +142,12 @@ stage.
 - Exit token: `LIVE VALIDATION CONFIRMED`
 - Status: In progress (configured live run pending)
 
+### v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration
+
+- Exit artifacts: Phase 1 — cloakserve runs CloakBrowser's patched stealth binary, blocked-source-rate metric, measurable drop in `detection_blocked`; Phase 2 — in-process `launch_context_async`, `fingerprint_seed` honored, per-source proxy rotation
+- Exit token: `GHOST STEALTH CONFIRMED`
+- Status: Planned (immediate priority after v1.2.0). Phased; proxy measurement-gated (DEC-009, DEC-010)
+
 ### v1.3.0 - Shareable Report Output (Deferred)
 
 - Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances

@@ -560,6 +560,95 @@ prompts `bp_004` and `bp_007` specify `min_sources=4` but list only 3
 
 ---
 
+## v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration
+
+Goal: Make CloakBrowser's stealth the actual browser layer so production research
+returns real extracted content from protected (Cloudflare / Turnstile / DataDome)
+sites. This is the "ghost" premise of the project and the current top
+report-quality blocker.
+
+Status: Planned. Immediate priority after v1.2.0 live validation. Phased. See
+[DEC-009](./DECISIONS.md) and [DEC-010](./DECISIONS.md).
+
+### Finding that motivates this stage
+
+The deployed `cloakserve` launches **vanilla headless Chromium** with only
+`--disable-blink-features=AutomationControlled`
+([backend/scripts/start_cloakserve.py](../backend/scripts/start_cloakserve.py)).
+`fingerprint_seed` is discarded (`del fingerprint_seed` in
+[backend/executor/navigate.py](../backend/executor/navigate.py)), and the
+`PROXY_*` settings are never used by the executor. In production, research reports
+come back empty (0% confidence) because Cloudflare blocks the datacenter-IP
+headless browser on every source. The project's namesake library, **CloakBrowser**
+(pip `cloakbrowser`; clone at
+`C:\Users\pchri\Documents\AIEngineeringProjects\CloakBrowser`), provides the real
+stealth that was never wired in: a patched Chromium binary, `--fingerprint-*`
+flags (not detectable CDP emulation), HTTP/SOCKS5 proxy with geoip-matched
+timezone/locale and WebRTC IP spoofing, human input emulation, and an optional
+`patchright` backend.
+
+### Phase 1 - Stealth server swap (fast unblock, minimal change)
+
+Ships:
+
+- Add `cloakbrowser[serve,geoip]` as a dependency of the cloakserve service
+- Replace the vanilla Chromium launch in `start_cloakserve.py` with CloakBrowser's
+  patched stealth binary exposed over CDP (reuse CloakBrowser's `serve` mode, or
+  launch `ensure_binary()` with stealth args), keeping the existing Host-header /
+  DNS-rebinding shim that makes Railway internal networking work
+- Update [docker/Dockerfile.cloak](../docker/Dockerfile.cloak) to install
+  `cloakbrowser`, pre-download the binary at build (`ensure_binary()`), and add the
+  required system deps + xvfb (CloakBrowser's own Dockerfile is the reference)
+- Wire optional `--proxy-server` from `PROXY_URL`/`PROXY_USER`/`PROXY_PASS` into the
+  launch (off by default; ready for the proxy decision)
+- Add a blocked-source-rate metric to live eval and status payloads to instrument
+  the measurement
+- Executor unchanged (still connects over CDP)
+
+Exit criteria:
+
+- cloakserve runs the CloakBrowser patched binary; `/json/version` healthy
+- A live eval / production run shows a measurable drop in `detection_blocked` rate
+  vs the vanilla baseline (capture before/after numbers)
+- Backend suite green; no executor regressions
+
+### Phase 2 - In-process launch (per-source stealth depth)
+
+Ships:
+
+- Add `cloakbrowser` to the API service; container pre-downloads the binary
+- Replace `_default_page_context` in navigate.py and extract.py with
+  `cloakbrowser.launch_context_async(...)` (or a shared CloakBrowser session
+  manager): honor `fingerprint_seed` (remove the `del`), enable per-source proxy
+  rotation, geoip timezone/locale match, WebRTC IP spoofing, and optional
+  `humanize`
+- Decide cloakserve's fate (retire the separate service, or keep for parallelism)
+- Optional persistent context for cookie/session reuse across steps to reduce
+  repeat challenges
+
+Exit criteria:
+
+- `fingerprint_seed` actually varies the browser fingerprint per source
+- Per-source proxy assignment works
+- Blocked-source rate and live `quality_score` improve on protected targets
+
+### Decisions to resolve at stage start
+
+- cloakserve launch method: reuse CloakBrowser `serve` CLI vs adapt
+  `start_cloakserve.py` to launch the patched binary + stealth args + keep the
+  Host-rewrite shim
+- `patchright` vs `playwright` backend (default `playwright` — we need proxy auth,
+  which patchright breaks)
+- Headless vs headed+xvfb (some WebGL/GPU stealth wants headed+xvfb per
+  CloakBrowser's Dockerfile) — decide from detection results
+- Image size / build-time budget for the patched binary + system deps on Railway
+- BINARY-LICENSE.md terms for deployment use
+
+Dependency: CloakBrowser is upstream (pip `cloakbrowser`, clone at the
+AIEngineeringProjects path). Pin a version; do not vendor its source.
+
+---
+
 ## v1.3.0 - Shareable Report Output (Deferred)
 
 Goal: Turn a completed research report from an ephemeral in-app web view into a
