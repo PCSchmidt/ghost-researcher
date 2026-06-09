@@ -769,3 +769,49 @@ right — this is explicitly planned, not a sign of going off-track. Approach:
 - OG preview image: static template vs dynamic generation (e.g. `@vercel/og`)
 - Public/unauthenticated report access model (the app is currently single-user with
   no auth; link sharing implies public-by-id reports)
+
+---
+
+## v1.4.0 - Scholarly Source Coverage (Deferred)
+
+Goal: Give the agent first-class access to scholarly/research repositories instead
+of relying on generic web search to surface them, so a "research" engine actually
+reaches the research literature.
+
+Status: Planned / Deferred. Sequenced after the v1.2.x stealth work.
+
+### Context
+
+Runtime source discovery is generic Brave web search ([search.py](../backend/executor/search.py));
+there is no integration with academic/research repositories (arXiv, Semantic
+Scholar, PubMed/Europe PMC, CORE, OpenReview, Crossref). The benchmark prompts
+*expect* academic sources (`expected_source_types: academic/preprint`), but the
+pipeline does not target them — they appear only if Brave happens to surface them.
+
+### Ships
+
+- A research-source-provider layer mirroring the existing search-provider boundary:
+  providers for arXiv (Atom API, no key), Semantic Scholar (Graph API), PubMed /
+  Europe PMC, CORE, Crossref — most are free / keyless
+- Planner access via either a `scholarly_search` tool or a `source_type` argument on
+  `web_search`, merging results into the source-candidate queue
+- Keyless fallback: bias web-search queries toward scholarly domains (`site:` filters)
+  when no provider is configured, so the default path stays dependency-free
+- Credibility scoring extended with scholarly signals (peer-reviewed venue, citation
+  count, recency, author/institution)
+- Evals: academic benchmark prompts validate repository coverage; a scholarly-coverage
+  metric in the harness
+
+### Exit criteria
+
+- A research goal in an academic domain surfaces and cites real repository sources
+  (e.g. arxiv.org papers) in the report
+- Scholarly providers are configurable and dependency-free by default (deterministic
+  offline provider for tests)
+- The eval shows improved expected-source coverage on academic prompts
+
+### Decisions to resolve at stage start
+
+- Which APIs first (arXiv + Semantic Scholar are free and keyless — likely first)
+- New `scholarly_search` tool vs a `source_type` parameter on `web_search`
+- Scholarly PDF handling — ties to the deferred full-PDF-parsing extraction item

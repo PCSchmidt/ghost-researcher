@@ -153,3 +153,9 @@ stage.
 - Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances
 - Exit token: `SHAREABLE OUTPUT CONFIRMED`
 - Status: Planned / Deferred (after v1.2.0). PDF layout expected to need visual iteration.
+
+### v1.4.0 - Scholarly Source Coverage (Deferred)
+
+- Exit artifacts: research-source-provider layer (arXiv/Semantic Scholar/PubMed/CORE/Crossref), planner access via `scholarly_search` or `source_type`, keyless `site:` fallback, scholarly credibility signals, academic-coverage eval metric
+- Exit token: `SCHOLARLY COVERAGE CONFIRMED`
+- Status: Planned / Deferred. Runtime search is currently generic Brave web search with no repository integration.
