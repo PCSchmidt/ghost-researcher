@@ -6,17 +6,46 @@ dispatches tool calls to a CloakBrowser executor (stealth Chromium via CDP), ext
 and credibility-scores sources, and synthesizes a structured intelligence report.
 
 **Deployed and running**: FastAPI backend on Railway, Next.js 16 frontend on Vercel,
-CloakBrowser CDP server on Railway. The full research pipeline is operational — the
-planner navigates 8–15 real sources per run, creates evidence from page content,
-and the synthesizer produces structured reports with cited findings. 110 backend
-tests pass, 11 frontend tests pass.
+CloakBrowser stealth CDP server on Railway. The full research pipeline is operational —
+the planner navigates 8–15 real sources per run, evades bot detection with a patched
+stealth browser, creates evidence from page content, and the synthesizer produces
+structured reports with cited findings. 110 backend tests pass, 11 frontend tests pass.
+
+---
+
+## Is this worth your time?
+
+If you are evaluating this as a portfolio project, here is the substance in one screen.
+
+- **A real agentic tool-use loop, not a wrapper around one API call.** An LLM planner
+  selects tool calls (`web_search`, `navigate_to_url`, `extract_structured_data`,
+  `assess_credibility`, `finalize_report`) against a stealth-browser executor and a
+  synthesizer, with hard termination conditions, token/dollar cost guards, and
+  loop/dedup detection. Every claim in a report is traceable to an extracted source —
+  unsupported claims fail validation.
+- **Anti-detection that is measured, not asserted.** The browser layer is CloakBrowser's
+  patched stealth Chromium. We proved its value with a reproducible before/after on the
+  production datacenter IP: the block rate on real Cloudflare-protected targets dropped
+  from ~100% (empty reports) to 37.5%, and a production research run went from a 0%-confidence
+  empty report to a 0.68-confidence report with 5 cited findings from 7 sources. The
+  measurement harness (`evals/blocked_rate.py`) ships with the repo.
+- **Evals culture that can actually fail.** The offline harness was rewritten from a
+  tautological flat-1.0 scorer into a discriminative one: an `integrity_score` regression
+  gate plus a sub-1.0 `quality_score` that rewards source breadth and real assessed
+  credibility. A run with broken evidence flow scores below 0.5.
+- **Full-stack and shipped.** FastAPI + a persistence boundary + SSE status streaming +
+  a Next.js 16 workbench, deployed to Railway and Vercel.
+- **Decisions and failure modes are written down.** `core/DECISIONS.md`,
+  `core/ERRORS.md`, and a staged roadmap show the engineering reasoning, not just the
+  code — including where CloakBrowser's stealth ends (browser fingerprint) and where IP
+  reputation begins (the residential-proxy decision, deferred with data).
 
 ---
 
 ## Current Status
 
 **Current checkpoint**: v1.2.0 — Evidence Quality and Live Validation (in progress),
-with v1.2.1 Ghost (CloakBrowser stealth integration) Phase 1 implemented locally.
+with v1.2.1 Ghost (CloakBrowser stealth integration) **Phase 1 done and live on Railway**.
 
 Live validation is done: the first configured live eval ran against Brave +
 CloakBrowser + OpenRouter and produced a committed artifact under `evals/results/`,
@@ -25,16 +54,17 @@ sub-1.0 `quality_score`) that replaced the old tautological flat-1.0 scorer.
 
 Live validation also surfaced the central gap behind the project's name: the
 deployed `cloakserve` had been launching **vanilla headless Chromium**, so Cloudflare
-blocked the Railway datacenter IP and reports came back empty. v1.2.1 Phase 1 swaps
+blocked the Railway datacenter IP and reports came back empty. v1.2.1 Phase 1 swapped
 `cloakserve` to launch **CloakBrowser's patched stealth binary** (`CLOAKSERVE_STEALTH=1`,
-the default), restoring the real anti-detection layer. Validated locally (CDP user
-agent went `HeadlessChrome` → `Chrome`); the decisive datacenter-IP before/after
-measurement runs on Railway via `evals/blocked_rate.py`.
+the default). Deployed and measured on Railway: the datacenter-IP block rate on real
+Cloudflare-protected targets dropped from ~100% to **37.5%**, and a production research
+run on the topic that previously returned an empty 0%-confidence report now returns a
+**0.68-confidence report with 5 cited findings from 7 sources**.
 
 ### What's working (deployed)
 
 - FastAPI backend on Railway (`ghostresearcher-api`) — 110 tests passing, 5 skipped
-- CloakBrowser CDP server on Railway (`cloakserve`) — stealth binary integrated (v1.2.1 Phase 1, validated in a local Linux container); production deploy pending merge
+- CloakBrowser stealth CDP server on Railway (`cloakserve`) — CloakBrowser patched binary live (v1.2.1 Phase 1); serves `Chrome/146`, ~62.5% of Cloudflare-protected targets usable from the datacenter IP
 - Next.js 16 frontend on Vercel — research form, SSE replay, report viewer, source cards
 - Brave Search — real source URLs, `SEARCH_PROVIDER=brave` configured on Railway
 - OpenRouter planner adapter — DeepSeek V4 Flash, tool-use loop, retry on text response
@@ -51,8 +81,7 @@ measurement runs on Railway via `evals/blocked_rate.py`.
 
 ### Known limits
 
-- **Stealth not yet deployed** — v1.2.1 Phase 1 swaps `cloakserve` to CloakBrowser's stealth binary and is validated locally + in a Linux container, but production still runs vanilla Chromium until the merge + Railway deploy. The decisive datacenter-IP before/after (`evals/blocked_rate.py`) runs on Railway.
-- **Residential proxy is measurement-gated** — the stealth binary fixes the browser fingerprint, but Cloudflare also weighs IP/ASN. A residential/mobile proxy is wired but only provisioned if Railway measurement shows blocking persists (DEC-010).
+- **IP-reputation blocking on ~37.5% of hard targets** — CloakBrowser's stealth fixes the browser fingerprint (it passes fingerprint bot-detection tests), but Cloudflare also weighs IP/ASN reputation, and a datacenter IP is inherently distrusted. The remaining blocks are IP-driven, not fingerprint-driven, so the fix is a clean IP. A residential/mobile proxy is wired (`PROXY_URL`) but, per DEC-010, only provisioned if 62.5% coverage proves insufficient — current report quality (0.68 confidence) suggests it is sufficient for now. Optional v1.2.1 Phase 2 spec: proxy-on-retry (route only `detection_blocked` pages through a residential proxy to cap cost).
 - **Evidence depth** — extraction captures page metadata, content sections, PDF/paywall/thin-SPA limitation records, and persisted extracted evidence; full PDF parsing remains a later dependency-backed task
 
 ### Not yet implemented
@@ -285,7 +314,7 @@ The build is intentionally staged:
 - v1.1.0 - Deep Research Operational
 - v1.1.1 - Evidence Flow Stabilization
 - v1.2.0 - Evidence Quality and Live Validation (in progress; live validation done)
-- v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration (Phase 1 done locally)
+- v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration (Phase 1 done & live on Railway; Phase 2 optional)
 - v1.3.0 - Shareable Report Output (deferred)
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).

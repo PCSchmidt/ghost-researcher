@@ -146,7 +146,7 @@ stage.
 
 - Exit artifacts: Phase 1 — cloakserve runs CloakBrowser's patched stealth binary, blocked-source-rate metric, measurable drop in `detection_blocked`; Phase 2 — in-process `launch_context_async`, `fingerprint_seed` honored, per-source proxy rotation
 - Exit token: `GHOST STEALTH CONFIRMED`
-- Status: Planned (immediate priority after v1.2.0). Phased; proxy measurement-gated (DEC-009, DEC-010)
+- Status: Phase 1 DONE & live on Railway (block rate ~100% → 37.5%; production report 0.68 confidence, 5 findings). Phase 2 optional (per-source fingerprint; proxy-on-retry). Proxy deferred — option 1, no proxy (DEC-010)
 
 ### v1.3.0 - Shareable Report Output (Deferred)
 
