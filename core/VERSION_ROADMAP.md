@@ -612,6 +612,19 @@ Exit criteria:
   vs the vanilla baseline (capture before/after numbers)
 - Backend suite green; no executor regressions
 
+Phase 1 status (2026-06-09): implemented and locally validated.
+[start_cloakserve.py](../backend/scripts/start_cloakserve.py) now launches
+CloakBrowser's patched binary (`CLOAKSERVE_STEALTH=1`, the default) and keeps the
+vanilla path under `CLOAKSERVE_STEALTH=0` for the baseline.
+[Dockerfile.cloak](../docker/Dockerfile.cloak) installs `cloakbrowser` and
+pre-downloads the binary at build. The CDP `/json/version` UA changed from
+`HeadlessChrome/130` to `Chrome/146` (no "Headless" tell). The executor drives the
+stealth browser over CDP end to end, and the new
+[evals/blocked_rate.py](../evals/blocked_rate.py) harness scored block_rate 0.0 on
+the exact production-failing targets from a residential IP. Remaining: deploy to
+Railway and capture the datacenter-IP before/after (the decisive measurement,
+since the production block was IP/ASN-driven).
+
 ### Phase 2 - In-process launch (per-source stealth depth)
 
 Ships:
