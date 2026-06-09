@@ -147,7 +147,7 @@ async def navigate_to_url(
     url: str,
     wait_for: str | None = None,
     fingerprint_seed: int | None = None,
-    timeout_seconds: float = 10.0,
+    timeout_seconds: float = 20.0,
     page_context_factory: PageContextFactory | None = None,
 ) -> NavigationResult:
     """Navigate to a URL via CloakBrowser and return normalized page state."""
@@ -158,26 +158,47 @@ async def navigate_to_url(
     started_at = perf_counter()
 
     async with page_context(settings) as page:
-        response = await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
-        # Model sometimes passes load-state keywords as wait_for; ignore them.
-        _wait_for = wait_for.strip() if wait_for else ""
-        if _wait_for and _wait_for.lower() not in (
-            "domcontentloaded",
-            "load",
-            "networkidle",
-            "networkidle0",
-            "networkidle2",
-        ):
-            try:
-                await page.wait_for_selector(_wait_for, timeout=timeout_ms)
-            except Exception:
-                pass  # selector may not exist on the target page; continue anyway
-        title = await page.title()
-        content = await page.content()
-        links = await page.eval_on_selector_all(
-            "a[href]",
-            "elements => elements.map((element) => element.href).filter(Boolean).slice(0, 20)",
-        )
+        try:
+            response = await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            # Model sometimes passes load-state keywords as wait_for; ignore them.
+            _wait_for = wait_for.strip() if wait_for else ""
+            if _wait_for and _wait_for.lower() not in (
+                "domcontentloaded",
+                "load",
+                "networkidle",
+                "networkidle0",
+                "networkidle2",
+            ):
+                try:
+                    await page.wait_for_selector(_wait_for, timeout=timeout_ms)
+                except Exception:
+                    pass  # selector may not exist on the target page; continue anyway
+            title = await page.title()
+            content = await page.content()
+            links = await page.eval_on_selector_all(
+                "a[href]",
+                "elements => elements.map((element) => element.href).filter(Boolean).slice(0, 20)",
+            )
+            final_url = page.url
+        except Exception as exc:
+            # A slow, stuck, or unreachable page must not abort the whole research
+            # run. Treat any navigation failure (goto timeout, network error) as a
+            # skip-this-source signal so the planner moves on instead of the API
+            # returning HTTP 500.
+            return NavigationResult(
+                url=url,
+                final_url=url,
+                title="",
+                status_code=0,
+                content_excerpt="",
+                links=[],
+                detection_blocked=True,
+                blocked_reason=f"navigation_error:{type(exc).__name__}",
+                screenshot_path=None,
+                timing_ms=int((perf_counter() - started_at) * 1000),
+                content_type=None,
+                page_type="blocked",
+            )
 
     detection_blocked, blocked_reason = _detect_block(title, content)
     timing_ms = int((perf_counter() - started_at) * 1000)
@@ -188,7 +209,7 @@ async def navigate_to_url(
     excerpt = _extract_excerpt(content)
     return NavigationResult(
         url=url,
-        final_url=page.url,
+        final_url=final_url,
         title=title,
         status_code=response.status if response is not None else 200,
         content_excerpt=excerpt,
