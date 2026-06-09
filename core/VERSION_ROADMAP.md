@@ -541,5 +541,19 @@ Ships:
 - Evidence quality metrics in API/session/status payloads
 - Stronger credibility/corroboration signals across source-diverse, claim-overlapping, and previously extracted evidence
 - Production-facing monitoring for model cost, CDP failures, and blocked-source rates
+- Discriminative eval scoring: offline harness split into `integrity_score`
+  (regression gate) and `quality_score` (sub-1.0, rewards source breadth and real
+  assessed credibility); offline labeled `harness_kind=regression`, live labeled
+  `harness_kind=quality`; navigation/extraction fixtures decoupled from the scorer
+  so evidence-flow regressions are visible. Artifact: `evals/results/eval_results_20260609T004059Z.json`
 
-Status: In progress. Local extraction, corroboration, offline sequence validation, and live eval readiness probing are complete; configured live validation remains pending because this shell lacks live network access.
+Status: In progress. Local extraction, corroboration, offline sequence validation,
+live eval readiness probing, and discriminative eval scoring are complete;
+configured live validation remains pending because this shell lacks live network
+access.
+
+Eval finding (2026-06-08): the discriminative scorer surfaced that benchmark
+prompts `bp_004` and `bp_007` specify `min_sources=4` but list only 3
+`expected_sources`, so they can never reach `sufficient_coverage` offline
+(integrity 0.5). Decide whether to raise their expected source lists or lower
+`min_sources` before treating offline as an all-green regression baseline.
