@@ -56,12 +56,33 @@ export type ReportClaim = {
   source_urls: string[];
 };
 
+export type ReportParagraph = {
+  text: string;
+  citations: string[];
+};
+
+export type ReportSection = {
+  heading: string;
+  paragraphs: ReportParagraph[];
+};
+
+export type Reference = {
+  url: string;
+  title: string;
+  credibility_score: number;
+};
+
 export type ResearchReport = {
   title: string;
   summary: string;
   key_findings: ReportClaim[];
   sources_used: string[];
   confidence: number;
+  limitations?: string[];
+  abstract?: string;
+  sections?: ReportSection[];
+  conclusion?: string;
+  references?: Reference[];
 };
 
 export type ResearchJob = {
