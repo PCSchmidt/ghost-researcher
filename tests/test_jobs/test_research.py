@@ -419,6 +419,47 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(len(result.decisions), 50)
         self.assertIsNotNone(result.synthesis)
 
+    async def test_run_sequence_finalizes_as_max_steps_when_loop_exhausted(self) -> None:
+        # A run that never calls finalize_report must still end "finalized" with reason
+        # "max_steps" (not left "active"), since termination_state defaults to "active".
+        from backend.agent.planner import PlannerDecision, ToolCall
+
+        class AlwaysNavigatePlanner:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def plan_next(self, session, *, last_tool_result=None):
+                self.calls += 1
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="navigate_to_url",
+                        arguments={"url": f"https://example.com/{self.calls}"},
+                    )
+                )
+
+        class OkRunner:
+            async def execute_tool_call(self, *, name, arguments, session):
+                session.increment_step()
+                return {
+                    "title": "Source",
+                    "content_excerpt": "useful evidence text from the page",
+                    "final_url": arguments.get("url"),
+                    "detection_blocked": False,
+                }
+
+        settings = Settings.from_env({})
+        orchestrator = ResearchOrchestrator(
+            settings,
+            planner=AlwaysNavigatePlanner(),
+            runner=OkRunner(),
+            synthesizer=FakeSynthesizer(),
+        )
+
+        result = await orchestrator.run_sequence("Research a broad topic", max_steps=3, min_sources=3)
+
+        self.assertEqual("finalized", result.session.termination_state)
+        self.assertEqual("max_steps", result.session.termination_reason)
+
     async def test_run_sequence_degrades_to_partial_report_on_mid_loop_error(self) -> None:
         # A flaky tool call mid-run (e.g. a CDP/browser failure) must not propagate
         # and 500 the request, discarding everything already gathered. The loop should
