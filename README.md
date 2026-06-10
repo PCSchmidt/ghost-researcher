@@ -315,7 +315,8 @@ The build is intentionally staged:
 - v1.1.1 - Evidence Flow Stabilization
 - v1.2.0 - Evidence Quality and Live Validation (in progress; live validation done)
 - v1.2.1 - Ghost: CloakBrowser Anti-Detection Integration (Phase 1 done & live on Railway; Phase 2 optional)
-- v1.3.0 - Shareable Report Output (deferred)
+- v1.5.0 - Long-Form Research Report (planned; research-paper structure, length emerges from evidence — prerequisite for the PDF)
+- v1.3.0 - Shareable Report Output (deferred; research-paper PDF, depends on v1.5.0)
 - v1.4.0 - Scholarly Source Coverage (deferred; arXiv/Semantic Scholar/PubMed/… repositories)
 
 Full details live in [core/VERSION_ROADMAP.md](core/VERSION_ROADMAP.md).

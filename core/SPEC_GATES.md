@@ -165,3 +165,9 @@ stage.
 - Exit artifacts: research-source-provider layer (arXiv/Semantic Scholar/PubMed/CORE/Crossref), planner access via `scholarly_search` or `source_type`, keyless `site:` fallback, scholarly credibility signals, academic-coverage eval metric
 - Exit token: `SCHOLARLY COVERAGE CONFIRMED`
 - Status: Planned / Deferred. Runtime search is currently generic Brave web search with no repository integration.
+
+### v1.5.0 - Long-Form Research Report
+
+- Exit artifacts: ResearchReport v2 (abstract, themed sections, in-text citations, conclusion, references); multi-pass synthesis; evidence-coverage + supported-claims eval metrics; report viewer renders the structure
+- Exit token: `LONG-FORM REPORT CONFIRMED`
+- Status: Planned. Length emerges from evidence, not a page count (DEC-011). **Prerequisite for v1.3.0** (research-paper PDF).
