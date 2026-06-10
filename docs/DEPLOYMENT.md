@@ -177,3 +177,26 @@ A successful unblock shows `block_rate` dropping (and `usable_rate` rising) from
 vanilla baseline to the stealth run. If blocking persists despite stealth, the cause
 is the datacenter IP, and a residential/mobile proxy is the next lever (DEC-010): set
 `PROXY_URL` on `cloakserve`.
+
+## 8. Build Watch Paths (stop rebuilding cloakserve on every push)
+
+Both services build from the same repo, so by default *any* push to `main` rebuilds
+both — including the ~5 GB `cloakserve` image — even for API-only or docs-only
+changes. Per-service watch paths fix this. The repo ships two config-as-code files
+with only `build.watchPatterns` (they merge with, and do not override, dashboard
+build settings):
+
+- [railway.cloak.json](../railway.cloak.json) — rebuild `CloakBrowser` only on
+  `docker/Dockerfile.cloak`, `backend/scripts/start_cloakserve.py`, or
+  `requirements.txt` changes
+- [railway.api.json](../railway.api.json) — rebuild `ghost-researcher` on
+  `backend/**`, `evals/**`, `Dockerfile`, or `requirements.txt` changes
+
+One-time setup: in the Railway dashboard, for each service open **Settings →
+Config-as-code** and set the config file path:
+
+- `ghost-researcher` → `railway.api.json`
+- `CloakBrowser` → `railway.cloak.json`
+
+After that, docs- and API-only changes no longer trigger the slow `cloakserve`
+rebuild.

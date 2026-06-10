@@ -684,7 +684,11 @@ AIEngineeringProjects path). Pin a version; do not vendor its source.
 Goal: Make heavy multi-source research jobs reliably return a report instead of
 failing with a CDP hang or a request timeout.
 
-Status: Implemented (page-bounding + wall-clock budget). Connection-reuse deferred.
+Status: Implemented and verified in production. Connection-reuse deferred. The
+demanding data-center goal that previously 500'd (navigate timeout) then hung
+(connect_over_cdp) now returns a report in ~226s (confidence 0.6, 5 findings, 4
+sources used, 8 visited) — finalizing naturally under the 240s budget, so the
+page-bounding fix alone restored fast reconnects.
 
 ### Context
 
