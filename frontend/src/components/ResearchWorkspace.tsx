@@ -1,22 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Activity, Database, FileText, Globe2, Server } from "lucide-react";
 import { JobStatus } from "@/components/JobStatus";
 import { ReportViewer } from "@/components/ReportViewer";
 import { ResearchForm } from "@/components/ResearchForm";
 import { SourceCard } from "@/components/SourceCard";
-import { submitResearchGoal, type ResearchJob } from "@/lib/api";
+import { getResearchJob, submitResearchGoal, type ResearchJob } from "@/lib/api";
+
+const POLL_INTERVAL_MS = 2500;
 
 export function ResearchWorkspace() {
   const [job, setJob] = useState<ResearchJob | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const jobId = job?.job_id ?? null;
+  const isRunning = job?.status === "running";
+
   async function handleSubmit(researchGoal: string) {
     setIsSubmitting(true);
     setError(null);
     try {
+      // POST returns immediately with a "running" job; the work continues
+      // server-side and we poll for completion below.
       setJob(await submitResearchGoal(researchGoal));
     } catch (currentError) {
       setError(currentError instanceof Error ? currentError.message : "Research request failed");
@@ -24,6 +31,36 @@ export function ResearchWorkspace() {
       setIsSubmitting(false);
     }
   }
+
+  // Poll the job until it reaches a terminal state, then stop. Keyed on the job id
+  // and running flag (not the whole job object) so each poll's setJob does not tear
+  // down and recreate the interval.
+  useEffect(() => {
+    if (!jobId || !isRunning) {
+      return;
+    }
+    let cancelled = false;
+
+    const timer = setInterval(async () => {
+      try {
+        const latest = await getResearchJob(jobId);
+        if (cancelled) {
+          return;
+        }
+        setJob(latest);
+        if (latest.status === "error") {
+          setError(latest.error ?? "Research job failed");
+        }
+      } catch {
+        // Transient fetch error (e.g. brief network blip) — keep polling.
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [jobId, isRunning]);
 
   const sourceUrls = useMemo(() => job?.session.sources_visited ?? [], [job]);
 
@@ -41,7 +78,7 @@ export function ResearchWorkspace() {
             </div>
           </div>
 
-          <ResearchForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          <ResearchForm onSubmit={handleSubmit} isSubmitting={isSubmitting || isRunning} />
 
           {error ? (
             <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -54,7 +91,11 @@ export function ResearchWorkspace() {
               <Metric icon={<Activity size={16} />} label="Steps" value={String(job?.session.steps_taken ?? 0)} />
               <Metric icon={<Database size={16} />} label="Sources" value={String(sourceUrls.length)} />
               <Metric icon={<Server size={16} />} label="State" value={job?.session.termination_state ?? "idle"} />
-              <Metric icon={<FileText size={16} />} label="Report" value={job?.synthesis ? "ready" : "pending"} />
+              <Metric
+                icon={<FileText size={16} />}
+                label="Report"
+                value={job?.synthesis ? "ready" : isRunning ? "running" : "pending"}
+              />
             </div>
           </section>
 

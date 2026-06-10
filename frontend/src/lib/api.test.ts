@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiBaseUrl, statusEventsUrl, submitResearchGoal } from "@/lib/api";
+import { apiBaseUrl, getResearchJob, statusEventsUrl, submitResearchGoal } from "@/lib/api";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -32,6 +32,18 @@ describe("api client", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 422 }));
 
     await expect(submitResearchGoal(" ")).rejects.toThrow("Research request failed with status 422");
+  });
+
+  it("fetches a job by id for polling", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.com");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ job_id: "job-1", status: "running" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getResearchJob("job-1")).resolves.toEqual({ job_id: "job-1", status: "running" });
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/research/job-1");
   });
 
   it("surfaces the backend error detail when present", async () => {

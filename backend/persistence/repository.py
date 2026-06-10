@@ -12,9 +12,11 @@ from uuid import uuid4
 
 
 class ResearchRepository(Protocol):
-    """Storage boundary for completed research job state."""
+    """Storage boundary for research job state."""
 
     def save(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update(self, job_id: str, payload: dict[str, Any]) -> dict[str, Any] | None: ...
 
     def get(self, job_id: str) -> dict[str, Any] | None: ...
 
@@ -64,6 +66,14 @@ class InMemoryResearchRepository:
         self._jobs[job.job_id] = job
         return job.response_payload()
 
+    def update(self, job_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+        existing = self._jobs.get(job_id)
+        if existing is None:
+            return None
+        updated = _update_job(existing, payload)
+        self._jobs[job_id] = updated
+        return updated.response_payload()
+
     def get(self, job_id: str) -> dict[str, Any] | None:
         job = self._jobs.get(job_id)
         if job is None:
@@ -83,6 +93,16 @@ class JsonFileResearchRepository:
         jobs[job.job_id] = job
         self._write_jobs(jobs)
         return job.response_payload()
+
+    def update(self, job_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+        jobs = self._read_jobs()
+        existing = jobs.get(job_id)
+        if existing is None:
+            return None
+        updated = _update_job(existing, payload)
+        jobs[job_id] = updated
+        self._write_jobs(jobs)
+        return updated.response_payload()
 
     def get(self, job_id: str) -> dict[str, Any] | None:
         job = self._read_jobs().get(job_id)
@@ -121,5 +141,15 @@ def _new_job(payload: dict[str, Any]) -> StoredResearchJob:
         job_id=str(uuid4()),
         created_at=timestamp,
         updated_at=timestamp,
+        payload=deepcopy(payload),
+    )
+
+
+def _update_job(existing: StoredResearchJob, payload: dict[str, Any]) -> StoredResearchJob:
+    """Replace a stored job's payload, preserving its id and creation time."""
+    return StoredResearchJob(
+        job_id=existing.job_id,
+        created_at=existing.created_at,
+        updated_at=datetime.now(UTC).isoformat(),
         payload=deepcopy(payload),
     )
