@@ -931,6 +931,36 @@ evidence" (more sources, full-text extraction, v1.4.0 scholarly repositories), n
 - Ties to v1.4.0 scholarly sources (depth/credibility) and the deferred full-PDF
   parsing.
 
+### Cost and model tier (recommended)
+
+Estimated cost per report (research loop + multi-pass synthesis), by synthesis tier:
+~$0.05–0.20 on a cheap flash/DeepSeek-class model, ~$0.20–0.55 mid (Kimi/Qwen-class),
+~$0.40–2.50 premium (Claude Sonnet-class), scaling with paper length and evidence.
+Input tokens dominate (feeding full source text), not the words written.
+
+Recommended **split-tier synthesis** rather than one model for everything:
+
+- Cheap flash/DeepSeek-class model for the research/planning loop **and** the
+  per-section drafting pass (bulk token volume, where quality matters least).
+- Premium Sonnet-class model only for the outline/clustering pass and the final
+  abstract + conclusion + whole-document coherence pass (low token volume, where
+  argument quality and faithful cross-section citation matter most).
+- This keeps a long (~25pp) report around **~$0.30–0.60** instead of ~$2+ all-premium,
+  while protecting the parts that carry the "reads like a research paper" quality.
+- Make the per-pass model configurable (extend the existing planner/synthesizer model
+  settings with a `SECTION_DRAFTER_MODEL` and a `FINAL_PASS_MODEL`), defaulting to
+  this split; keep a cheap-only path available for minimum cost.
+
+Budget cap: raise `MAX_MODEL_COST_PER_JOB_USD` to a configurable higher tier with a
+recommended default of **~$0.75** for long-form jobs (today's $0.15 is too low and a
+long report already exceeds it). Preserve the existing guard — `WARN_MODEL_COST_*`
+threshold, the hard per-job dollar/token caps, and graceful early termination that
+synthesizes whatever is ready when the cap is hit.
+
+Cost levers to apply: OpenRouter prompt caching (the shared instruction/context
+re-sent across section passes), and per-section evidence slicing (send each section
+only its theme's sources, not all of them — already implied by the multi-pass design).
+
 ### Exit criteria
 
 - A complex, evidence-rich topic yields a multi-section paper (abstract, themed
