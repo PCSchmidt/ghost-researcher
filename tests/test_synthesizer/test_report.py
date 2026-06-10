@@ -107,5 +107,116 @@ class ReportSynthesizerTests(unittest.IsolatedAsyncioTestCase):
             await synthesizer.synthesize(AgentSession(research_goal="No evidence"))
 
 
+def _two_source_session() -> AgentSession:
+    session = AgentSession(research_goal="Assess data center energy efficiency in 2025")
+    session.add_evidence(
+        url="https://a.gov/x",
+        title="Cooling study",
+        claims=["Direct-to-chip cooling lowers PUE substantially."],
+        credibility_score=0.9,
+    )
+    session.add_evidence(
+        url="https://b.org/y",
+        title="Adoption report",
+        claims=["Hyperscaler adoption is accelerating in 2025."],
+        credibility_score=0.6,
+    )
+    return session
+
+
+def _long_form_transport():
+    async def transport(payload: dict[str, Any]) -> dict[str, Any]:
+        system = payload["messages"][0]["content"]
+        if "outline" in system:
+            content = json.dumps(
+                {
+                    "title": "Data Center Energy Efficiency in 2025",
+                    "sections": [
+                        {"heading": "Cooling", "source_urls": ["https://a.gov/x"]},
+                        {"heading": "Adoption", "source_urls": ["https://b.org/y"]},
+                    ],
+                }
+            )
+        elif "drafting ONE section" in system:
+            content = json.dumps(
+                {
+                    "paragraphs": [
+                        {
+                            "text": "This paragraph is comfortably longer than the minimum length filter and is grounded in evidence.",
+                            "citations": ["https://a.gov/x", "https://b.org/y"],
+                        }
+                    ]
+                }
+            )
+        elif "abstract, conclusion" in system:
+            content = json.dumps(
+                {
+                    "abstract": "This paper surveys data-center efficiency strategies in 2025.",
+                    "conclusion": "Cooling and siting drive the largest efficiency gains.",
+                    "key_findings": [
+                        {"text": "Direct-to-chip cooling lowers PUE.", "source_urls": ["https://a.gov/x"]}
+                    ],
+                }
+            )
+        else:
+            content = "{}"
+        return {
+            "choices": [{"message": {"content": content}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "cost": 0.001},
+        }
+
+    return transport
+
+
+class LongFormSynthesizerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_deterministic_long_form_builds_structured_paper(self) -> None:
+        settings = Settings.from_env({"LONGFORM_ENABLED": "true"})
+        synthesizer = ReportSynthesizer(settings)
+
+        report = await synthesizer.synthesize(_two_source_session())
+
+        self.assertTrue(report.is_long_form)
+        self.assertGreaterEqual(len(report.sections), 1)
+        self.assertEqual(2, len(report.references))
+        self.assertTrue(report.references[0].credibility_score >= report.references[1].credibility_score)
+        self.assertTrue(report.abstract)
+        self.assertTrue(report.key_findings)
+
+    async def test_multi_pass_long_form_assembles_and_records_usage(self) -> None:
+        settings = Settings.from_env({"LONGFORM_ENABLED": "true"})
+        session = _two_source_session()
+        synthesizer = ReportSynthesizer(settings, transport=_long_form_transport())
+
+        report = await synthesizer.synthesize(session)
+
+        self.assertTrue(report.is_long_form)
+        self.assertEqual("Data Center Energy Efficiency in 2025", report.title)
+        self.assertEqual(2, len(report.sections))
+        self.assertEqual("This paper surveys data-center efficiency strategies in 2025.", report.abstract)
+        self.assertTrue(report.conclusion)
+        self.assertIn("https://a.gov/x", report.sources_used)
+        self.assertIn("https://b.org/y", report.sources_used)
+        # outline + 2 sections + framing = 4 calls, each cost 0.001
+        self.assertAlmostEqual(0.004, session.running_cost_usd, places=6)
+        self.assertEqual(600, session.running_tokens)
+
+    async def test_long_form_degrades_to_deterministic_on_bad_outline(self) -> None:
+        async def bad_outline_transport(payload: dict[str, Any]) -> dict[str, Any]:
+            # Outline pass returns JSON with no usable sections -> long-form must
+            # degrade to a deterministic structured build rather than failing.
+            return {
+                "choices": [{"message": {"content": json.dumps({"title": "x"})}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "cost": 0.0005},
+            }
+
+        settings = Settings.from_env({"LONGFORM_ENABLED": "true"})
+        synthesizer = ReportSynthesizer(settings, transport=bad_outline_transport)
+
+        report = await synthesizer.synthesize(_two_source_session())
+
+        self.assertTrue(report.is_long_form)  # deterministic fallback still produces sections
+        self.assertTrue(report.references)
+
+
 if __name__ == "__main__":
     unittest.main()
