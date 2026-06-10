@@ -728,6 +728,50 @@ returned.
 
 ---
 
+## v1.2.3 - Async Jobs & Live Progress
+
+### Context
+
+The whole research job ran synchronously inside `POST /research` (~100–200s).
+Desktop tolerated the long-pending fetch; mobile browsers dropped it
+("Failed to fetch") when the connection blipped, the screen locked, or the tab
+backgrounded. There is no client-side fix for a 200s synchronous request.
+
+### Ships (done)
+
+- `POST /research` persists a `running` job and returns it **immediately**; the
+  work runs detached (`asyncio.create_task`). The client polls
+  `GET /research/{job_id}` until terminal. Fixes the mobile failure and removes the
+  long-request fragility everywhere.
+- **Live progress**: a `progress_callback` persists an in-progress snapshot after
+  each step (`build_status_events(..., final=False)`), so Steps/Sources climb and
+  agent steps stream into the status panel while the job runs — the real-time
+  "agent steps" demo moment (DEC-006). The report viewer shows a "Researching…"
+  state until coverage is sufficient.
+- **Serialization**: an `asyncio.Lock` runs one job at a time so concurrent
+  submissions don't collide on the single shared CloakBrowser (they queue).
+- **Hard per-job timeout** (`JOB_HARD_TIMEOUT_SECONDS`, default 330): the in-loop
+  budget only checks between steps, so a single hung browser/CDP call could run
+  forever and, because jobs are serialized, stall the queue. `asyncio.wait_for`
+  cancels it and stores a terminal `error`.
+- Failed/timed-out jobs are persisted as terminal `error` with detail; the frontend
+  surfaces it.
+
+### Deferred / notes
+
+- In-memory repo + single uvicorn worker keep polling coherent. A Redis-backed
+  queue + shared store is the documented multi-worker upgrade (the planned
+  `jobs/queue.py`).
+
+### Exit criteria
+
+- POST returns in well under a second with `status: running` (verified in prod).
+- Mobile submission no longer returns "Failed to fetch".
+- A hung job is cancelled by the hard timeout rather than blocking the queue.
+- Backend + frontend suites green.
+
+---
+
 ## v1.3.0 - Shareable Report Output (Deferred)
 
 Goal: Turn a completed research report from an ephemeral in-app web view into a

@@ -377,7 +377,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app
 
 ## Current Implementation Checkpoint
 
-- Current checkpoint: v1.2.0 — Evidence Quality and Live Validation (in progress); v1.2.1 Ghost (CloakBrowser stealth) Phase 1 done locally
+- Current checkpoint: v1.2.3 — Async Jobs & Live Progress DONE + deployed (POST /research returns a `running` job instantly, work runs detached, client polls; live per-step progress; serialized shared browser; hard per-job timeout `JOB_HARD_TIMEOUT_SECONDS`; failures persisted as terminal `error`). Fixed mobile "Failed to fetch" (was the long synchronous request). Earlier: v1.2.2 robustness (partial-report-on-failure, finalize-on-max_steps) deployed; v1.2.1 Ghost stealth Phase 1 deployed; v1.2.0 Evidence Quality in progress
+- POST /research is ASYNC: synchronous run removed; `asyncio.create_task` + `repository.update(job_id, ...)`; frontend `getResearchJob` polls every 2.5s until terminal; ReportViewer shows "Researching…" while running. Single uvicorn worker keeps the in-memory repo coherent; Redis queue is the multi-worker upgrade
 - Pipeline: Brave Search → 8-15 sources navigated → evidence from navigate excerpts → LLM synthesis → structured report
 - Frontend: report renders with findings, sources, SSE replay — confirmed working June 2026
 - Evidence strategy: navigate_to_url captures title + content_excerpt for every non-blocked page; extraction persists extracted evidence and strengthens corroboration where page text is available

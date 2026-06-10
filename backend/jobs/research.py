@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -93,8 +94,21 @@ class ResearchOrchestrator:
         )
         return PlannerRunResult(session=session, decision=decision, tool_result=tool_result)
 
-    async def run_sequence(self, research_goal: str, *, max_steps: int = 15, min_sources: int = 4) -> PlannerSequenceResult:
-        """Run a deterministic tool sequence without synthesis or persistence."""
+    async def run_sequence(
+        self,
+        research_goal: str,
+        *,
+        max_steps: int = 15,
+        min_sources: int = 4,
+        progress_callback: Callable[["AgentSession", list[PlannerDecision], list[dict[str, Any]]], Awaitable[None]]
+        | None = None,
+    ) -> PlannerSequenceResult:
+        """Run a deterministic tool sequence without synthesis or persistence.
+
+        ``progress_callback`` (if given) is invoked after each completed step with the
+        live session/decisions/tool_results so a caller can persist an in-progress
+        snapshot. It is called inside the failure-guarded loop and must not raise.
+        """
         session = AgentSession(research_goal=research_goal)
         if isinstance(self._planner, PlannerSkeleton):
             self._planner = PlannerSkeleton(min_sources=min_sources)
@@ -182,6 +196,9 @@ class ResearchOrchestrator:
                             tool_results.append(ext_result)
                             last_tool_result = ext_result
                         break  # one forced navigate+extract per fallback trigger
+
+                if progress_callback is not None:
+                    await progress_callback(session, decisions, tool_results)
             else:
                 # Exhausted max_steps without explicit finalize_report or stop signal.
                 # termination_state defaults to the truthy "active", so `not state` never
