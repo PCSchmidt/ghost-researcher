@@ -23,3 +23,6 @@ READMEmd
 notes.txt
 files.zip
 files/
+
+# Transient local hook state (enforce-tests marker)
+.claude/state/
