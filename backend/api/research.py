@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Protocol
 
@@ -13,7 +14,7 @@ from backend.agent.memory import AgentSession
 from backend.agent.planner import PlannerDecision, ToolCall
 from backend.config import Settings
 from backend.jobs.research import PlannerRunResult, PlannerSequenceResult, ResearchOrchestrator
-from backend.jobs.status import build_status_events, encode_sse_event
+from backend.jobs.status import JobStatusEvent, build_status_events, encode_sse_event
 from backend.persistence import InMemoryResearchRepository, ResearchRepository
 from backend.synthesizer.schema import ResearchReport
 
@@ -105,6 +106,57 @@ def _serialize_sequence_result(result: PlannerSequenceResult) -> dict[str, Any]:
     }
 
 
+def _running_job_payload(research_goal: str) -> dict[str, Any]:
+    """Initial record saved before a job runs so the client can poll immediately."""
+    session = AgentSession(research_goal=research_goal)
+    started = JobStatusEvent(
+        sequence=0,
+        event_type="job_started",
+        status="active",
+        message="Research job accepted",
+        payload={"research_goal": research_goal},
+    )
+    return {
+        "status": "running",
+        "status_events": [started.to_dict()],
+        "session": _serialize_session(session),
+        "decisions": [],
+        "tool_results": [],
+        "synthesis": None,
+    }
+
+
+def _failed_job_payload(research_goal: str, detail: str) -> dict[str, Any]:
+    """Terminal record written when a background job raises before producing a result."""
+    session = AgentSession(research_goal=research_goal)
+    session.finalize("error")
+    events = [
+        JobStatusEvent(
+            sequence=0,
+            event_type="job_started",
+            status="active",
+            message="Research job accepted",
+            payload={"research_goal": research_goal},
+        ).to_dict(),
+        JobStatusEvent(
+            sequence=1,
+            event_type="job_failed",
+            status="error",
+            message="Research job failed",
+            payload={"detail": detail},
+        ).to_dict(),
+    ]
+    return {
+        "status": "error",
+        "error": detail,
+        "status_events": events,
+        "session": _serialize_session(session),
+        "decisions": [],
+        "tool_results": [],
+        "synthesis": None,
+    }
+
+
 def create_research_router(
     settings: Settings,
     *,
@@ -116,17 +168,36 @@ def create_research_router(
     active_orchestrator = orchestrator or ResearchOrchestrator(settings)
     active_repository = repository or InMemoryResearchRepository()
 
+    # A research job can take minutes. Running it synchronously inside the request
+    # made mobile browsers drop the long-pending fetch ("Failed to fetch"). Instead
+    # POST persists a "running" record and returns immediately; the job runs detached
+    # and the client polls GET /research/{job_id}. The lock serializes execution so
+    # concurrent jobs do not collide on the single shared CloakBrowser.
+    job_lock = asyncio.Lock()
+    background_tasks: set[asyncio.Task[Any]] = set()
+
+    async def _execute_research_job(job_id: str, research_goal: str) -> None:
+        async with job_lock:
+            try:
+                result = await active_orchestrator.run_sequence(research_goal)
+                payload = _serialize_sequence_result(result)
+            except Exception as exc:  # noqa: BLE001 - persist failure as a terminal job, never crash the worker
+                logger.exception("background research job %s failed for goal=%r", job_id, research_goal)
+                payload = _failed_job_payload(research_goal, str(exc))
+            if active_repository.update(job_id, payload) is None:
+                logger.warning("research job %s vanished before completion could be stored", job_id)
+
     @router.post("/research")
     async def create_research(request: ResearchRequest) -> dict[str, Any]:
         research_goal = request.research_goal.strip()
         if not research_goal:
             raise HTTPException(status_code=422, detail="research_goal cannot be blank")
-        try:
-            result = await active_orchestrator.run_sequence(research_goal)
-        except Exception as exc:
-            logger.exception("run_sequence failed for goal=%r", research_goal)
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
-        return active_repository.save(_serialize_sequence_result(result))
+        running = active_repository.save(_running_job_payload(research_goal))
+        job_id = str(running["job_id"])
+        task = asyncio.create_task(_execute_research_job(job_id, research_goal))
+        background_tasks.add(task)
+        task.add_done_callback(background_tasks.discard)
+        return running
 
     @router.get("/research/{job_id}")
     async def get_research(job_id: str) -> dict[str, Any]:

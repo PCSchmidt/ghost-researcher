@@ -48,6 +48,35 @@ class ResearchRepositoryTests(unittest.TestCase):
 
         self.assertIsNone(repository.get("missing-job"))
 
+    def test_in_memory_update_replaces_payload_and_preserves_identity(self) -> None:
+        repository = InMemoryResearchRepository()
+        running = repository.save({"status": "running", "synthesis": None})
+
+        updated = repository.update(running["job_id"], {"status": "completed", "synthesis": {"title": "Done"}})
+
+        self.assertIsNotNone(updated)
+        self.assertEqual(running["job_id"], updated["job_id"])
+        self.assertEqual(running["created_at"], updated["created_at"])
+        self.assertEqual("completed", updated["status"])
+        self.assertEqual("completed", repository.get(running["job_id"])["status"])
+
+    def test_update_returns_none_for_missing_job(self) -> None:
+        repository = InMemoryResearchRepository()
+
+        self.assertIsNone(repository.update("missing-job", {"status": "completed"}))
+
+    def test_json_repository_update_persists_across_instances(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "research_jobs.json"
+            repository = JsonFileResearchRepository(path)
+            running = repository.save({"status": "running", "synthesis": None})
+
+            repository.update(running["job_id"], {"status": "completed", "synthesis": None})
+            fetched = JsonFileResearchRepository(path).get(running["job_id"])
+
+        self.assertEqual("completed", fetched["status"])
+        self.assertEqual(running["job_id"], fetched["job_id"])
+
 
 if __name__ == "__main__":
     unittest.main()

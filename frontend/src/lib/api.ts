@@ -69,12 +69,17 @@ export type ResearchJob = {
   created_at: string;
   updated_at: string;
   status: string;
+  error?: string | null;
   status_events: StatusEvent[];
   session: SessionState;
   decisions: PlannerDecision[];
   tool_results: Record<string, unknown>[];
   synthesis: ResearchReport | null;
 };
+
+export function isTerminalStatus(status: string): boolean {
+  return status !== "running";
+}
 
 export function apiBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
@@ -97,6 +102,21 @@ export async function submitResearchGoal(researchGoal: string): Promise<Research
       detail
         ? `Research request failed (status ${response.status}): ${detail}`
         : `Research request failed with status ${response.status}`,
+    );
+  }
+
+  return response.json() as Promise<ResearchJob>;
+}
+
+export async function getResearchJob(jobId: string): Promise<ResearchJob> {
+  const response = await fetch(`${apiBaseUrl()}/research/${encodeURIComponent(jobId)}`);
+
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new Error(
+      detail
+        ? `Failed to load job (status ${response.status}): ${detail}`
+        : `Failed to load job with status ${response.status}`,
     );
   }
 
