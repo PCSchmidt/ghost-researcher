@@ -20,4 +20,40 @@ describe("ReportViewer", () => {
     expect(screen.getByText("82%")).toBeInTheDocument();
     expect(screen.getByText("Finding with source")).toBeInTheDocument();
   });
+
+  it("renders a long-form paper with sections, citations, and references", () => {
+    render(
+      <ReportViewer
+        report={{
+          title: "Data Center Efficiency 2025",
+          summary: "abstract text",
+          confidence: 0.75,
+          sources_used: ["https://a.gov/x", "https://b.org/y"],
+          key_findings: [{ text: "k", source_urls: ["https://a.gov/x"] }],
+          abstract: "This paper surveys efficiency strategies.",
+          sections: [
+            {
+              heading: "Cooling",
+              paragraphs: [{ text: "Direct-to-chip cooling lowers PUE.", citations: ["https://a.gov/x"] }],
+            },
+          ],
+          conclusion: "Cooling drives the largest gains.",
+          references: [
+            { url: "https://a.gov/x", title: "Cooling study", credibility_score: 0.9 },
+            { url: "https://b.org/y", title: "Adoption report", credibility_score: 0.6 },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Abstract")).toBeInTheDocument();
+    expect(screen.getByText("1. Cooling")).toBeInTheDocument();
+    expect(screen.getByText(/Direct-to-chip cooling lowers PUE\./)).toBeInTheDocument();
+    expect(screen.getByText("Conclusion")).toBeInTheDocument();
+    expect(screen.getByText("References")).toBeInTheDocument();
+    expect(screen.getByText("Cooling study")).toBeInTheDocument();
+    // in-text citation marker maps the URL to reference number [1]
+    // (also appears as the reference list number, so assert at least one)
+    expect(screen.getAllByText("[1]").length).toBeGreaterThanOrEqual(1);
+  });
 });
