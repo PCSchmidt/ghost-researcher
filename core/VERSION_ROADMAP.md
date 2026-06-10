@@ -679,6 +679,51 @@ AIEngineeringProjects path). Pin a version; do not vendor its source.
 
 ---
 
+## v1.2.2 - Pipeline Robustness
+
+Goal: Make heavy multi-source research jobs reliably return a report instead of
+failing with a CDP hang or a request timeout.
+
+Status: Implemented (page-bounding + wall-clock budget). Connection-reuse deferred.
+
+### Context
+
+Production verification of a demanding goal exposed two failure modes beyond the
+v1.2.1 navigate-timeout hotfix: (1) the shared CloakBrowser browser accumulated
+never-closed pages (`browser.close()` over CDP only disconnects), eventually
+stalling `connect_over_cdp`'s target sync and requiring a manual cloakserve
+restart; (2) per-job latency (reconnect per tool call + 20s slow-source timeouts +
+per-step LLM calls) could exceed the 300s request timeout, so the job never
+returned.
+
+### Ships (done)
+
+- `navigate_to_url` closes existing pages before opening a new one
+  ([navigate.py](../backend/executor/navigate.py)), bounding the shared browser to
+  ~1 open page so reconnects stay fast
+- Wall-clock job budget `JOB_TIME_BUDGET_SECONDS` (default 240): when spent, the
+  orchestrator stops planning, finalizes `time_budget`, and synthesis runs on
+  collected evidence so the request returns a report
+  ([research.py](../backend/jobs/research.py), [config.py](../backend/config.py))
+- Navigation timeout raised 10s → 20s and goto/page errors caught as skippable
+  blocked sources (v1.2.1 hotfix)
+
+### Deferred (optional follow-up)
+
+- Reuse a single CDP connection/context per job instead of reconnecting on every
+  tool call (latency optimization, not required for correctness)
+- Per-job browser context isolation with guaranteed teardown
+
+### Exit criteria
+
+- A demanding multi-source goal returns a report (possibly partial) within the
+  request timeout
+- Open-page count in the shared browser stays bounded across many jobs (no manual
+  restart needed)
+- Backend suite green
+
+---
+
 ## v1.3.0 - Shareable Report Output (Deferred)
 
 Goal: Turn a completed research report from an ephemeral in-app web view into a

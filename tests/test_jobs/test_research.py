@@ -381,6 +381,44 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNone(result.synthesis)
 
+    async def test_run_sequence_stops_and_synthesizes_on_time_budget(self) -> None:
+        # A heavy goal must not run forever: when the wall-clock budget is spent the
+        # loop stops planning, finalizes as time_budget, and still returns a report.
+        import asyncio
+
+        from backend.agent.planner import PlannerDecision, ToolCall
+
+        class NeverStopsPlanner:
+            async def plan_next(self, session, *, last_tool_result=None):
+                return PlannerDecision(
+                    tool_call=ToolCall(name="navigate_to_url", arguments={"url": "https://example.com/a"})
+                )
+
+        class SlowRunner:
+            async def execute_tool_call(self, *, name, arguments, session):
+                await asyncio.sleep(0.02)
+                session.increment_step()
+                return {
+                    "title": "Source",
+                    "content_excerpt": "useful evidence text from the page",
+                    "final_url": arguments.get("url"),
+                    "detection_blocked": False,
+                }
+
+        settings = Settings.from_env({"JOB_TIME_BUDGET_SECONDS": "0.01"})
+        orchestrator = ResearchOrchestrator(
+            settings,
+            planner=NeverStopsPlanner(),
+            runner=SlowRunner(),
+            synthesizer=FakeSynthesizer(),
+        )
+
+        result = await orchestrator.run_sequence("Research a demanding topic", max_steps=50, min_sources=3)
+
+        self.assertEqual("time_budget", result.session.termination_reason)
+        self.assertLess(len(result.decisions), 50)
+        self.assertIsNotNone(result.synthesis)
+
 
 if __name__ == "__main__":
     unittest.main()

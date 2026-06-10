@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import time
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -54,6 +55,7 @@ class ResearchOrchestrator:
         runner: ResearchRunner | None = None,
         synthesizer: Any | None = None,
     ) -> None:
+        self._settings = settings
         self._planner = planner or _default_planner(settings)
         self._runner = runner or ResearchRunner(settings)
         self._synthesizer = synthesizer or ReportSynthesizer(settings)
@@ -96,8 +98,18 @@ class ResearchOrchestrator:
         decisions: list[PlannerDecision] = []
         tool_results: list[dict[str, Any]] = []
         last_tool_result: dict[str, Any] | None = None
+        started_at = time.monotonic()
+        time_budget = self._settings.job_time_budget_seconds
 
         for step in range(max_steps):
+            # Wall-clock guard: heavy goals can hit many slow sources and exceed the
+            # HTTP request timeout. When the budget is spent, stop planning and let
+            # synthesis run on whatever evidence exists so the job returns a report
+            # instead of failing.
+            if time_budget > 0 and time.monotonic() - started_at > time_budget:
+                if session.termination_state == "active":
+                    session.finalize("time_budget")
+                break
             decision = await self._plan_next(session, last_tool_result=last_tool_result)
             decision = self._guard_premature_finalize(session, decision, min_sources=min_sources)
             decisions.append(decision)

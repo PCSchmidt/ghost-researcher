@@ -130,6 +130,16 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
         ws_endpoint = await async_resolve_cdp_ws_endpoint(settings)
         browser = await playwright.chromium.connect_over_cdp(ws_endpoint)
         context = browser.contexts[0] if browser.contexts else await browser.new_context()
+        # Close pages left open by prior steps. The CloakBrowser CDP browser is
+        # shared and long-lived; `browser.close()` here only disconnects, so pages
+        # accumulate across navigate calls and eventually stall connect_over_cdp's
+        # target sync (a single slow research job, or several jobs, can hang it).
+        # Bounding the open-page count to one keeps reconnects fast.
+        for existing_page in list(context.pages):
+            try:
+                await existing_page.close()
+            except Exception:
+                pass
         page = await context.new_page()
         yield page
     finally:
