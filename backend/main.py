@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import sys
 from collections.abc import Callable
 from typing import Mapping
 
@@ -15,6 +17,23 @@ from backend.api.research import ResearchOrchestratorLike
 from backend.persistence import ResearchRepository
 
 
+def _configure_logging(level: str) -> None:
+    """Attach a stderr handler to the ghostresearcher namespace.
+
+    Without this, application tracebacks (e.g. a failed research run) fall to
+    Python's last-resort handler, which uvicorn's logging config can suppress —
+    leaving production 500s undiagnosable. We own this namespace explicitly.
+    """
+    app_logger = logging.getLogger("ghostresearcher")
+    app_logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    if not any(getattr(h, "_ghostresearcher", False) for h in app_logger.handlers):
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        handler._ghostresearcher = True  # type: ignore[attr-defined]
+        app_logger.addHandler(handler)
+    app_logger.propagate = False
+
+
 def create_app(
     env: Mapping[str, str] | None = None,
     *,
@@ -24,6 +43,7 @@ def create_app(
 ) -> FastAPI:
     """Build the FastAPI app with environment-backed settings."""
     settings = Settings.from_env(env)
+    _configure_logging(settings.log_level)
     app = FastAPI(title="GhostResearcher API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,

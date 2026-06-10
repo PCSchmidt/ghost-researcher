@@ -33,4 +33,19 @@ describe("api client", () => {
 
     await expect(submitResearchGoal(" ")).rejects.toThrow("Research request failed with status 422");
   });
+
+  it("surfaces the backend error detail when present", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ detail: "connect_over_cdp timeout" }),
+      }),
+    );
+
+    await expect(submitResearchGoal("Find FAA guidance")).rejects.toThrow(
+      "Research request failed (status 500): connect_over_cdp timeout",
+    );
+  });
 });

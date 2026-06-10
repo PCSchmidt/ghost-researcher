@@ -419,6 +419,57 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(len(result.decisions), 50)
         self.assertIsNotNone(result.synthesis)
 
+    async def test_run_sequence_degrades_to_partial_report_on_mid_loop_error(self) -> None:
+        # A flaky tool call mid-run (e.g. a CDP/browser failure) must not propagate
+        # and 500 the request, discarding everything already gathered. The loop should
+        # finalize as "error" and still synthesize from the evidence collected so far.
+        from backend.agent.planner import PlannerDecision, ToolCall
+
+        class FlakyRunner:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def execute_tool_call(self, *, name, arguments, session):
+                self.calls += 1
+                if self.calls == 1:
+                    session.increment_step()
+                    return {
+                        "title": "First Source",
+                        "content_excerpt": "useful evidence from the first page",
+                        "final_url": arguments.get("url"),
+                        "detection_blocked": False,
+                    }
+                raise RuntimeError("connect_over_cdp: simulated browser failure")
+
+        class AlwaysNavigatePlanner:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def plan_next(self, session, *, last_tool_result=None):
+                self.calls += 1
+                return PlannerDecision(
+                    tool_call=ToolCall(
+                        name="navigate_to_url",
+                        arguments={"url": f"https://example.com/{self.calls}"},
+                    )
+                )
+
+        settings = Settings.from_env({})
+        orchestrator = ResearchOrchestrator(
+            settings,
+            planner=AlwaysNavigatePlanner(),
+            runner=FlakyRunner(),
+            synthesizer=FakeSynthesizer(),
+        )
+
+        # Must not raise: the mid-loop RuntimeError is caught and degraded.
+        result = await orchestrator.run_sequence("Research a demanding topic", max_steps=10, min_sources=3)
+
+        self.assertEqual("error", result.session.termination_reason)
+        self.assertEqual("finalized", result.session.termination_state)
+        self.assertIsNotNone(result.synthesis)
+        self.assertGreaterEqual(len(result.session.evidence_records), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

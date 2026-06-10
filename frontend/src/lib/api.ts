@@ -92,8 +92,25 @@ export async function submitResearchGoal(researchGoal: string): Promise<Research
   });
 
   if (!response.ok) {
-    throw new Error(`Research request failed with status ${response.status}`);
+    const detail = await readErrorDetail(response);
+    throw new Error(
+      detail
+        ? `Research request failed (status ${response.status}): ${detail}`
+        : `Research request failed with status ${response.status}`,
+    );
   }
 
   return response.json() as Promise<ResearchJob>;
+}
+
+async function readErrorDetail(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { detail?: unknown };
+    if (typeof body.detail === "string" && body.detail.trim()) {
+      return body.detail.trim();
+    }
+  } catch {
+    // body was not JSON (e.g. an edge-proxy timeout page); fall back to status only
+  }
+  return null;
 }
