@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, Awaitable, Callable
 
@@ -101,12 +102,19 @@ class ReportSynthesizer:
         try:
             outline = await self._call_json(transport, outline_model, _outline_request(session, evidence), session)
             planned = _parse_outline_sections(outline, evidence, self._settings.longform_max_sections)
-            drafted: list[ReportSection] = []
-            for heading, assigned in planned:
-                self._guard_cost(session)
-                section_json = await self._call_json(
-                    transport, section_model, _section_request(session, heading, assigned), session
+            self._guard_cost(session)
+            # Sections are independent, so draft them concurrently — this keeps total
+            # synthesis time close to a single section call rather than their sum, which
+            # matters because synthesis runs after the research loop under the job's
+            # hard wall-clock timeout.
+            section_jsons = await asyncio.gather(
+                *(
+                    self._call_json(transport, section_model, _section_request(session, heading, assigned), session)
+                    for heading, assigned in planned
                 )
+            )
+            drafted: list[ReportSection] = []
+            for (heading, _assigned), section_json in zip(planned, section_jsons):
                 paragraphs = _parse_section_paragraphs(section_json, evidence)
                 if paragraphs:
                     drafted.append(ReportSection(heading=heading, paragraphs=paragraphs))
