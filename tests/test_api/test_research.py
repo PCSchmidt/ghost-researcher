@@ -24,8 +24,11 @@ class FakeResearchOrchestrator:
         self.result = result
         self.received_goal: str | None = None
 
-    async def run_sequence(self, research_goal: str) -> PlannerSequenceResult:
+    async def run_sequence(self, research_goal: str, **kwargs: object) -> PlannerSequenceResult:
         self.received_goal = research_goal
+        progress_callback = kwargs.get("progress_callback")
+        if progress_callback is not None:
+            await progress_callback(self.result.session, self.result.decisions, self.result.tool_results)
         return self.result
 
 
@@ -33,8 +36,14 @@ class RaisingResearchOrchestrator:
     def __init__(self, error: Exception) -> None:
         self.error = error
 
-    async def run_sequence(self, research_goal: str) -> PlannerSequenceResult:
+    async def run_sequence(self, research_goal: str, **kwargs: object) -> PlannerSequenceResult:
         raise self.error
+
+
+class HangingResearchOrchestrator:
+    async def run_sequence(self, research_goal: str, **kwargs: object) -> PlannerSequenceResult:
+        await asyncio.sleep(30)
+        raise AssertionError("should have been cancelled by the hard timeout")
 
 
 def _client(app) -> AsyncClient:
@@ -169,6 +178,18 @@ class ResearchRouteTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("connect_over_cdp boom", payload["error"])
             self.assertIsNone(payload["synthesis"])
             self.assertEqual("error", payload["session"]["termination_reason"])
+
+    async def test_hung_job_is_cancelled_by_hard_timeout(self) -> None:
+        # A job whose work never returns must be cancelled and stored as a terminal
+        # error so it cannot block the serialized queue forever.
+        app = create_app({"JOB_HARD_TIMEOUT_SECONDS": "0.05"}, research_orchestrator=HangingResearchOrchestrator())
+
+        async with _client(app) as client:
+            created = await client.post("/research", json={"research_goal": "Find FAA BVLOS guidance"})
+            payload = await _wait_for_terminal(client, created.json()["job_id"])
+
+            self.assertEqual("error", payload["status"])
+            self.assertIn("job_timeout", payload["error"])
 
     async def test_completed_job_streams_persisted_status_events(self) -> None:
         session = AgentSession(research_goal="Review https://example.com/report")

@@ -154,6 +154,12 @@ stage.
 - Exit token: `PIPELINE ROBUSTNESS CONFIRMED`
 - Status: Implemented (page-bounding + time budget). Connection-reuse deferred.
 
+### v1.2.3 - Async Jobs & Live Progress
+
+- Exit artifacts: `POST /research` returns a "running" job immediately and runs the work in a detached background task (fixes mobile "Failed to fetch" from the long synchronous request); client polls `GET /research/{job_id}`; per-step progress persisted for live steps/sources; `asyncio.Lock` serializes the shared browser; hard per-job wall-clock timeout (`JOB_HARD_TIMEOUT_SECONDS`) cancels a hung job to a terminal error; failed jobs persisted as terminal `error` with detail
+- Exit token: `ASYNC JOBS CONFIRMED`
+- Status: Complete. Single-worker in-memory repo keeps polling coherent; Redis-backed queue remains the documented multi-worker upgrade.
+
 ### v1.3.0 - Shareable Report Output (Deferred)
 
 - Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances

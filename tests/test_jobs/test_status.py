@@ -47,6 +47,25 @@ class JobStatusEventTests(unittest.TestCase):
         self.assertEqual("sufficient_coverage", events[-1]["payload"]["termination_reason"])
         self.assertEqual(1, events[-1]["payload"]["evidence_quality"]["assessed_evidence_count"])
 
+    def test_build_status_events_omits_completion_for_in_progress_snapshot(self) -> None:
+        # final=False powers the live progress snapshot persisted mid-run: no premature
+        # "job finished" event while the planner is still working.
+        session = AgentSession(research_goal="Review https://example.com/report")
+        result = PlannerSequenceResult(
+            session=session,
+            decisions=[
+                PlannerDecision(
+                    tool_call=ToolCall(name="navigate_to_url", arguments={"url": "https://example.com/report"})
+                )
+            ],
+            tool_results=[{"final_url": "https://example.com/report"}],
+        )
+
+        events = build_status_events(result, final=False)
+
+        self.assertEqual(["job_started", "tool_started", "tool_completed"], [e["event_type"] for e in events])
+        self.assertNotIn("job_completed", [e["event_type"] for e in events])
+
     def test_build_status_events_records_planner_stop(self) -> None:
         session = AgentSession(research_goal="Find FAA guidance")
         session.finalize("no_new_sources")

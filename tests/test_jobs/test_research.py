@@ -460,6 +460,44 @@ class ResearchOrchestratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("finalized", result.session.termination_state)
         self.assertEqual("max_steps", result.session.termination_reason)
 
+    async def test_run_sequence_invokes_progress_callback_per_step(self) -> None:
+        # The callback feeds the live-progress snapshot the polling client renders.
+        from backend.agent.planner import PlannerDecision, ToolCall
+
+        class TwoNavPlanner:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            async def plan_next(self, session, *, last_tool_result=None):
+                self.calls += 1
+                if self.calls <= 2:
+                    return PlannerDecision(
+                        tool_call=ToolCall(name="navigate_to_url", arguments={"url": f"https://example.com/{self.calls}"})
+                    )
+                return PlannerDecision(tool_call=None, termination_reason="no_new_sources")
+
+        class OkRunner:
+            async def execute_tool_call(self, *, name, arguments, session):
+                session.increment_step()
+                return {"title": "S", "content_excerpt": "evidence", "final_url": arguments.get("url"), "detection_blocked": False}
+
+        snapshots: list[int] = []
+
+        async def on_progress(session, decisions, tool_results):
+            snapshots.append(session.steps_taken)
+
+        orchestrator = ResearchOrchestrator(
+            Settings.from_env({}),
+            planner=TwoNavPlanner(),
+            runner=OkRunner(),
+            synthesizer=FakeSynthesizer(),
+        )
+
+        await orchestrator.run_sequence("Topic", max_steps=5, min_sources=3, progress_callback=on_progress)
+
+        # One snapshot per completed navigation step.
+        self.assertEqual([1, 2], snapshots)
+
     async def test_run_sequence_degrades_to_partial_report_on_mid_loop_error(self) -> None:
         # A flaky tool call mid-run (e.g. a CDP/browser failure) must not propagate
         # and 500 the request, discarding everything already gathered. The loop should

@@ -176,11 +176,50 @@ def create_research_router(
     job_lock = asyncio.Lock()
     background_tasks: set[asyncio.Task[Any]] = set()
 
+    async def _persist_progress(
+        job_id: str,
+        session: AgentSession,
+        decisions: list[PlannerDecision],
+        tool_results: list[dict[str, Any]],
+    ) -> None:
+        # Live in-progress snapshot so the polling client sees steps/sources climb.
+        # Must never raise into the planner loop, so swallow persistence errors.
+        try:
+            snapshot = PlannerSequenceResult(
+                session=session,
+                decisions=list(decisions),
+                tool_results=list(tool_results),
+            )
+            payload = {
+                "status": "running",
+                "status_events": build_status_events(snapshot, final=False),
+                "session": _serialize_session(session),
+                "decisions": [_serialize_decision(decision) for decision in decisions],
+                "tool_results": list(tool_results),
+                "synthesis": None,
+            }
+            active_repository.update(job_id, payload)
+        except Exception:  # noqa: BLE001 - progress persistence is best-effort
+            logger.exception("failed to persist progress for research job %s", job_id)
+
     async def _execute_research_job(job_id: str, research_goal: str) -> None:
         async with job_lock:
             try:
-                result = await active_orchestrator.run_sequence(research_goal)
+                # Hard wall-clock backstop: the in-loop time budget only checks between
+                # steps, so a single hung browser/CDP call could otherwise run forever and
+                # — because jobs are serialized — stall the whole queue. Cancel and store a
+                # terminal error instead.
+                async def _run() -> Any:
+                    return await active_orchestrator.run_sequence(
+                        research_goal,
+                        progress_callback=lambda s, d, t: _persist_progress(job_id, s, d, t),
+                    )
+
+                result = await asyncio.wait_for(_run(), timeout=settings.job_hard_timeout_seconds)
                 payload = _serialize_sequence_result(result)
+            except TimeoutError:
+                logger.warning("background research job %s exceeded hard timeout for goal=%r", job_id, research_goal)
+                payload = _failed_job_payload(research_goal, "job_timeout: exceeded hard wall-clock limit")
             except Exception as exc:  # noqa: BLE001 - persist failure as a terminal job, never crash the worker
                 logger.exception("background research job %s failed for goal=%r", job_id, research_goal)
                 payload = _failed_job_payload(research_goal, str(exc))

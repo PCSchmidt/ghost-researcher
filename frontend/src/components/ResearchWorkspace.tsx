@@ -114,7 +114,7 @@ export function ResearchWorkspace() {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <ReportViewer report={job?.synthesis ?? null} />
+            <ReportViewer report={job?.synthesis ?? null} isRunning={isRunning} />
             <section aria-label="Sources" className="space-y-3">
               <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-600">Sources</h3>
               {sourceUrls.length ? (

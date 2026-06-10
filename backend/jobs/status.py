@@ -32,8 +32,12 @@ class JobStatusEvent:
         }
 
 
-def build_status_events(result: PlannerSequenceResult) -> list[dict[str, Any]]:
-    """Build ordered status events from a completed planner sequence."""
+def build_status_events(result: PlannerSequenceResult, *, final: bool = True) -> list[dict[str, Any]]:
+    """Build ordered status events from a planner sequence.
+
+    With ``final=False`` the trailing synthesis/job_completed events are omitted so
+    the stream can be persisted as a live in-progress snapshot while the job runs.
+    """
     events: list[JobStatusEvent] = [
         JobStatusEvent(
             sequence=0,
@@ -78,6 +82,9 @@ def build_status_events(result: PlannerSequenceResult) -> list[dict[str, Any]]:
                 )
             )
             sequence += 1
+
+    if not final:
+        return [event.to_dict() for event in events]
 
     if result.synthesis is not None:
         events.append(

@@ -1,8 +1,23 @@
-import { FileText } from "lucide-react";
+import { FileText, LoaderCircle } from "lucide-react";
 import type { ResearchReport } from "@/lib/api";
 
-export function ReportViewer({ report }: { report: ResearchReport | null }) {
+export function ReportViewer({ report, isRunning = false }: { report: ResearchReport | null; isRunning?: boolean }) {
   if (!report) {
+    if (isRunning) {
+      return (
+        <section className="rounded-md border border-teal-200 bg-teal-50/40 p-5" aria-label="Report" aria-busy="true">
+          <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-teal-100 text-teal-800">
+            <LoaderCircle size={20} className="animate-spin" aria-hidden="true" />
+          </div>
+          <h3 className="text-lg font-semibold text-zinc-950">Researching…</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+            The agent is searching, navigating sources, and assessing credibility. Steps and sources
+            appear in the status panel as they complete — the report renders here when coverage is
+            sufficient. This usually takes 1–3 minutes.
+          </p>
+        </section>
+      );
+    }
     return (
       <section className="rounded-md border border-dashed border-zinc-300 bg-white p-5" aria-label="Report">
         <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-amber-50 text-amber-800">
