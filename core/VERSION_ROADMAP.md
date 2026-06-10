@@ -749,13 +749,16 @@ These are different mechanisms and must not be conflated:
   PDF plus a print-optimized stylesheet so the browser "Save as PDF" path also
   produces a clean document.
 
-### Prerequisite
+### Prerequisite — depends on v1.5.0
 
 Report content is currently a schema skeleton (`title`, `summary`,
-`key_findings[]`, `sources_used[]`, `confidence`, `limitations[]`) with no length
-or structure contract. A PDF will expose that thinness. Either upgrade the
-synthesis prompt for length/section structure as part of this stage, or accept a
-deliberately terse one-page brief. Resolve before build.
+`key_findings[]`, `sources_used[]`, `confidence`, `limitations[]`); a PDF would
+expose that thinness. The long-form, research-paper content is its own stage,
+**v1.5.0 — Long-Form Research Report**, and is a hard prerequisite for this one. The
+PDF here must render that structure as a research paper (title page with abstract,
+numbered sections/subsections, in-text citations, a references/bibliography page,
+page numbers, academic typography), not the one-page brief sketched below. Build
+v1.5.0 first.
 
 ### Ships
 
@@ -864,3 +867,84 @@ pipeline does not target them — they appear only if Brave happens to surface t
 - Which APIs first (arXiv + Semantic Scholar are free and keyless — likely first)
 - New `scholarly_search` tool vs a `source_type` parameter on `web_search`
 - Scholarly PDF handling — ties to the deferred full-PDF-parsing extraction item
+
+---
+
+## v1.5.0 - Long-Form Research Report
+
+Goal: Turn the report from a one-page skeleton into a structured, research-paper-style
+document. Length **emerges from the evidence** — faithful, complete coverage at the
+depth the sources support — rather than a target page count. Mandatory research-paper
+structure makes it read as academic regardless of length.
+
+Status: Planned. **Prerequisite for v1.3.0** (the PDF is only worth building once the
+content has this depth). May draw on v1.4.0 scholarly sources for evidence depth.
+
+### Length principle (see DEC-011)
+
+Length is an output, not a target. The report must completely and faithfully cover
+the gathered, credible evidence; it must never pad thin evidence to reach a length,
+nor truncate rich evidence to stay under one. A complex, source-rich topic naturally
+yields a long paper; a thin topic yields a shorter but still complete one. ~5–25 pages
+is a *soft sanity envelope* used only to flag degenerate output (a one-paragraph blurb
+or an 80-page ramble) — not a constraint. The real lever for "appropriately long" is
+upstream evidence depth/breadth: a too-thin report signals "gather more/deeper
+evidence" (more sources, full-text extraction, v1.4.0 scholarly repositories), not
+"write more words."
+
+### Report schema (ResearchReport v2)
+
+- `title`, byline (GhostResearcher + generated date), `abstract`, `keywords`
+- `sections[]`: each has heading, level, body paragraphs (claims carrying in-text
+  citation markers), optional subsections. Body sections are derived from clustering
+  the evidence into distinct themes, so section count scales with the evidence.
+- `discussion`/analysis, `conclusion`, `limitations`
+- `references[]`: numbered, deduplicated sources (title, url, credibility, accessed
+  date), resolved by the in-text citation markers
+- Source-traceability invariant preserved at paragraph granularity:
+  `validate_report_sources` extended to sections/paragraphs; unsupported claims are
+  rejected, never invented to fill space
+
+### Synthesis (multi-pass — single-shot won't reliably produce structured depth)
+
+1. Theme/outline pass: cluster evidence into themes and propose a section outline
+   (count scales with distinct, corroborated themes)
+2. Section-drafting pass: draft each section from its assigned evidence with citations
+   (per-section calls keep each within context limits and improve depth)
+3. Assembly pass: write abstract + conclusion, build the references list, stitch and
+   validate the whole document
+
+### Evidence coverage = the quality target
+
+- "Evidence coverage" = the fraction of credible gathered evidence (sources / themes)
+  that is faithfully synthesized and cited in the report. This replaces page count as
+  the eval target.
+- Plus a supported-claims ratio and a structural-completeness check (abstract,
+  sections, references present). The soft envelope only flags degenerate length.
+
+### Dependencies
+
+- Evidence depth: pass full extracted source text to synthesis (today it leans on
+  short claims/excerpts), raise source count, and raise the token + cost budgets —
+  `MAX_TOKENS_PER_JOB=125000` and `MAX_MODEL_COST_PER_JOB_USD=0.15` are too low for a
+  multi-pass long report. Add a configurable higher tier with an explicit cost guard.
+- Ties to v1.4.0 scholarly sources (depth/credibility) and the deferred full-PDF
+  parsing.
+
+### Exit criteria
+
+- A complex, evidence-rich topic yields a multi-section paper (abstract, themed
+  sections with in-text citations, conclusion, references), length proportional to the
+  evidence, every claim source-traceable
+- A thin topic yields a proportionally shorter but complete report (no padding) and
+  flags low evidence coverage
+- The report viewer renders the abstract/section/reference structure
+- The eval reports evidence-coverage and supported-claims metrics
+
+### Decisions to resolve at stage start
+
+- Multi-pass vs single-pass synthesis (multi-pass recommended for reliable depth)
+- Token/cost budget tier for long reports and the per-job cost cap (cost rises
+  materially with multi-pass + full-text evidence)
+- Citation style (numbered `[n]` recommended for web sources)
+- Report-schema versioning / back-compat with the v1 skeleton
