@@ -679,6 +679,51 @@ AIEngineeringProjects path). Pin a version; do not vendor its source.
 
 ---
 
+## v1.2.2 - Pipeline Robustness
+
+Goal: Make heavy multi-source research jobs reliably return a report instead of
+failing with a CDP hang or a request timeout.
+
+Status: Implemented (page-bounding + wall-clock budget). Connection-reuse deferred.
+
+### Context
+
+Production verification of a demanding goal exposed two failure modes beyond the
+v1.2.1 navigate-timeout hotfix: (1) the shared CloakBrowser browser accumulated
+never-closed pages (`browser.close()` over CDP only disconnects), eventually
+stalling `connect_over_cdp`'s target sync and requiring a manual cloakserve
+restart; (2) per-job latency (reconnect per tool call + 20s slow-source timeouts +
+per-step LLM calls) could exceed the 300s request timeout, so the job never
+returned.
+
+### Ships (done)
+
+- `navigate_to_url` closes existing pages before opening a new one
+  ([navigate.py](../backend/executor/navigate.py)), bounding the shared browser to
+  ~1 open page so reconnects stay fast
+- Wall-clock job budget `JOB_TIME_BUDGET_SECONDS` (default 240): when spent, the
+  orchestrator stops planning, finalizes `time_budget`, and synthesis runs on
+  collected evidence so the request returns a report
+  ([research.py](../backend/jobs/research.py), [config.py](../backend/config.py))
+- Navigation timeout raised 10s → 20s and goto/page errors caught as skippable
+  blocked sources (v1.2.1 hotfix)
+
+### Deferred (optional follow-up)
+
+- Reuse a single CDP connection/context per job instead of reconnecting on every
+  tool call (latency optimization, not required for correctness)
+- Per-job browser context isolation with guaranteed teardown
+
+### Exit criteria
+
+- A demanding multi-source goal returns a report (possibly partial) within the
+  request timeout
+- Open-page count in the shared browser stays bounded across many jobs (no manual
+  restart needed)
+- Backend suite green
+
+---
+
 ## v1.3.0 - Shareable Report Output (Deferred)
 
 Goal: Turn a completed research report from an ephemeral in-app web view into a
@@ -769,3 +814,49 @@ right — this is explicitly planned, not a sign of going off-track. Approach:
 - OG preview image: static template vs dynamic generation (e.g. `@vercel/og`)
 - Public/unauthenticated report access model (the app is currently single-user with
   no auth; link sharing implies public-by-id reports)
+
+---
+
+## v1.4.0 - Scholarly Source Coverage (Deferred)
+
+Goal: Give the agent first-class access to scholarly/research repositories instead
+of relying on generic web search to surface them, so a "research" engine actually
+reaches the research literature.
+
+Status: Planned / Deferred. Sequenced after the v1.2.x stealth work.
+
+### Context
+
+Runtime source discovery is generic Brave web search ([search.py](../backend/executor/search.py));
+there is no integration with academic/research repositories (arXiv, Semantic
+Scholar, PubMed/Europe PMC, CORE, OpenReview, Crossref). The benchmark prompts
+*expect* academic sources (`expected_source_types: academic/preprint`), but the
+pipeline does not target them — they appear only if Brave happens to surface them.
+
+### Ships
+
+- A research-source-provider layer mirroring the existing search-provider boundary:
+  providers for arXiv (Atom API, no key), Semantic Scholar (Graph API), PubMed /
+  Europe PMC, CORE, Crossref — most are free / keyless
+- Planner access via either a `scholarly_search` tool or a `source_type` argument on
+  `web_search`, merging results into the source-candidate queue
+- Keyless fallback: bias web-search queries toward scholarly domains (`site:` filters)
+  when no provider is configured, so the default path stays dependency-free
+- Credibility scoring extended with scholarly signals (peer-reviewed venue, citation
+  count, recency, author/institution)
+- Evals: academic benchmark prompts validate repository coverage; a scholarly-coverage
+  metric in the harness
+
+### Exit criteria
+
+- A research goal in an academic domain surfaces and cites real repository sources
+  (e.g. arxiv.org papers) in the report
+- Scholarly providers are configurable and dependency-free by default (deterministic
+  offline provider for tests)
+- The eval shows improved expected-source coverage on academic prompts
+
+### Decisions to resolve at stage start
+
+- Which APIs first (arXiv + Semantic Scholar are free and keyless — likely first)
+- New `scholarly_search` tool vs a `source_type` parameter on `web_search`
+- Scholarly PDF handling — ties to the deferred full-PDF-parsing extraction item

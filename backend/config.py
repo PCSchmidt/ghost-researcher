@@ -48,6 +48,7 @@ class Settings:
     log_level: str
     next_public_api_url: str | None
     cors_allowed_origins: list[str]
+    job_time_budget_seconds: float = 240.0
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -82,4 +83,5 @@ class Settings:
             cors_allowed_origins=_parse_csv(
                 source.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
             ),
+            job_time_budget_seconds=float(source.get("JOB_TIME_BUDGET_SECONDS", "240")),
         )

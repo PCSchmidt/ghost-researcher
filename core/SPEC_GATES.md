@@ -148,8 +148,20 @@ stage.
 - Exit token: `GHOST STEALTH CONFIRMED`
 - Status: Phase 1 DONE & live on Railway (block rate ~100% → 37.5%; production report 0.68 confidence, 5 findings). Phase 2 optional (per-source fingerprint; proxy-on-retry). Proxy deferred — option 1, no proxy (DEC-010)
 
+### v1.2.2 - Pipeline Robustness
+
+- Exit artifacts: navigate bounds shared browser to ~1 page (fixes connect_over_cdp hang); wall-clock `JOB_TIME_BUDGET_SECONDS` → partial synthesis on timeout; nav timeout 10s→20s + caught goto errors
+- Exit token: `PIPELINE ROBUSTNESS CONFIRMED`
+- Status: Implemented (page-bounding + time budget). Connection-reuse deferred.
+
 ### v1.3.0 - Shareable Report Output (Deferred)
 
 - Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances
 - Exit token: `SHAREABLE OUTPUT CONFIRMED`
 - Status: Planned / Deferred (after v1.2.0). PDF layout expected to need visual iteration.
+
+### v1.4.0 - Scholarly Source Coverage (Deferred)
+
+- Exit artifacts: research-source-provider layer (arXiv/Semantic Scholar/PubMed/CORE/Crossref), planner access via `scholarly_search` or `source_type`, keyless `site:` fallback, scholarly credibility signals, academic-coverage eval metric
+- Exit token: `SCHOLARLY COVERAGE CONFIRMED`
+- Status: Planned / Deferred. Runtime search is currently generic Brave web search with no repository integration.
