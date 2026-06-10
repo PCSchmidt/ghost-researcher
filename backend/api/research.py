@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Protocol
 
 from fastapi import APIRouter, HTTPException
@@ -15,6 +16,8 @@ from backend.jobs.research import PlannerRunResult, PlannerSequenceResult, Resea
 from backend.jobs.status import build_status_events, encode_sse_event
 from backend.persistence import InMemoryResearchRepository, ResearchRepository
 from backend.synthesizer.schema import ResearchReport
+
+logger = logging.getLogger("ghostresearcher.api")
 
 
 class ResearchOrchestratorLike(Protocol):
@@ -121,6 +124,7 @@ def create_research_router(
         try:
             result = await active_orchestrator.run_sequence(research_goal)
         except Exception as exc:
+            logger.exception("run_sequence failed for goal=%r", research_goal)
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         return active_repository.save(_serialize_sequence_result(result))
 
