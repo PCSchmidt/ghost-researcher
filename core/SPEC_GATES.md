@@ -174,6 +174,6 @@ stage.
 
 ### v1.5.0 - Long-Form Research Report
 
-- Exit artifacts: ResearchReport v2 (abstract, themed sections, in-text citations, conclusion, references); multi-pass synthesis; evidence-coverage + supported-claims eval metrics; report viewer renders the structure
+- Exit artifacts: ResearchReport v2 (abstract, themed sections, in-text citations, conclusion, references); multi-pass synthesis (outline → concurrent per-section drafting → framing, split model tiers); report viewer renders the structure; evidence-coverage + supported-claims eval metrics
 - Exit token: `LONG-FORM REPORT CONFIRMED`
-- Status: Planned. Length emerges from evidence, not a page count (DEC-011). **Prerequisite for v1.3.0** (research-paper PDF).
+- Status: Core shipped + LIVE on Railway/Vercel (LONGFORM_ENABLED=true, cap raised to $0.75, research budget 150s, hard timeout 420s). Verified in production: a 4-section research paper (abstract + in-text citations + references) in ~315s. Length emerges from evidence, not a page count (DEC-011). Remaining: evidence-coverage eval metric; operational follow-up — recycle the long-lived cloakserve browser (stale instance was hanging research). **Prerequisite for v1.3.0** (research-paper PDF).
