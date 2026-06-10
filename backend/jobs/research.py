@@ -184,7 +184,10 @@ class ResearchOrchestrator:
                         break  # one forced navigate+extract per fallback trigger
             else:
                 # Exhausted max_steps without explicit finalize_report or stop signal.
-                if not session.termination_state:
+                # termination_state defaults to the truthy "active", so `not state` never
+                # fired and finished jobs were left "active". Guard on "active" explicitly
+                # (matching the time-budget guard above) so they finalize as "max_steps".
+                if session.termination_state == "active":
                     session.finalize("max_steps")
         except Exception:  # noqa: BLE001 - degrade to a partial report, never 500 away gathered evidence
             logger.exception(
