@@ -118,6 +118,46 @@ class NavigateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(0, result.status_code)
         self.assertTrue(result.blocked_reason.startswith("navigation_error:"))
 
+    async def test_hung_navigation_is_bounded_by_overall_timeout(self) -> None:
+        # A degraded shared browser can hang a page operation indefinitely (no
+        # exception). The overall navigate backstop must cancel it and return a
+        # blocked source so the planner moves on instead of the job hanging.
+        import asyncio
+
+        class HangingPage:
+            url = "https://hang.example/start"
+
+            async def goto(self, url: str, *, wait_until: str, timeout: float) -> None:
+                await asyncio.sleep(60)  # never returns within the test budget
+
+            async def wait_for_selector(self, selector: str, *, timeout: float) -> None:
+                return None
+
+            async def title(self) -> str:
+                return ""
+
+            async def content(self) -> str:
+                return ""
+
+            async def eval_on_selector_all(self, selector: str, expression: str) -> list[str]:
+                return []
+
+        @asynccontextmanager
+        async def fake_context(settings: Settings):
+            yield HangingPage()
+
+        # timeout_seconds=0.05 -> overall backstop ~0.15s, so this resolves fast.
+        result = await navigate_to_url(
+            Settings.from_env({}),
+            url="https://hang.example/start",
+            timeout_seconds=0.05,
+            page_context_factory=fake_context,
+        )
+
+        self.assertTrue(result.detection_blocked)
+        self.assertEqual("blocked", result.page_type)
+        self.assertEqual("navigation_timeout", result.blocked_reason)
+
     async def test_navigate_detects_bot_challenge_content(self) -> None:
         fake_page = FakePage(
             url="https://example.com/challenge",

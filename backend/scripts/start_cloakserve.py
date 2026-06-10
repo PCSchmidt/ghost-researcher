@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import os
 import signal
-import sys
+from typing import Any
 from urllib.request import urlopen
 from urllib.error import URLError
 from playwright.async_api import async_playwright
@@ -127,6 +127,70 @@ def _resolve_chromium(playwright, *, browser_port: int) -> tuple[str, list[str],
     return executable, args, "vanilla"
 
 
+async def _wait_http_ready(browser_port: int, *, attempts: int = 120) -> bool:
+    """Poll Chromium's /json/version until it returns 200 (HTTP server ready)."""
+    version_url = f"http://127.0.0.1:{browser_port}/json/version"
+    for _attempt in range(attempts):
+        try:
+            with urlopen(version_url, timeout=1.0) as resp:
+                if resp.status == 200:
+                    print(f"Chromium HTTP ready on port {browser_port} (attempt {_attempt + 1})", flush=True)
+                    return True
+        except (URLError, OSError):
+            pass
+        await asyncio.sleep(0.5)
+    return False
+
+
+async def _launch_browser(playwright, *, browser_port: int) -> asyncio.subprocess.Process:
+    """Launch Chromium on browser_port and wait for its HTTP endpoint to be ready."""
+    _executable, args, mode = _resolve_chromium(playwright, browser_port=browser_port)
+    print(f"Launching {mode} Chromium on 127.0.0.1:{browser_port}...", flush=True)
+    process = await asyncio.create_subprocess_exec(*args)
+    if not await _wait_http_ready(browser_port):
+        print("Chromium did not become HTTP-ready in time; proceeding anyway", flush=True)
+    return process
+
+
+async def _recycle_browser_periodically(
+    playwright,
+    *,
+    browser_port: int,
+    holder: dict[str, Any],
+    max_age_seconds: float,
+    stop_event: asyncio.Event,
+) -> None:
+    """Recycle the Chromium subprocess every max_age_seconds.
+
+    The long-lived shared browser degrades over time (stale targets, accumulated
+    state) and can start hanging CDP target sync. Relaunching it on the same port
+    keeps it fresh. One browser runs at a time (terminate then relaunch), so there
+    is no memory spike; the brief relaunch window only makes a navigation or two
+    fail fast (the executor bounds every browser call), never hang.
+    """
+    while not stop_event.is_set():
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=max_age_seconds)
+            return  # stop requested during the wait
+        except asyncio.TimeoutError:
+            pass  # max age elapsed -> recycle
+
+        print("Recycling Chromium (max age reached)...", flush=True)
+        old = holder.get("process")
+        if old is not None and old.returncode is None:
+            old.terminate()
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(old.wait(), timeout=10.0)
+        for attempt in range(5):
+            try:
+                holder["process"] = await _launch_browser(playwright, browser_port=browser_port)
+                print("Chromium recycled.", flush=True)
+                break
+            except Exception as exc:  # noqa: BLE001 - keep retrying so we never end up browserless
+                print(f"Recycle launch failed (attempt {attempt + 1}): {exc}", flush=True)
+                await asyncio.sleep(2.0)
+
+
 async def main():
     print("Starting CloakBrowser CDP server...", flush=True)
 
@@ -134,28 +198,10 @@ async def main():
     browser_port = port + 1
 
     async with async_playwright() as p:
-        executable, args, mode = _resolve_chromium(p, browser_port=browser_port)
-
-        print(f"Launching {mode} Chromium on 127.0.0.1:{browser_port}...", flush=True)
-
         # Launch Chromium locally and expose it through a TCP proxy for Railway.
-        process = await asyncio.create_subprocess_exec(*args)
-
-        # Wait for Chromium's /json/version HTTP endpoint to return 200.
-        # TCP-only check is insufficient — Chromium can accept the socket before
-        # its HTTP server is ready, causing /json/version to return 500.
-        version_url = f"http://127.0.0.1:{browser_port}/json/version"
-        for _attempt in range(120):
-            try:
-                with urlopen(version_url, timeout=1.0) as resp:
-                    if resp.status == 200:
-                        print(f"Chromium HTTP ready on port {browser_port} (attempt {_attempt + 1})", flush=True)
-                        break
-            except (URLError, OSError):
-                pass
-            await asyncio.sleep(0.5)
-        else:
-            print("Chromium did not become HTTP-ready in time; proceeding anyway", flush=True)
+        # A holder lets the periodic recycle task swap the subprocess underneath the
+        # proxy (which always targets the fixed browser_port).
+        holder: dict[str, Any] = {"process": await _launch_browser(p, browser_port=browser_port)}
 
         async def handle_proxy_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
             await _handle_proxy_client(
@@ -187,12 +233,34 @@ async def main():
         except NotImplementedError:
             pass  # Windows does not support add_signal_handler fully
 
+        # Periodic browser recycling (opt-in). 0 disables it (default), keeping the
+        # original single-launch behavior. Set CLOAKSERVE_MAX_AGE_SECONDS to e.g.
+        # 21600 (6h) to keep the long-lived shared browser fresh.
+        max_age_seconds = float(os.getenv("CLOAKSERVE_MAX_AGE_SECONDS", "0") or "0")
+        recycle_task: asyncio.Task | None = None
+        if max_age_seconds > 0:
+            print(f"Browser recycling enabled: every {max_age_seconds:.0f}s", flush=True)
+            recycle_task = asyncio.create_task(
+                _recycle_browser_periodically(
+                    p,
+                    browser_port=browser_port,
+                    holder=holder,
+                    max_age_seconds=max_age_seconds,
+                    stop_event=stop_event,
+                )
+            )
+
         await stop_event.wait()
 
-        print(f"Shutting down CDP server...", flush=True)
+        print("Shutting down CDP server...", flush=True)
+        if recycle_task is not None:
+            recycle_task.cancel()
+            with contextlib.suppress(Exception):
+                await recycle_task
         proxy_server.close()
         await proxy_server.wait_closed()
-        if process.returncode is None:
+        process = holder.get("process")
+        if process is not None and process.returncode is None:
             process.terminate()
             await process.wait()
 

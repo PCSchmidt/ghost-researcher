@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -128,7 +129,10 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
     try:
         playwright = await async_playwright().start()
         ws_endpoint = await async_resolve_cdp_ws_endpoint(settings)
-        browser = await playwright.chromium.connect_over_cdp(ws_endpoint)
+        # Bound the CDP connect: a degraded/stale shared browser can otherwise hang
+        # target sync here for minutes, which the navigate timeout below cannot preempt
+        # because it happens before page.goto. 20s is plenty for a healthy server.
+        browser = await playwright.chromium.connect_over_cdp(ws_endpoint, timeout=20_000)
         context = browser.contexts[0] if browser.contexts else await browser.new_context()
         # Close pages left open by prior steps. The CloakBrowser CDP browser is
         # shared and long-lived; `browser.close()` here only disconnects, so pages
@@ -145,10 +149,18 @@ async def _default_page_context(settings: Settings) -> AsyncIterator[Page]:
     finally:
         # Don't close the page — extract needs it. Chromium keeps the page
         # alive in its context so the next Playwright connection sees it.
+        # Bound cleanup so a stuck browser.close() can't hang the job (especially
+        # during cancellation by the navigate-level timeout below).
         if browser is not None:
-            await browser.close()
+            try:
+                await asyncio.wait_for(browser.close(), timeout=5.0)
+            except Exception:
+                pass
         if playwright is not None:
-            await playwright.stop()
+            try:
+                await asyncio.wait_for(playwright.stop(), timeout=5.0)
+            except Exception:
+                pass
 
 
 async def navigate_to_url(
@@ -167,6 +179,55 @@ async def navigate_to_url(
     timeout_ms = timeout_seconds * 1000
     started_at = perf_counter()
 
+    # Overall backstop around the entire navigation (connect + new_page + goto +
+    # reads + cleanup). On a degraded shared browser any of these can hang outside
+    # the per-call timeouts; bounding the whole thing guarantees a navigation fails
+    # fast and the planner moves on instead of the job running to its hard cap.
+    # 3x the page timeout leaves room for the 20s connect + 20s goto + reads.
+    overall_timeout = timeout_seconds * 3
+    try:
+        return await asyncio.wait_for(
+            _perform_navigation(
+                settings,
+                url=url,
+                wait_for=wait_for,
+                timeout_ms=timeout_ms,
+                started_at=started_at,
+                page_context=page_context,
+            ),
+            timeout=overall_timeout,
+        )
+    except Exception as exc:
+        reason = "navigation_timeout" if isinstance(exc, (asyncio.TimeoutError, TimeoutError)) else f"navigation_error:{type(exc).__name__}"
+        return _blocked_navigation(url, started_at, reason)
+
+
+def _blocked_navigation(url: str, started_at: float, reason: str) -> NavigationResult:
+    return NavigationResult(
+        url=url,
+        final_url=url,
+        title="",
+        status_code=0,
+        content_excerpt="",
+        links=[],
+        detection_blocked=True,
+        blocked_reason=reason,
+        screenshot_path=None,
+        timing_ms=int((perf_counter() - started_at) * 1000),
+        content_type=None,
+        page_type="blocked",
+    )
+
+
+async def _perform_navigation(
+    settings: Settings,
+    *,
+    url: str,
+    wait_for: str | None,
+    timeout_ms: float,
+    started_at: float,
+    page_context: PageContextFactory,
+) -> NavigationResult:
     async with page_context(settings) as page:
         try:
             response = await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
@@ -195,20 +256,7 @@ async def navigate_to_url(
             # run. Treat any navigation failure (goto timeout, network error) as a
             # skip-this-source signal so the planner moves on instead of the API
             # returning HTTP 500.
-            return NavigationResult(
-                url=url,
-                final_url=url,
-                title="",
-                status_code=0,
-                content_excerpt="",
-                links=[],
-                detection_blocked=True,
-                blocked_reason=f"navigation_error:{type(exc).__name__}",
-                screenshot_path=None,
-                timing_ms=int((perf_counter() - started_at) * 1000),
-                content_type=None,
-                page_type="blocked",
-            )
+            return _blocked_navigation(url, started_at, f"navigation_error:{type(exc).__name__}")
 
     detection_blocked, blocked_reason = _detect_block(title, content)
     timing_ms = int((perf_counter() - started_at) * 1000)
