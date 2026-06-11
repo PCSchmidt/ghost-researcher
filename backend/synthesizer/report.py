@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import Any, Awaitable, Callable
 
 from backend.agent.memory import AgentSession, EvidenceRecord
@@ -20,6 +21,8 @@ from backend.synthesizer.schema import (
 )
 
 SynthesisTransport = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
+
+logger = logging.getLogger("ghostresearcher.synthesis")
 
 
 class SynthesisError(RuntimeError):
@@ -60,7 +63,13 @@ class ReportSynthesizer:
                     report = await self._synthesize_long_form(session, transport)
                 else:
                     report = await self._synthesize_flat(session, transport)
-            except SynthesisError:
+            except SynthesisError as exc:
+                logger.warning(
+                    "model synthesis failed (%s); using deterministic build (goal=%r, tokens=%d)",
+                    exc,
+                    session.research_goal,
+                    session.running_tokens,
+                )
                 report = self._deterministic_report_for(session)
         else:
             report = self._deterministic_report_for(session)
@@ -140,11 +149,12 @@ class ReportSynthesizer:
             )
             return _assemble_long_form(session, evidence, outline, drafted, framing)
         except SynthesisError:
-            if session.running_cost_usd >= self._settings.max_model_cost_per_job_usd:
-                raise
-            return _deterministic_long_form_report(session, self._settings.longform_max_sections)
-        except Exception:  # noqa: BLE001 - a malformed pass degrades to a deterministic build
-            return _deterministic_long_form_report(session, self._settings.longform_max_sections)
+            # Surfaces to synthesize(), which logs the reason and degrades to the
+            # deterministic long-form build. Centralizing the fallback there keeps it
+            # observable instead of silently swallowed here.
+            raise
+        except Exception as exc:  # noqa: BLE001 - report as SynthesisError so the caller degrades + logs
+            raise SynthesisError(f"long_form_failed:{type(exc).__name__}") from exc
 
 
 def _deterministic_report(session: AgentSession) -> ResearchReport:
