@@ -164,7 +164,7 @@ stage.
 
 - Exit artifacts: `/reports/[id]` permalink + `/reports` list, print CSS, client print-to-PDF (Download/Print button), ReportDocument paper layout, share/open affordances
 - Exit token: `SHAREABLE OUTPUT CONFIRMED`
-- Status: Core shipped — client print-to-PDF (DEC-008): `/reports/[id]` permalink renders the research-paper layout and exports to PDF via the browser print dialog; `/reports` list; `GET /reports` summaries. Deferred follow-ups: (1) **durable persistence** — the default repo is in-memory, so permalinks/reports do not survive an API redeploy; switch production to JsonFile/Postgres for truly durable shareable links; (2) social OG/Twitter preview cards; (3) optional server-rendered PDF (reuse cloakserve `page.pdf()`). PDF layout expected to iterate visually.
+- Status: Shipped + LIVE — client print-to-PDF (DEC-008): `/reports/[id]` permalink renders the research-paper layout and exports to PDF via the browser print dialog (verified by user); `/reports` list; `GET /reports` summaries. **Durable persistence DONE**: `REPORTS_DB_PATH` → `JsonFileResearchRepository` on a Railway volume (`/data/reports.json`); verified in production — a completed report and its permalink survived a full API redeploy. Deferred follow-ups: (1) social OG/Twitter preview cards; (2) optional server-rendered PDF (reuse cloakserve `page.pdf()`); (3) Postgres for higher-volume durability. PDF layout expected to iterate visually.
 
 ### v1.4.0 - Scholarly Source Coverage (Deferred)
 

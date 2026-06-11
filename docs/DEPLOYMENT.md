@@ -200,3 +200,22 @@ Config-as-code** and set the config file path:
 
 After that, docs- and API-only changes no longer trigger the slow `cloakserve`
 rebuild.
+
+## 9. Durable Reports (shareable permalinks that survive redeploys)
+
+The default repository is in-memory, so reports and their `/reports/[id]` permalinks
+are lost on every redeploy. For durable shareable links, persist jobs to a JSON file
+on a Railway **volume** attached to `ghost-researcher`:
+
+```bash
+# attach a volume to the API service (CLI panics on the interactive prompt on
+# Windows; the dashboard Settings -> Volumes works too). Mount path /data:
+railway volume -s ghost-researcher add -m /data
+# point the repo at a file on the volume:
+railway variables --set "REPORTS_DB_PATH=/data/reports.json" -s ghost-researcher
+```
+
+`create_app` uses `JsonFileResearchRepository(REPORTS_DB_PATH)` when the var is set
+(else in-memory). Writes are atomic (tmp + replace) and jobs are serialized, so the
+file is never read mid-write. Verified: a completed report and its permalink survive
+a full API redeploy. For higher volume, migrate to Postgres (`DATABASE_URL`).
