@@ -12,10 +12,12 @@ from backend.agent.memory import AgentSession
 from backend.config import Settings
 from backend.executor.browser import BrowserHealth
 from backend.jobs.research import PlannerSequenceResult
-from backend.synthesizer.schema import ResearchReport, ReportClaim
+from backend.synthesizer.schema import Reference, ReportClaim, ReportParagraph, ReportSection, ResearchReport
 from evals.eval_runner import (
     BenchmarkPrompt,
     _breadth_score,
+    _evidence_coverage_score,
+    _supported_claims_score,
     load_benchmark_prompts,
     load_env_file,
     run_eval_suite,
@@ -67,6 +69,40 @@ class EvalRunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1.0, scored["metrics"]["source_trace_score"])
         self.assertEqual(["faa.gov"], scored["metrics"]["expected_source_matches"])
         self.assertGreater(scored["score"], 0.7)
+
+    def test_evidence_coverage_and_supported_claims_metrics(self) -> None:
+        # 3 gathered sources; report cites only 2 -> coverage 2/3.
+        session = AgentSession(research_goal="data center efficiency")
+        for url in ("https://a.gov/x", "https://b.org/y", "https://c.edu/z"):
+            session.add_evidence(url=url, title="t", claims=["c"], credibility_score=0.7)
+        report = ResearchReport(
+            title="Paper",
+            summary="s",
+            key_findings=[ReportClaim(text="finding", source_urls=["https://b.org/y"])],
+            sources_used=["https://a.gov/x", "https://b.org/y"],
+            confidence=0.6,
+            abstract="abstract",
+            sections=[
+                ReportSection(
+                    heading="Section",
+                    paragraphs=[
+                        ReportParagraph(text="cited paragraph", citations=["https://a.gov/x"]),
+                        ReportParagraph(text="uncited paragraph", citations=[]),
+                    ],
+                )
+            ],
+            conclusion="done",
+            references=[Reference(url="https://a.gov/x", title="t", credibility_score=0.7)],
+        )
+        result = PlannerSequenceResult(session=session, decisions=[], tool_results=[], synthesis=report)
+
+        # coverage = |{a,b} ∩ {a,b,c}| / 3
+        self.assertAlmostEqual(0.667, _evidence_coverage_score(result), places=3)
+        # supported = 1 key_finding + 1 cited paragraph out of (1 + 2) total claims
+        self.assertAlmostEqual(0.667, _supported_claims_score(report), places=3)
+
+    def test_supported_claims_empty_report_is_zero(self) -> None:
+        self.assertEqual(0.0, _supported_claims_score(None))
 
     async def test_run_eval_suite_produces_cases_and_average(self) -> None:
         payload = await run_eval_suite(prompts=[_prompt()])

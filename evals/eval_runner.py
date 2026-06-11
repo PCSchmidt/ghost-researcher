@@ -190,6 +190,13 @@ def score_prompt(prompt: BenchmarkPrompt, result: PlannerSequenceResult) -> dict
         "criteria_coverage_score": _criteria_coverage(prompt, report_text),
         "freshness_score": _freshness_score(prompt, report_text),
         "mean_credibility_score": mean_credibility,
+        # v1.5.0 long-form quality (DEC-011): length emerges from evidence, so we
+        # score how much gathered credible evidence the report actually synthesizes
+        # and how well its claims/paragraphs are cited — not page count.
+        "evidence_coverage_score": _evidence_coverage_score(result),
+        "supported_claims_score": _supported_claims_score(report),
+        "is_long_form": bool(report and report.is_long_form),
+        "section_count": len(report.sections) if report else 0,
         "tool_sequence": [decision.tool_call.name for decision in result.decisions if decision.tool_call is not None],
         "termination_reason": result.session.termination_reason,
     }
@@ -204,11 +211,13 @@ def score_prompt(prompt: BenchmarkPrompt, result: PlannerSequenceResult) -> dict
     )
     quality_score = round(
         (
-            metrics["expected_source_score"] * 0.20
-            + metrics["criteria_coverage_score"] * 0.25
-            + metrics["freshness_score"] * 0.15
-            + metrics["mean_credibility_score"] * 0.20
-            + metrics["breadth_score"] * 0.20
+            metrics["expected_source_score"] * 0.15
+            + metrics["criteria_coverage_score"] * 0.20
+            + metrics["freshness_score"] * 0.10
+            + metrics["mean_credibility_score"] * 0.15
+            + metrics["breadth_score"] * 0.15
+            + metrics["evidence_coverage_score"] * 0.15
+            + metrics["supported_claims_score"] * 0.10
         ),
         3,
     )
@@ -379,6 +388,44 @@ def _breadth_score(source_count: int, min_sources: int) -> float:
     return round(min(1.0, 0.7 + 0.15 * extra), 3)
 
 
+def _evidence_coverage_score(result: PlannerSequenceResult) -> float:
+    """Fraction of gathered (deduped) evidence URLs the report actually cites.
+
+    This is DEC-011's evidence-coverage target: a faithful report synthesizes the
+    credible evidence it gathered rather than leaving most of it on the floor.
+    """
+    gathered = {record.url for record in result.session.evidence_records}
+    if not gathered:
+        return 0.0
+    report = result.synthesis
+    cited = set(report.sources_used) if report else set()
+    return round(len(cited & gathered) / len(gathered), 3)
+
+
+def _supported_claims_score(report: Any) -> float:
+    """Fraction of report claims/paragraphs carrying at least one citation.
+
+    Counts the flat quick-view layer (key_findings) and, for long-form reports,
+    every section paragraph. An uncited paragraph is an unsupported claim.
+    """
+    if report is None:
+        return 0.0
+    total = 0
+    supported = 0
+    for claim in report.key_findings:
+        total += 1
+        if claim.source_urls:
+            supported += 1
+    for section in report.sections:
+        for paragraph in section.paragraphs:
+            total += 1
+            if paragraph.citations:
+                supported += 1
+    if total == 0:
+        return 0.0
+    return round(supported / total, 3)
+
+
 def _bool(value: Any) -> float:
     return 1.0 if value else 0.0
 
@@ -468,6 +515,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--mode", choices=["offline", "live"], default="offline")
     parser.add_argument("--limit", type=int, default=3, help="Number of benchmark prompts to run. Use 0 for all prompts.")
     parser.add_argument("--no-write", action="store_true", help="Print results without writing an artifact.")
+    parser.add_argument(
+        "--longform",
+        action="store_true",
+        help="Enable long-form synthesis for the offline run (deterministic, no live keys).",
+    )
     return parser.parse_args()
 
 
@@ -502,7 +554,14 @@ async def _main() -> None:
     # Live runs need real configuration (search provider, keys, CDP url). The CLI
     # reads it from .env + the process environment. Offline runs stay deterministic
     # and configuration-free so their artifacts remain reproducible.
-    settings = Settings.from_env(load_env_file()) if args.mode == "live" else None
+    if args.mode == "live":
+        settings = Settings.from_env(load_env_file())
+    elif args.longform:
+        # Exercise the deterministic long-form build (sections/citations/references)
+        # without pulling in live keys, so the offline artifact stays reproducible.
+        settings = Settings.from_env({"LONGFORM_ENABLED": "true"})
+    else:
+        settings = None
     prompts = load_benchmark_prompts(args.benchmark)
     selected_prompts = prompts if args.limit == 0 else prompts[: args.limit]
     payload = await run_eval_suite(prompts=selected_prompts, mode=args.mode, settings=settings)
