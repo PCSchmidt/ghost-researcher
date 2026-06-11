@@ -231,6 +231,40 @@ class ResearchRouteTests(unittest.IsolatedAsyncioTestCase):
             response = await client.get("/research/missing-job")
             self.assertEqual(404, response.status_code)
 
+    async def test_reports_list_returns_summaries(self) -> None:
+        session = AgentSession(research_goal="Review https://example.com/report")
+        session.register_source("https://example.com/report")
+        session.finalize("sufficient_coverage")
+        result = PlannerSequenceResult(
+            session=session,
+            decisions=[PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")],
+            tool_results=[],
+            synthesis=ResearchReport(
+                title="Example synthesis",
+                summary="s",
+                key_findings=[ReportClaim(text="c", source_urls=["https://example.com/report"])],
+                sources_used=["https://example.com/report"],
+                confidence=0.8,
+            ),
+        )
+        repository = InMemoryResearchRepository()
+        app = create_app({}, research_orchestrator=FakeResearchOrchestrator(result), research_repository=repository)
+
+        async with _client(app) as client:
+            created = await client.post("/research", json={"research_goal": "Review https://example.com/report"})
+            await _wait_for_terminal(client, created.json()["job_id"])
+            reports = (await client.get("/reports")).json()["reports"]
+
+            self.assertEqual(1, len(reports))
+            self.assertEqual("Example synthesis", reports[0]["title"])
+            self.assertEqual("Review https://example.com/report", reports[0]["research_goal"])
+            self.assertIn("confidence", reports[0])
+
+    async def test_reports_list_empty(self) -> None:
+        app = create_app({})
+        async with _client(app) as client:
+            self.assertEqual([], (await client.get("/reports")).json()["reports"])
+
     async def test_get_returns_404_for_missing_event_stream(self) -> None:
         app = create_app({})
         async with _client(app) as client:

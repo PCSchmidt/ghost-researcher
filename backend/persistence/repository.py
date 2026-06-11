@@ -20,6 +20,8 @@ class ResearchRepository(Protocol):
 
     def get(self, job_id: str) -> dict[str, Any] | None: ...
 
+    def list(self) -> list[dict[str, Any]]: ...
+
 
 @dataclass(frozen=True, slots=True)
 class StoredResearchJob:
@@ -80,6 +82,10 @@ class InMemoryResearchRepository:
             return None
         return job.response_payload()
 
+    def list(self) -> list[dict[str, Any]]:
+        ordered = sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
+        return [job.response_payload() for job in ordered]
+
 
 class JsonFileResearchRepository:
     """JSON-file repository that preserves job state across process restarts."""
@@ -109,6 +115,10 @@ class JsonFileResearchRepository:
         if job is None:
             return None
         return job.response_payload()
+
+    def list(self) -> list[dict[str, Any]]:
+        ordered = sorted(self._read_jobs().values(), key=lambda job: job.created_at, reverse=True)
+        return [job.response_payload() for job in ordered]
 
     def _read_jobs(self) -> dict[str, StoredResearchJob]:
         if not self._path.exists():

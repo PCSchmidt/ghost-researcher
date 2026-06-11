@@ -102,6 +102,18 @@ export function isTerminalStatus(status: string): boolean {
   return status !== "running";
 }
 
+export type ReportSummary = {
+  job_id: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  research_goal: string | null;
+  title: string | null;
+  confidence: number | null;
+  is_long_form: boolean;
+  source_count: number;
+};
+
 export function apiBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 }
@@ -142,6 +154,19 @@ export async function getResearchJob(jobId: string): Promise<ResearchJob> {
   }
 
   return response.json() as Promise<ResearchJob>;
+}
+
+export async function getReportsList(): Promise<ReportSummary[]> {
+  const response = await fetch(`${apiBaseUrl()}/reports`);
+  if (!response.ok) {
+    throw new Error(`Failed to load reports with status ${response.status}`);
+  }
+  const body = (await response.json()) as { reports?: ReportSummary[] };
+  return body.reports ?? [];
+}
+
+export function reportPermalink(jobId: string): string {
+  return `/reports/${encodeURIComponent(jobId)}`;
 }
 
 async function readErrorDetail(response: Response): Promise<string | null> {

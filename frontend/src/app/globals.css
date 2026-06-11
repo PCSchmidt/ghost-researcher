@@ -23,3 +23,53 @@ textarea,
 input {
   font: inherit;
 }
+
+/* Research-paper document: serif body for an academic feel on screen and in print. */
+.report-paper {
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+}
+.report-paper h1,
+.report-paper h2 {
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+}
+
+/* Print-to-PDF: strip app chrome and lay the report out as a paper. The user's
+   browser "Save as PDF" uses these rules, so this is the PDF layout. */
+@media print {
+  @page {
+    margin: 18mm 16mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  /* Drop the on-screen sheet framing so the paper fills the page. */
+  .report-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .report-paper {
+    max-width: none !important;
+    padding: 0 !important;
+    color: #000000 !important;
+  }
+  .report-meta {
+    display: none !important;
+  }
+  /* Keep headings with the text that follows; avoid orphaned section breaks. */
+  .report-paper h1,
+  .report-paper h2 {
+    break-after: avoid;
+  }
+  .report-paper a {
+    color: #000000 !important;
+    text-decoration: none;
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
+}
