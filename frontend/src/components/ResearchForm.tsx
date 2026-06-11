@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { LoaderCircle, Send } from "lucide-react";
 
 type ResearchFormProps = {
@@ -8,8 +8,24 @@ type ResearchFormProps = {
   onSubmit: (researchGoal: string) => Promise<void>;
 };
 
+const GOAL_STORAGE_KEY = "ghostresearcher:goal";
+const DEFAULT_GOAL = "Find recent FAA BVLOS guidance and summarize credible sources";
+
+function readSavedGoal(): string {
+  if (typeof window === "undefined") {
+    return DEFAULT_GOAL;
+  }
+  // Persisted so the prompt survives navigating to a report and back; an explicit
+  // empty string (user cleared it) is preserved, only an unset key falls back.
+  return window.localStorage.getItem(GOAL_STORAGE_KEY) ?? DEFAULT_GOAL;
+}
+
 export function ResearchForm({ isSubmitting, onSubmit }: ResearchFormProps) {
-  const [researchGoal, setResearchGoal] = useState("Find recent FAA BVLOS guidance and summarize credible sources");
+  const [researchGoal, setResearchGoal] = useState<string>(readSavedGoal);
+
+  useEffect(() => {
+    window.localStorage.setItem(GOAL_STORAGE_KEY, researchGoal);
+  }, [researchGoal]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
