@@ -41,32 +41,46 @@ class ReportSynthesizer:
         self._transport = transport
 
     async def synthesize(self, session: AgentSession) -> ResearchReport:
-        """Generate and validate a report for the current session."""
+        """Generate and validate a report for the current session.
+
+        Model synthesis is best-effort. If the model budget is already spent (the
+        research loop can exhaust the shared token budget before synthesis runs) or a
+        model pass fails, we degrade to a token-free deterministic build from the
+        gathered evidence — a run that gathered evidence must never return an empty
+        report.
+        """
         if not session.evidence_records:
             raise SynthesisError("no_evidence_records")
-        self._guard_cost(session)
 
-        use_model = self._transport is not None or bool(self._settings.openrouter_api_key)
-        if not use_model:
-            report = (
-                _deterministic_long_form_report(session, self._settings.longform_max_sections)
-                if self._settings.longform_enabled
-                else _deterministic_report(session)
-            )
+        has_transport = self._transport is not None or bool(self._settings.openrouter_api_key)
+        if has_transport and not self._over_budget(session):
+            try:
+                transport = self._transport or OpenRouterChatClient(self._settings).complete
+                if self._settings.longform_enabled:
+                    report = await self._synthesize_long_form(session, transport)
+                else:
+                    report = await self._synthesize_flat(session, transport)
+            except SynthesisError:
+                report = self._deterministic_report_for(session)
         else:
-            transport = self._transport or OpenRouterChatClient(self._settings).complete
-            if self._settings.longform_enabled:
-                report = await self._synthesize_long_form(session, transport)
-            else:
-                report = await self._synthesize_flat(session, transport)
+            report = self._deterministic_report_for(session)
 
         validate_report_sources(report, session.evidence_records)
         return report
 
+    def _deterministic_report_for(self, session: AgentSession) -> ResearchReport:
+        if self._settings.longform_enabled:
+            return _deterministic_long_form_report(session, self._settings.longform_max_sections)
+        return _deterministic_report(session)
+
+    def _over_budget(self, session: AgentSession) -> bool:
+        return (
+            session.running_tokens >= self._settings.max_tokens_per_job
+            or session.running_cost_usd >= self._settings.max_model_cost_per_job_usd
+        )
+
     def _guard_cost(self, session: AgentSession) -> None:
-        if session.running_tokens >= self._settings.max_tokens_per_job:
-            raise SynthesisError("cost_limit")
-        if session.running_cost_usd >= self._settings.max_model_cost_per_job_usd:
+        if self._over_budget(session):
             raise SynthesisError("cost_limit")
 
     async def _synthesize_flat(self, session: AgentSession, transport: SynthesisTransport) -> ResearchReport:

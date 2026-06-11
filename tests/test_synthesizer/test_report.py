@@ -106,6 +106,27 @@ class ReportSynthesizerTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(SynthesisError, "no_evidence_records"):
             await synthesizer.synthesize(AgentSession(research_goal="No evidence"))
 
+    async def test_synthesis_degrades_to_deterministic_when_token_budget_spent(self) -> None:
+        # The research loop can exhaust the shared token budget before synthesis runs.
+        # A run that gathered evidence must still return a report (deterministic, no
+        # tokens), not None — and must not call the model when already over budget.
+        session = _session_with_evidence()
+        session.record_model_usage(prompt_tokens=200_000, completion_tokens=0, cost_usd=0.0)
+        called = False
+
+        async def fake_transport(payload: dict[str, Any]) -> dict[str, Any]:
+            nonlocal called
+            called = True
+            return {"choices": [{"message": {"content": "{}"}}], "usage": {}}
+
+        synthesizer = ReportSynthesizer(Settings.from_env({}), transport=fake_transport)
+
+        report = await synthesizer.synthesize(session)
+
+        self.assertFalse(called)  # over budget -> no model call
+        self.assertIsNotNone(report)
+        self.assertEqual(["https://faa.gov/bvlos"], report.sources_used)
+
 
 def _two_source_session() -> AgentSession:
     session = AgentSession(research_goal="Assess data center energy efficiency in 2025")
