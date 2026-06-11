@@ -160,11 +160,11 @@ stage.
 - Exit token: `ASYNC JOBS CONFIRMED`
 - Status: Complete. Single-worker in-memory repo keeps polling coherent; Redis-backed queue remains the documented multi-worker upgrade.
 
-### v1.3.0 - Shareable Report Output (Deferred)
+### v1.3.0 - Shareable Report Output
 
-- Exit artifacts: `/reports/[id]` permalink + `/reports` list, OG/Twitter preview, print CSS, server-rendered PDF export, share/download affordances
+- Exit artifacts: `/reports/[id]` permalink + `/reports` list, print CSS, client print-to-PDF (Download/Print button), ReportDocument paper layout, share/open affordances
 - Exit token: `SHAREABLE OUTPUT CONFIRMED`
-- Status: Planned / Deferred (after v1.2.0). PDF layout expected to need visual iteration.
+- Status: Core shipped — client print-to-PDF (DEC-008): `/reports/[id]` permalink renders the research-paper layout and exports to PDF via the browser print dialog; `/reports` list; `GET /reports` summaries. Deferred follow-ups: (1) **durable persistence** — the default repo is in-memory, so permalinks/reports do not survive an API redeploy; switch production to JsonFile/Postgres for truly durable shareable links; (2) social OG/Twitter preview cards; (3) optional server-rendered PDF (reuse cloakserve `page.pdf()`). PDF layout expected to iterate visually.
 
 ### v1.4.0 - Scholarly Source Coverage (Deferred)
 
