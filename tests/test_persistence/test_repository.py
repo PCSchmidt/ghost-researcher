@@ -65,6 +65,19 @@ class ResearchRepositoryTests(unittest.TestCase):
 
         self.assertIsNone(repository.update("missing-job", {"status": "completed"}))
 
+    def test_list_returns_all_jobs(self) -> None:
+        repository = InMemoryResearchRepository()
+        a = repository.save({"status": "completed"})
+        b = repository.save({"status": "running"})
+
+        listed = repository.list()
+
+        self.assertEqual(2, len(listed))
+        self.assertEqual({a["job_id"], b["job_id"]}, {row["job_id"] for row in listed})
+
+    def test_empty_repository_lists_nothing(self) -> None:
+        self.assertEqual([], InMemoryResearchRepository().list())
+
     def test_json_repository_update_persists_across_instances(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "research_jobs.json"

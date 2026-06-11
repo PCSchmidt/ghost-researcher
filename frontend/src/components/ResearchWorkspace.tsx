@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Database, FileText, Globe2, Server } from "lucide-react";
+import Link from "next/link";
+import { Activity, Database, FileText, Globe2, Server, SquareArrowOutUpRight } from "lucide-react";
 import { JobStatus } from "@/components/JobStatus";
 import { ReportViewer } from "@/components/ReportViewer";
 import { ResearchForm } from "@/components/ResearchForm";
 import { SourceCard } from "@/components/SourceCard";
-import { getResearchJob, submitResearchGoal, type ResearchJob } from "@/lib/api";
+import { getResearchJob, reportPermalink, submitResearchGoal, type ResearchJob } from "@/lib/api";
 
 const POLL_INTERVAL_MS = 2500;
 
@@ -80,6 +81,13 @@ export function ResearchWorkspace() {
 
           <ResearchForm onSubmit={handleSubmit} isSubmitting={isSubmitting || isRunning} />
 
+          <Link
+            href="/reports"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:underline"
+          >
+            <FileText size={15} aria-hidden="true" /> All reports
+          </Link>
+
           {error ? (
             <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
               {error}
@@ -110,7 +118,17 @@ export function ResearchWorkspace() {
                 {job?.session.research_goal ?? "Submit a research goal"}
               </h2>
             </div>
-            <div className="text-sm text-zinc-600">{job ? `Job ${job.job_id.slice(0, 8)}` : "No job yet"}</div>
+            <div className="flex items-center gap-3 text-sm text-zinc-600">
+              {job?.synthesis ? (
+                <Link
+                  href={reportPermalink(job.job_id)}
+                  className="inline-flex items-center gap-1.5 font-medium text-teal-700 hover:underline"
+                >
+                  Open report <SquareArrowOutUpRight size={14} aria-hidden="true" />
+                </Link>
+              ) : null}
+              <span>{job ? `Job ${job.job_id.slice(0, 8)}` : "No job yet"}</span>
+            </div>
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">

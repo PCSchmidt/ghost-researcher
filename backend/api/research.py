@@ -84,6 +84,23 @@ def _serialize_synthesis(report: ResearchReport | None) -> dict[str, Any] | None
     return report.to_dict()
 
 
+def _report_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    """Trim a stored job payload to a lightweight row for the /reports list."""
+    session = payload.get("session") or {}
+    synthesis = payload.get("synthesis") or {}
+    return {
+        "job_id": payload.get("job_id"),
+        "created_at": payload.get("created_at"),
+        "updated_at": payload.get("updated_at"),
+        "status": payload.get("status"),
+        "research_goal": session.get("research_goal"),
+        "title": synthesis.get("title"),
+        "confidence": synthesis.get("confidence"),
+        "is_long_form": bool(synthesis.get("sections")),
+        "source_count": len(session.get("sources_visited") or []),
+    }
+
+
 def _serialize_run_result(result: PlannerRunResult) -> dict[str, Any]:
     return {
         "status": "completed" if result.session.steps_taken > 0 else "stopped",
@@ -244,6 +261,10 @@ def create_research_router(
         if payload is None:
             raise HTTPException(status_code=404, detail="research job not found")
         return payload
+
+    @router.get("/reports")
+    async def list_reports() -> dict[str, Any]:
+        return {"reports": [_report_summary(payload) for payload in active_repository.list()]}
 
     @router.get("/research/{job_id}/events")
     async def stream_research_events(job_id: str) -> StreamingResponse:
