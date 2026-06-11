@@ -265,6 +265,47 @@ class ResearchRouteTests(unittest.IsolatedAsyncioTestCase):
         async with _client(app) as client:
             self.assertEqual([], (await client.get("/reports")).json()["reports"])
 
+    async def test_reports_persist_across_app_restart_with_db_path(self) -> None:
+        # With REPORTS_DB_PATH set, a job created by one app instance is still readable
+        # by a fresh instance (a redeploy) pointed at the same file — durable permalinks.
+        import tempfile
+        from pathlib import Path
+
+        session = AgentSession(research_goal="Durable goal")
+        session.register_source("https://example.com/report")
+        session.finalize("sufficient_coverage")
+        result = PlannerSequenceResult(
+            session=session,
+            decisions=[PlannerDecision(tool_call=None, termination_reason="sufficient_coverage")],
+            tool_results=[],
+            synthesis=ResearchReport(
+                title="Durable report",
+                summary="s",
+                key_findings=[ReportClaim(text="c", source_urls=["https://example.com/report"])],
+                sources_used=["https://example.com/report"],
+                confidence=0.7,
+            ),
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "reports.json")
+
+            app1 = create_app({"REPORTS_DB_PATH": db_path}, research_orchestrator=FakeResearchOrchestrator(result))
+            async with _client(app1) as client:
+                created = await client.post("/research", json={"research_goal": "Durable goal"})
+                job_id = created.json()["job_id"]
+                await _wait_for_terminal(client, job_id)
+
+            # Fresh app instance (simulated redeploy), same file, no orchestrator.
+            app2 = create_app({"REPORTS_DB_PATH": db_path})
+            async with _client(app2) as client:
+                fetched = await client.get(f"/research/{job_id}")
+                self.assertEqual(200, fetched.status_code)
+                self.assertEqual("Durable report", fetched.json()["synthesis"]["title"])
+                reports = (await client.get("/reports")).json()["reports"]
+                self.assertEqual(1, len(reports))
+                self.assertEqual(job_id, reports[0]["job_id"])
+
     async def test_get_returns_404_for_missing_event_stream(self) -> None:
         app = create_app({})
         async with _client(app) as client:

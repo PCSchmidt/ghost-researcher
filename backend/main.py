@@ -14,7 +14,7 @@ from backend.api import create_health_router, create_research_router
 from backend.config import Settings
 from backend.executor.browser import BrowserHealth
 from backend.api.research import ResearchOrchestratorLike
-from backend.persistence import ResearchRepository
+from backend.persistence import JsonFileResearchRepository, ResearchRepository
 
 
 def _configure_logging(level: str) -> None:
@@ -53,6 +53,12 @@ def create_app(
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
+    # Durable reports: when REPORTS_DB_PATH is set (a Railway volume in production),
+    # persist jobs to a JSON file so shareable permalinks and the /reports list
+    # survive redeploys. Otherwise the in-memory repo (the router default) is used,
+    # which keeps tests and local runs dependency-free.
+    if research_repository is None and settings.reports_db_path:
+        research_repository = JsonFileResearchRepository(settings.reports_db_path)
     app.include_router(create_health_router(settings, browser_health_resolver=browser_health_resolver))
     app.include_router(
         create_research_router(

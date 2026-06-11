@@ -52,6 +52,7 @@ class Settings:
     job_hard_timeout_seconds: float = 330.0
     longform_enabled: bool = False
     longform_max_sections: int = 6
+    reports_db_path: str | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -90,4 +91,5 @@ class Settings:
             job_hard_timeout_seconds=float(source.get("JOB_HARD_TIMEOUT_SECONDS", "330")),
             longform_enabled=_parse_bool(source.get("LONGFORM_ENABLED", "false"), default=False),
             longform_max_sections=int(source.get("LONGFORM_MAX_SECTIONS", "6")),
+            reports_db_path=(source.get("REPORTS_DB_PATH") or None),
         )
