@@ -60,3 +60,24 @@ Prevention: Keep model routing behind an adapter and never trust raw model outpu
 Root cause: Model calls do not persist usage and reported cost metadata.
 Fix: Record model slug, prompt tokens, completion tokens, reported cost, and fallback tier for every model call.
 Prevention: Make cost logging part of planner/synthesizer adapter tests.
+
+### ERR-010: Job hangs at planner turn 0 to the hard timeout (unbounded model call)
+
+Root cause: A single OpenRouter call has no overall wall-clock bound. The blocking
+`urlopen(timeout=30)` runs in a worker thread, but OpenRouter sends keep-alive
+`: OPENROUTER PROCESSING` comment bytes during long generations, which keeps the socket
+active and defeats the per-socket 30s timeout. A slow/stuck generation therefore runs
+until the job's `JOB_HARD_TIMEOUT_SECONDS` cap. Observed in production (job a90b4ac0):
+the FIRST planner call (`run_sequence` step 0 is `_plan_next`, before any browser op)
+hung for the full 420s → `planner_turns=0, tokens=0, sources=[]`, terminal
+`job_timeout: exceeded hard wall-clock limit`, STEPS/SOURCES 0 in the UI. Not the
+stale-browser issue (no browser op runs before the first planner call; health was OK; a
+fresh job ran fine).
+Fix: `OpenRouterChatClient.complete` wraps the `to_thread` await in `asyncio.wait_for`
+bounded by `MODEL_CALL_TIMEOUT_SECONDS` (default 90s); on timeout it raises
+`PlannerAdapterError("openrouter_timeout")`. The planner loop's broad except finalizes on
+gathered evidence; the synthesizer degrades to its deterministic build. So one stuck
+generation now fails fast and the job returns/ends in ~90s instead of hanging 420s.
+Prevention: bound every external call with an overall wall-clock deadline, not just a
+per-socket timeout — keep-alive bytes make socket timeouts insufficient. Mirrors the
+navigate bounding (ERR-006 family).

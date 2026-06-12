@@ -50,6 +50,7 @@ class Settings:
     cors_allowed_origins: list[str]
     job_time_budget_seconds: float = 240.0
     job_hard_timeout_seconds: float = 330.0
+    model_call_timeout_seconds: float = 90.0
     longform_enabled: bool = False
     longform_max_sections: int = 6
     reports_db_path: str | None = None
@@ -89,6 +90,7 @@ class Settings:
             ),
             job_time_budget_seconds=float(source.get("JOB_TIME_BUDGET_SECONDS", "240")),
             job_hard_timeout_seconds=float(source.get("JOB_HARD_TIMEOUT_SECONDS", "330")),
+            model_call_timeout_seconds=float(source.get("MODEL_CALL_TIMEOUT_SECONDS", "90")),
             longform_enabled=_parse_bool(source.get("LONGFORM_ENABLED", "false"), default=False),
             longform_max_sections=int(source.get("LONGFORM_MAX_SECTIONS", "6")),
             reports_db_path=(source.get("REPORTS_DB_PATH") or None),

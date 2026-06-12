@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable
 from urllib import error, request
@@ -15,6 +16,8 @@ from backend.agent.tools import TOOLS, TOOL_REGISTRY
 from backend.config import Settings
 
 Transport = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
+
+logger = logging.getLogger("ghostresearcher.openrouter")
 
 
 class PlannerAdapterError(RuntimeError):
@@ -40,8 +43,28 @@ class OpenRouterChatClient:
         self._settings = settings
 
     async def complete(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """POST a chat completion request and return decoded JSON."""
-        return await asyncio.to_thread(self._complete_sync, payload)
+        """POST a chat completion request and return decoded JSON.
+
+        Bounded by ``model_call_timeout_seconds``: the blocking ``urlopen`` runs in a
+        worker thread, and OpenRouter sends keep-alive ``: OPENROUTER PROCESSING``
+        comments during long generations, which defeats the per-socket ``urlopen``
+        timeout. Without an overall wall-clock bound a single stuck generation can
+        consume the whole job's hard timeout (observed: a job hung at planner turn 0
+        for the full 420s). On timeout we raise so callers degrade gracefully — the
+        planner loop finalizes on gathered evidence, the synthesizer falls back to a
+        deterministic build.
+        """
+        timeout = self._settings.model_call_timeout_seconds
+        call = asyncio.to_thread(self._complete_sync, payload)
+        if timeout <= 0:
+            return await call
+        try:
+            return await asyncio.wait_for(call, timeout=timeout)
+        except (asyncio.TimeoutError, TimeoutError) as exc:
+            # The worker thread keeps running until urlopen returns/errors (it can't be
+            # force-killed), but the awaiting coroutine is freed so the job proceeds.
+            logger.warning("openrouter call exceeded %.0fs wall-clock bound; aborting", timeout)
+            raise PlannerAdapterError("openrouter_timeout") from exc
 
     def _complete_sync(self, payload: dict[str, Any]) -> dict[str, Any]:
         url = self._settings.openrouter_base_url.rstrip("/") + "/chat/completions"

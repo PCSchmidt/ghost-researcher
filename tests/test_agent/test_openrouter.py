@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 import unittest
 from unittest.mock import patch
 from typing import Any
@@ -72,6 +73,23 @@ class OpenRouterPlannerTests(unittest.IsolatedAsyncioTestCase):
             "deepseek/deepseek-v4-flash",
             json.loads(request_obj.data.decode("utf-8"))["model"],
         )
+
+    async def test_complete_aborts_when_call_exceeds_wall_clock_bound(self) -> None:
+        # A stuck generation (OpenRouter keep-alive bytes defeat the socket timeout)
+        # must not be able to consume the whole job budget: complete() bounds the call
+        # and raises so callers degrade gracefully.
+        settings = Settings.from_env({"OPENROUTER_API_KEY": "test-key", "MODEL_CALL_TIMEOUT_SECONDS": "0.05"})
+        client = OpenRouterChatClient(settings)
+
+        def slow_complete(payload: dict[str, Any]) -> dict[str, Any]:
+            time.sleep(5)  # far longer than the 0.05s bound
+            return {"choices": []}
+
+        with patch.object(client, "_complete_sync", side_effect=slow_complete):
+            with self.assertRaises(PlannerAdapterError) as ctx:
+                await client.complete({"model": "m", "messages": []})
+
+        self.assertIn("openrouter_timeout", str(ctx.exception))
 
     async def test_planner_returns_validated_tool_call_and_records_usage(self) -> None:
         captured_payloads: list[dict[str, Any]] = []

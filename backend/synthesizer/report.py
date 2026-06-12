@@ -8,7 +8,7 @@ import logging
 from typing import Any, Awaitable, Callable
 
 from backend.agent.memory import AgentSession, EvidenceRecord
-from backend.agent.openrouter import OpenRouterChatClient
+from backend.agent.openrouter import OpenRouterChatClient, PlannerAdapterError
 from backend.config import Settings
 from backend.synthesizer.schema import (
     Reference,
@@ -63,7 +63,7 @@ class ReportSynthesizer:
                     report = await self._synthesize_long_form(session, transport)
                 else:
                     report = await self._synthesize_flat(session, transport)
-            except SynthesisError as exc:
+            except (SynthesisError, PlannerAdapterError) as exc:
                 logger.warning(
                     "model synthesis failed (%s); using deterministic build (goal=%r, tokens=%d)",
                     exc,
