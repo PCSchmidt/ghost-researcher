@@ -121,11 +121,15 @@ class ReportSynthesizerTests(unittest.IsolatedAsyncioTestCase):
 
         synthesizer = ReportSynthesizer(Settings.from_env({}), transport=fake_transport)
 
-        report = await synthesizer.synthesize(session)
+        with self.assertLogs("ghostresearcher.synthesis", level="WARNING") as captured:
+            report = await synthesizer.synthesize(session)
 
         self.assertFalse(called)  # over budget -> no model call
         self.assertIsNotNone(report)
         self.assertEqual(["https://faa.gov/bvlos"], report.sources_used)
+        # The silent over-budget skip now leaves a trace so a deterministic
+        # report is diagnosable from the logs.
+        self.assertTrue(any("over_budget" in line for line in captured.output))
 
 
 def _two_source_session() -> AgentSession:

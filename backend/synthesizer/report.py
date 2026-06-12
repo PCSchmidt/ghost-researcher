@@ -72,6 +72,17 @@ class ReportSynthesizer:
                 )
                 report = self._deterministic_report_for(session)
         else:
+            reason = "over_budget" if has_transport else "no_transport"
+            logger.warning(
+                "skipping model synthesis (%s); using deterministic build "
+                "(goal=%r, tokens=%d/%d, cost=$%.4f/$%.2f)",
+                reason,
+                session.research_goal,
+                session.running_tokens,
+                self._settings.max_tokens_per_job,
+                session.running_cost_usd,
+                self._settings.max_model_cost_per_job_usd,
+            )
             report = self._deterministic_report_for(session)
 
         validate_report_sources(report, session.evidence_records)

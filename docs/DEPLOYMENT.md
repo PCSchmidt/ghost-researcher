@@ -219,3 +219,23 @@ railway variables --set "REPORTS_DB_PATH=/data/reports.json" -s ghost-researcher
 (else in-memory). Writes are atomic (tmp + replace) and jobs are serialized, so the
 file is never read mid-write. Verified: a completed report and its permalink survive
 a full API redeploy. For higher volume, migrate to Postgres (`DATABASE_URL`).
+
+## 10. Social Preview Cards (rich link unfurls)
+
+When a `/reports/[id]` permalink is pasted into Slack, X, Discord, LinkedIn, etc.,
+it unfurls into a branded card. The route is a **server component**: `generateMetadata`
+fetches the report server-side and emits real Open Graph / Twitter tags (crawlers
+don't run JS, so client-rendered tags would be invisible), and a colocated
+`opengraph-image.tsx` renders a 1200×630 PNG card (report title + confidence/source
+stats) via `next/og`. The interactive parts (fetch, print-to-PDF) live in the
+`ReportPermalinkView` client child.
+
+Both are resilient: if the API is unreachable or the report doesn't exist, the page
+falls back to generic branded metadata and a generic card instead of failing.
+
+Set `NEXT_PUBLIC_SITE_URL` on Vercel to the public frontend origin so the OG image
+URLs resolve absolute (it backs `metadataBase`). It defaults to
+`https://ghost-researcher.vercel.app`, so the default works out of the box; set it
+only if the domain changes. After deploy, validate unfurls with the
+[X card validator](https://cards-dev.twitter.com/validator) or by pasting a permalink
+into Slack; use a crawler's "re-scrape" to bust a stale cache.
